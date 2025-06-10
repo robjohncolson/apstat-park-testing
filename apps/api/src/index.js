@@ -1,23 +1,20 @@
-// TypeScript conversion in progress - temporarily using require for dependencies
 const express = require('express');
 const { Pool } = require('pg');
 const cors = require('cors');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
-// TODO: Uncomment when dependencies are installed
-// import { logger } from './logger.js';
 
-// Simple console logger for now
+// Simple structured logger
 const logger = {
-  info: (msg: string, context?: any) => console.log(`[INFO] ${msg}`, context || ''),
-  warn: (msg: string, context?: any) => console.warn(`[WARN] ${msg}`, context || ''),
-  error: (msg: string, context?: any) => console.error(`[ERROR] ${msg}`, context || ''),
-  debug: (msg: string, context?: any) => {
+  info: (msg, context) => console.log(`[INFO] ${msg}`, context || ''),
+  warn: (msg, context) => console.warn(`[WARN] ${msg}`, context || ''),
+  error: (msg, context) => console.error(`[ERROR] ${msg}`, context || ''),
+  debug: (msg, context) => {
     if (process.env.NODE_ENV !== 'production') {
       console.log(`[DEBUG] ${msg}`, context || '');
     }
   },
-  child: (context: any) => logger
+  child: (context) => logger
 };
 
 const app = express();
@@ -31,50 +28,35 @@ const io = new Server(server, {
 const port = process.env.PORT || 3000;
 
 // Add request ID middleware for better debugging
-app.use((req: Request, res: Response, next: NextFunction) => {
-    const requestId = Math.random().toString(36).substring(2, 15);
-    req.requestId = requestId;
-    res.setHeader('X-Request-ID', requestId);
-    
-    const childLogger = logger.child({ requestId });
-    req.logger = childLogger;
-    
-    childLogger.info(`${req.method} ${req.path}`, {
-        method: req.method,
-        path: req.path,
-        userAgent: req.get('User-Agent'),
-        ip: req.ip
-    });
-    
-    next();
+app.use((req, res, next) => {
+  const requestId = Math.random().toString(36).substring(2, 15);
+  req.requestId = requestId;
+  res.setHeader('X-Request-ID', requestId);
+  
+  const childLogger = logger.child({ requestId });
+  req.logger = childLogger;
+  
+  childLogger.info(`${req.method} ${req.path}`, {
+    method: req.method,
+    path: req.path,
+    userAgent: req.get('User-Agent'),
+    ip: req.ip
+  });
+  
+  next();
 });
-
-// Extend Express Request interface
-declare global {
-    namespace Express {
-        interface Request {
-            requestId: string;
-            logger: typeof logger;
-        }
-    }
-}
-
-// Socket interface extension
-interface SocketWithUser extends Socket {
-    username?: string;
-}
 
 // Database connections
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
 // Dedicated listener connection for PostgreSQL LISTEN/NOTIFY
-let notificationListener: Pool | null = null;
+let notificationListener = null;
 
 // Track connected users for real-time updates
-const connectedUsers = new Map<string, Set<string>>(); // username -> Set of socket.ids
+const connectedUsers = new Map(); // username -> Set of socket.ids
 
 // Initialize PostgreSQL notification listener
 async function initializeNotificationListener() {
