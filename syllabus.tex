@@ -1,0 +1,394 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry} % Sets margins to 1 inch
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{fancyhdr}
+
+% Define Lynn Public Schools colors
+\definecolor{lynnmaroon}{RGB}{128, 0, 32} % Maroon
+\definecolor{lynngrey}{RGB}{128, 128, 128} % Grey
+
+% Setup fancy headers
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{1pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{lynnmaroon}\leaders\hrule height \headrulewidth\hfill}}
+\fancyhead[L]{\textbf{\textcolor{lynnmaroon}{Lynn Public Schools - AP Statistics}}}
+\fancyhead[R]{\textbf{\textcolor{lynngrey}{School Year 2025-2026}}}
+\fancyfoot[C]{\thepage}
+
+% Title formatting
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{lynnmaroon}}
+  {}
+  {0em}
+  {}[\titlerule]
+  
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{lynngrey}}
+  {}
+  {0em}
+  {}
+
+% Hyperref setup with Lynn colors
+\hypersetup{
+    colorlinks=true,
+    linkcolor=lynnmaroon,
+    filecolor=lynnmaroon,
+    urlcolor=lynnmaroon,
+}
+
+% Document begins
+\begin{document}
+
+% Title
+\begin{center}
+\textbf{\Huge{\textcolor{lynnmaroon}{Lynn Public Schools}}}\\
+\vspace{0.5em}
+\textbf{\LARGE{\textcolor{lynnmaroon}{AP Statistics}}}\\
+\vspace{0.5em}
+\textbf{\large{\textcolor{lynngrey}{School Year 2025-2026: Mastering Data Through Weekly Cycles \& Statistical Language}}}
+\end{center}
+
+\vspace{1em}
+
+% Contact info
+\noindent\textbf{Teacher:} Robert Colson\\
+\textbf{Contact:} colsonr@lynnschools.org\\
+\textbf{Office Hours:} Monday-Friday, 2:30 PM - 3:30 PM in Room [TBD - To Be Determined] (Available for concept help)\\
+\textbf{Schoology:} \href{https://lynnschools.schoology.com/}{https://lynnschools.schoology.com/} (Used for FRQ/MCQ releases \& announcements)
+
+\section{Course Philosophy: Language, Cycles, Self-Direction, and AP Readiness}
+
+Welcome to AP Statistics! I view this course as learning a new language as much as learning mathematical concepts – perhaps even more so. It's about precisely communicating complex ideas using the vocabulary and reasoning of statistics. We'll explore how to collect, analyze, interpret, and draw conclusions from data, mirroring a college-level introductory course and preparing you for the AP Exam.
+
+My approach focuses on distinct roles to help you master both the concepts and the language:
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{My Role (In Class): Analog Exploration.} Each week begins with my introduction to new topics through hands-on, often analog, activities. I focus on building intuition, exploring concepts physically (calculators, dice, etc.), and offering supplemental perspectives. This time is not focused on direct AP Exam alignment but on deeper conceptual understanding.
+
+  \item \textbf{Your Role (Independent): Digital Foundation \& AP Alignment.} Using our AP Stat Navigator online platform during the week, you will watch the official AP videos to get the core content.
+
+  \item \textbf{AI's Role (Grok): AP Language \& Practice Alignment.} After watching the videos, you will use the AI tutor (Grok) with the official AP Practice Quiz PDFs. Grok's specific task here is to ensure you practice applying concepts and using statistical language in a way that aligns precisely with College Board expectations for the AP Exam. This AI-guided practice is your primary tool for exam-specific preparation.
+\end{itemize}
+
+\textbf{Weekly Check-ins:} We start the following week with a fun Blooket review and timed AP question practice to keep the cycle moving and reinforce learning.
+
+\textbf{Focus on AP Success:} The entire structure aims to prepare you for the AP Statistics Exam in May 2026.
+
+\section{Prerequisites}
+
+Successful completion of Algebra II. You must be prepared for consistent weekly independent work using our online platform (including AI interaction) and active participation in my hands-on class activities.
+
+\section{Required Materials}
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Graphing Calculator} (TI-84 Plus CE highly recommended, as I will use it in class)
+  
+  \item \textbf{Clipboard \& Scratch Paper:} I personally find traditional notebooks less useful for learning than for archiving. I encourage you to use a clipboard with loose paper for taking temporary notes and working through problems until a concept "clicks."
+  
+  \item \textbf{Pen/Pencil}
+  
+  \item \textbf{Mandatory Daily Access:} Computer/tablet with internet for the AP Stat Navigator online learning platform and potentially Schoology for weekly question access.
+\end{itemize}
+
+\section{AP Stat Navigator: Your Weekly Learning \& Practice Engine}
+
+This custom platform is central to your weekly learning cycle. Consistent engagement during the week is essential.\\
+\textbf{Access Here:} \href{https://apstat-unit-x-vercel.vercel.app/unit1.html}{https://apstat-unit-x-vercel.vercel.app/unit1.html} (Note: Final URL may consolidate units)
+
+\subsection{Features}
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Complete Curriculum:} All 9 AP Statistics units and topics.
+  
+  \item \textbf{AP Daily Videos (+ Backups):} Foundational video lessons.
+  
+  \item \textbf{Official AP Practice Quizzes (PDFs):} The source material for AI-tutored practice.
+  
+  \item \textbf{AI Tutor Integration (Grok):} Your tool for AP Alignment. Use Grok to administer the official practice quiz PDFs, guiding your practice and ensuring your understanding and language align with College Board expectations.
+  
+  \item \textbf{Progress Dashboard \& Pacing Guidance:} Track your completion and progress towards the April 8th goal.
+\end{itemize}
+
+\section{The Weekly Course Rhythm \& The Origami Option}
+
+\subsection{Monday (Start of Week N)}
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Blooket Challenge:} Fun, competitive review of Week N-1's material. Your performance adjusts your grade (see below).
+  
+  \item \textbf{AP Question Timed Practice:} 15 minutes on the official question(s) (FRQ/MCQs) from Week N-1. Collected.
+  
+  \item \textbf{Question Review:} Go over the question(s) from Week N-2. FRQs returned.
+  
+  \item \textbf{My Analog Lesson:} Introduction to Week N concepts. Use your clipboard and scratch paper here!
+\end{itemize}
+
+\subsection{During Week N (Tuesday - Friday)}
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Your Independent LMS Work:} Watch videos, then use Grok + Practice Quiz PDFs for Week N's topics on AP Stat Navigator. This solidifies the concepts and ensures AP alignment.
+\end{itemize}
+
+\subsection{End of Week N (e.g., Friday)}
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{New AP Question Release:} Posted on Schoology for next Monday.
+  
+  \item \textbf{(Optional) Origami Time!:} Once a concept from the week is firmly in your head, I encourage you to learn the weekly origami fold (I'll share resources!) and transform your scratch notes into something creative. Let the paper hold the memory, not just the ink!
+\end{itemize}
+
+\section{The April 8th Target \& Weekly Responsibility}
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{My Goal:} I have structured the topic sequence to cover all 9 Units by Wednesday, April 8th, 2026.
+  
+  \item \textbf{Why?} To give you $\sim$4 weeks for focused AP Exam review.
+  
+  \item \textbf{The Pace:} Requires diligent completion of each week's assigned videos and AI-tutored quizzes on AP Stat Navigator during that week. No summer prep is required to start, but consistent weekly effort is mandatory.
+  
+  \item \textbf{Getting Ahead (Optional):} AP Stat Navigator allows you to work ahead if you wish.
+\end{itemize}
+
+\section{Grading: Engagement \& Friendly Competition}
+
+My grading philosophy aims to minimize pressure while encouraging consistent engagement.
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Baseline:} All students begin each quarter with a 95\% average.
+  
+  \item \textbf{Weekly Blooket Impact:} Your performance on the weekly Blooket game (covering the previous week's material) will adjust your grade within the 90\% to 100\% range for the quarter.
+  
+  \item The Blooket score is a composite, rewarding accuracy, speed, and your rank relative to classmates.
+  
+  \item This is intended as a fun, low-stakes, competitive measure of your "interest" and consistent engagement with the previous week's independent LMS work. Think of it as showing up prepared!
+  
+  \item \textbf{Focus:} The goal isn't the grade itself, but using the Blooket as feedback on your weekly preparation and understanding.
+\end{itemize}
+
+\section{Weekly AP Question Practice}
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Purpose:} Build proficiency with official AP question formats (FRQ/MCQ) through regular, timed practice using official retired materials.
+  
+  \item \textbf{Process:} Released end-of-week (Schoology), completed start-of-next-week (15 min, timed), collected by me, scanned (FRQs potentially becoming part of a digital class resource archive), and reviewed together the following week.
+  
+  \item \textbf{Not Graded (Directly):} Your score doesn't directly impact your grade adjustment, but consistent effort is excellent exam prep.
+\end{itemize}
+
+\section{Our Learning Philosophy: Engagement, Tools, and Personal Growth}
+
+In this course, my primary goal is for you to genuinely learn and understand statistics – its concepts, its applications, and its language. The path to true understanding often involves grappling with ideas, trying things out, making mistakes, and finding clarity.
+
+\subsection{The Value of Effort}
+
+Like mastering a sport or a musical instrument, there's a deep satisfaction that comes from putting in the effort to truly learn a skill. Developing your statistical reasoning is a mental equivalent – the reward comes from the growth itself, from the "aha!" moments, and from the ability to confidently apply what you know. Simply having a tool give you an answer without that internal effort offers less long-term value and, frankly, less joy.
+
+\subsection{AI as a Learning Partner}
+
+Artificial Intelligence (like Grok, which we integrate with our platform) is an incredibly powerful tool. I encourage you to use it abundantly to help you understand concepts. Ask it questions, have it explain things in different ways, use it to check your reasoning as you work through the practice materials on AP Stat Navigator. Use it to grow your understanding, not to avoid the process of growth itself. My focus isn't on policing how you arrive at understanding, but that you are actively striving for it.
+
+\subsection{The Evidence of Engagement: Your Handwritten Work}
+
+While I encourage digital tools for learning, the key requirement for demonstrating your active participation in the learning cycle is tangible: filling up paper with your handwritten thoughts, calculations, and notes. This could be notes from the videos, work done alongside the AI tutor, or practice on the weekly questions. Even if some of the content originates from an AI explanation, the act of writing it down signifies you are actively processing the information. This physical engagement is crucial.
+
+\subsection{Discerning Your Path}
+
+Ultimately, it's your responsibility to figure out which learning activities are most rewarding and effective for you. Aiming for the bare minimum, or using tools solely to bypass the effort of learning, primarily shortchanges your own opportunity for growth and the satisfaction that comes with mastery. I trust you to navigate this, using the tools available to genuinely enhance your skills in preparation for the AP exam and beyond.
+
+\section{AP Statistics Exam (May 2026)}
+
+This exam is the target benchmark for the course. I expect all students to register and take it to potentially earn college credit/placement.
+
+\section{Classroom Environment \& Expectations}
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Weekly Preparation is Mandatory:} Success in the Blooket and understanding my analog lesson depend directly on your completion of the previous week's videos and AI-tutored quizzes on AP Stat Navigator.
+  
+  \item \textbf{Active Participation:} Be ready for the Blooket, the timed practice questions, and the hands-on activities each week.
+  
+  \item \textbf{Respect \& Collaboration:} Contribute positively during Blookets and activities. Support your peers.
+  
+  \item \textbf{Embrace the Process:} Consistent weekly effort and managing your independent learning are key skills we are developing. Use the clipboard/scratch paper actively during my lessons.
+\end{itemize}
+
+\section{A Final Note from Me}
+
+AP Statistics is about understanding the language of data. I provide the in-class explorations; you build the foundational knowledge and AP-aligned practice through AP Stat Navigator and the AI tutor. Commit to the weekly cycle, use the tools effectively, embrace the origami, and you'll be well-prepared for the AP exam and equipped with valuable analytical skills. I'm here to facilitate the in-class part of this journey!
+
+\section*{\textcolor{lynnmaroon}{AP Statistics 2025-2026: Accelerated Weekly Topic Breakdown (Tentative)}}
+
+\textbf{Goal:} Cover all 9 Units via AP Stat Navigator (Videos + AI-Quiz Practice) by April 8th, 2026.\\
+\textbf{Note:} This schedule is TENTATIVE and subject to change based on the official 2025-2026 Lynn Public Schools calendar. Holidays/breaks are estimates.
+
+\subsection*{Weekly Structure Reminder}
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Mon:} Blooket (Week N-1 Topics), Timed AP Q (Week N-1 Topics), Q Review (Week N-2 Topics), Analog Lesson (Week N Topics).
+  
+  \item \textbf{Tue-Fri:} Independent LMS Work on AP Stat Navigator (Week N Topics: Videos + AI-Quizzes).
+  
+  \item \textbf{Fri:} AP Q Release (Week N Topics) on Schoology.
+\end{itemize}
+
+\subsection*{\textcolor{lynnmaroon}{Quarter 1 (Approx. Sep 3 - Nov 7, 2025)}}
+
+\begin{description}
+  \item[\textbf{Week 1 (Sep 3-5):}] \textbf{LMS Focus:} Unit 1: 1.1, 1.2, 1.3.
+  
+  \textbf{Class (Sep 4/5):} Intro, Setup, Analog Lesson (1.1-1.3). No Blooket/Q Practice first week.
+  
+  \item[\textbf{Week 2 (Sep 8-12):}] \textbf{LMS Focus:} Unit 1: 1.4, 1.5, 1.6, 1.7.
+  
+  \textbf{Class (Mon):} Blooket (1.1-1.3), Analog Lesson (1.4-1.7).
+  
+  \item[\textbf{Week 3 (Sep 15-19):}] \textbf{LMS Focus:} Unit 1: 1.8, 1.9, 1.10, Unit 1 Capstone/Check Prep.
+  
+  \textbf{Class (Mon):} Blooket (1.4-1.7), AP Q Practice (1.1-1.3), Q Review (N/A), Analog Lesson (1.8-1.10).
+  
+  \item[\textbf{Week 4 (Sep 22-26):}] \textbf{LMS Focus:} Unit 2: 2.1, 2.2, 2.3, 2.4.
+  
+  \textbf{Class (Mon):} Blooket (1.8-1.10+Cap), AP Q Practice (1.4-1.7), Q Review (1.1-1.3), Analog Lesson (2.1-2.4).
+  
+  \item[\textbf{Week 5 (Sep 29 - Oct 3):}] \textbf{LMS Focus:} Unit 2: 2.5, 2.6, 2.7.
+  
+  \textbf{Class (Mon):} Blooket (2.1-2.4), AP Q Practice (1.8-1.10+Cap), Q Review (1.4-1.7), Analog Lesson (2.5-2.7).
+  
+  \item[\textbf{Week 6 (Oct 6-10):}] \textbf{LMS Focus:} Unit 2: 2.8, 2.9, Unit 2 Capstone/Check Prep. Start Unit 3: 3.1.
+  
+  \textbf{Class (Mon):} Blooket (2.5-2.7), AP Q Practice (2.1-2.4), Q Review (1.8-1.10+Cap), Analog Lesson (2.8-2.9, 3.1).
+  
+  \item[\textbf{Week 7 (Oct 14-17):}] \textbf{LMS Focus:} Unit 3: 3.2, 3.3, 3.4. (Likely Indigenous Peoples' Day Oct 13)
+  
+  \textbf{Class (Tue):} Blooket (2.8-2.9+Cap, 3.1), AP Q Practice (2.5-2.7), Q Review (2.1-2.4), Analog Lesson (3.2-3.4).
+  
+  \item[\textbf{Week 8 (Oct 20-24):}] \textbf{LMS Focus:} Unit 3: 3.5, 3.6, 3.7.
+  
+  \textbf{Class (Mon):} Blooket (3.2-3.4), AP Q Practice (2.8-2.9+Cap, 3.1), Q Review (2.5-2.7), Analog Lesson (3.5-3.7).
+  
+  \item[\textbf{Week 9 (Oct 27-31):}] \textbf{LMS Focus:} Unit 3 Capstone/Check Prep. Start Unit 4: 4.1, 4.2.
+  
+  \textbf{Class (Mon):} Blooket (3.5-3.7), AP Q Practice (3.2-3.4), Q Review (2.8-2.9+Cap, 3.1), Analog Lesson (U3 Cap, 4.1-4.2).
+  
+  \item[\textbf{Week 10 (Nov 3-7):}] \textbf{LMS Focus:} Unit 4: 4.3, 4.4, 4.5. (Likely Teacher PD Nov 4/5).
+  
+  \textbf{Class (Mon):} Blooket (U3 Cap, 4.1-4.2), AP Q Practice (3.5-3.7), Q Review (3.2-3.4), Analog Lesson (4.3-4.5). \textbf{End Q1.}
+\end{description}
+
+\subsection*{\textcolor{lynnmaroon}{Quarter 2 (Approx. Nov 10 - Jan 23, 2026)}}
+
+\begin{description}
+  \item[\textbf{Week 11 (Nov 10-14):}] \textbf{LMS Focus:} Unit 4: 4.6, 4.7. (Likely Veterans Day Nov 11)
+  
+  \textbf{Class (Mon/Tue):} Blooket (4.3-4.5), AP Q Practice (U3 Cap, 4.1-4.2), Q Review (3.5-3.7), Analog Lesson (4.6-4.7).
+  
+  \item[\textbf{Week 12 (Nov 17-21):}] \textbf{LMS Focus:} Unit 4: 4.8, 4.9.
+  
+  \textbf{Class (Mon):} Blooket (4.6-4.7), AP Q Practice (4.3-4.5), Q Review (U3 Cap, 4.1-4.2), Analog Lesson (4.8-4.9).
+  
+  \item[\textbf{Week 13 (Nov 24-26):}] \textbf{LMS Focus:} Unit 4: 4.10. (Short week - Thanksgiving Break)
+  
+  \textbf{Class (Mon):} Blooket (4.8-4.9), AP Q Practice (4.6-4.7), Q Review (4.3-4.5), Analog Lesson (4.10).
+  
+  \item[\textbf{Week 14 (Dec 1-5):}] \textbf{LMS Focus:} Unit 4: 4.11, 4.12.
+  
+  \textbf{Class (Mon):} Blooket (4.10), AP Q Practice (4.8-4.9), Q Review (4.6-4.7), Analog Lesson (4.11-4.12).
+  
+  \item[\textbf{Week 15 (Dec 8-12):}] \textbf{LMS Focus:} Unit 4 Capstone/Check Prep. Start Unit 5: 5.1, 5.2.
+  
+  \textbf{Class (Mon):} Blooket (4.11-4.12), AP Q Practice (4.10), Q Review (4.8-4.9), Analog Lesson (U4 Cap, 5.1-5.2).
+  
+  \item[\textbf{Week 16 (Dec 15-19):}] \textbf{LMS Focus:} Unit 5: 5.3, 5.4.
+  
+  \textbf{Class (Mon):} Blooket (U4 Cap, 5.1-5.2), AP Q Practice (4.11-4.12), Q Review (4.10), Analog Lesson (5.3-5.4).
+  
+  \item[\textbf{Winter Break (Approx. Dec 22 - Jan 2)}]
+  
+  \item[\textbf{Week 17 (Jan 5-9):}] \textbf{LMS Focus:} Unit 5: 5.5, 5.6.
+  
+  \textbf{Class (Mon):} Blooket (5.3-5.4), AP Q Practice (U4 Cap, 5.1-5.2), Q Review (4.11-4.12), Analog Lesson (5.5-5.6).
+  
+  \item[\textbf{Week 18 (Jan 12-16):}] \textbf{LMS Focus:} Unit 5: 5.7, 5.8, Unit 5 Capstone/Check Prep. (Likely Teacher PD)
+  
+  \textbf{Class (Mon):} Blooket (5.5-5.6), AP Q Practice (5.3-5.4), Q Review (U4 Cap, 5.1-5.2), Analog Lesson (5.7-5.8, U5 Cap).
+  
+  \item[\textbf{Week 19 (Jan 20-23):}] \textbf{LMS Focus:} Unit 6: 6.1, 6.2, 6.3. (MLK Day Jan 19).
+  
+  \textbf{Class (Tue):} Blooket (5.7-5.8+Cap), AP Q Practice (5.5-5.6), Q Review (5.3-5.4), Analog Lesson (6.1-6.3). \textbf{End Q2.}
+\end{description}
+
+\subsection*{\textcolor{lynnmaroon}{Quarter 3 (Approx. Jan 26 - Apr 3, 2026)}}
+
+\begin{description}
+  \item[\textbf{Week 20 (Jan 26-30):}] \textbf{LMS Focus:} Unit 6: 6.4, 6.5, 6.6.
+  
+  \textbf{Class (Mon):} Blooket (6.1-6.3), AP Q Practice (5.7-5.8+Cap), Q Review (5.5-5.6), Analog Lesson (6.4-6.6).
+  
+  \item[\textbf{Week 21 (Feb 2-6):}] \textbf{LMS Focus:} Unit 6: 6.7, 6.8, 6.9.
+  
+  \textbf{Class (Mon):} Blooket (6.4-6.6), AP Q Practice (6.1-6.3), Q Review (5.7-5.8+Cap), Analog Lesson (6.7-6.9).
+  
+  \item[\textbf{Week 22 (Feb 9-13):}] \textbf{LMS Focus:} Unit 6: 6.10, 6.11, Unit 6 Capstone/Check Prep.
+  
+  \textbf{Class (Mon):} Blooket (6.7-6.9), AP Q Practice (6.4-6.6), Q Review (6.1-6.3), Analog Lesson (6.10-6.11, U6 Cap).
+  
+  \item[\textbf{February Break (Approx. Feb 16-20)}]
+  
+  \item[\textbf{Week 23 (Feb 23-27):}] \textbf{LMS Focus:} Unit 7: 7.1, 7.2, 7.3.
+  
+  \textbf{Class (Mon):} Blooket (6.10-6.11+Cap), AP Q Practice (6.7-6.9), Q Review (6.4-6.6), Analog Lesson (7.1-7.3).
+  
+  \item[\textbf{Week 24 (Mar 2-6):}] \textbf{LMS Focus:} Unit 7: 7.4, 7.5, 7.6.
+  
+  \textbf{Class (Mon):} Blooket (7.1-7.3), AP Q Practice (6.10-6.11+Cap), Q Review (6.7-6.9), Analog Lesson (7.4-7.6).
+  
+  \item[\textbf{Week 25 (Mar 9-13):}] \textbf{LMS Focus:} Unit 7: 7.7, 7.8, 7.9.
+  
+  \textbf{Class (Mon):} Blooket (7.4-7.6), AP Q Practice (7.1-7.3), Q Review (6.10-6.11+Cap), Analog Lesson (7.7-7.9).
+  
+  \item[\textbf{Week 26 (Mar 16-20):}] \textbf{LMS Focus:} Unit 7: 7.10, Unit 7 Capstone/Check Prep. Start Unit 8: 8.1.
+  
+  \textbf{Class (Mon):} Blooket (7.7-7.9), AP Q Practice (7.4-7.6), Q Review (7.1-7.3), Analog Lesson (7.10, U7 Cap, 8.1).
+  
+  \item[\textbf{Week 27 (Mar 23-27):}] \textbf{LMS Focus:} Unit 8: 8.2, 8.3, 8.4.
+  
+  \textbf{Class (Mon):} Blooket (7.10, U7 Cap, 8.1), AP Q Practice (7.7-7.9), Q Review (7.4-7.6), Analog Lesson (8.2-8.4).
+  
+  \item[\textbf{Week 28 (Mar 30 - Apr 3):}] \textbf{LMS Focus:} Unit 8: 8.5, 8.6. (Good Friday potentially Apr 3).
+  
+  \textbf{Class (Mon):} Blooket (8.2-8.4), AP Q Practice (7.10, U7 Cap, 8.1), Q Review (7.7-7.9), Analog Lesson (8.5-8.6). \textbf{End Q3.}
+\end{description}
+
+\subsection*{\textcolor{lynnmaroon}{Quarter 4 - Final Push (Approx. Apr 6 - Apr 8, 2026)}}
+
+\begin{description}
+  \item[\textbf{Week 29 (Apr 6-8):}] \textbf{LMS Focus:} Unit 8: 8.7, Unit 8 Capstone/Check Prep. Unit 9: 9.1 - 9.6 \& Capstone. (Extremely Compressed - Heavy LMS Focus Required This Week).
+  
+  \textbf{Class (Mon):} Blooket (8.5-8.6), AP Q Practice (8.2-8.4), Q Review (7.10, U7 Cap, 8.1), Analog Lesson (8.7, U8 Cap, Overview Unit 9).
+  
+  \textbf{Class (Tue/Wed):} Continue brief Unit 9 concepts/support. Emphasize LMS completion.
+\end{description}   
+
+\begin{center}
+\fbox{\Large \textbf{\textcolor{lynnmaroon}{--- TARGET DATE REACHED: April 8th ---}}}
+\end{center}
+
+\subsection*{\textcolor{lynnmaroon}{Post-April 8th (Until AP Exam $\sim$May 7/8)}}
+
+\begin{description}
+  \item[\textbf{Week 30 (Apr 13-17):}] Dedicated AP Review Block 1 (Practice FRQs, MCQs, focus on weak areas identified via Blookets/AP Q Practice/LMS checks).
+  
+  \item[\textbf{April Break (Approx. Apr 20-24)}]
+  
+  \item[\textbf{Week 31 (Apr 27 - May 1):}] Dedicated AP Review Block 2 (Full Practice Exam analysis, targeted review).
+  
+  \item[\textbf{Week 32 (May 4 - Exam Day):}] Final Review, test-taking strategies, confidence building.
+\end{description}
+
+\end{document}

@@ -1,0 +1,13 @@
+This website serves lessons to AP students, and it does so ina  Table of contents manner where each lesson can be starred, and the stars are used to figure how many lessons are needed to complete by the AP exam deadline, by which a quota is given, and when the quota is complete, the screen turns green.
+
+I liked this mechanic alot, but I want to make the the nav simpler, taking inspiration for nintendo's pico park.
+
+Each lesson should be treated as a level, and take up the entire screen.  Each lesson needs to be finished sequentially before the next is offered.  After a lesson is complete, the user is shown a Unit screen which gives a very clear visual representation of the lessons completed, and the lessons to be complete.  The navigation is done via left or right arrow to go forward in the unit.. and each lesson is represented by a box with a number that is the lesson number. T he world (unit) is displayed on top, and in order for a user to get out of the world view and see what worlds are available, the user needs to press a button that goes to the world screen.  Each world is a particular topic (Unit topic), there are nine worlds, and the 1st world needs to be completed before the 2nd unlocks.
+
+Please focus on the structure of the current app, and see how you can transform it into what my vision is (based on pico park)
+
+Come up with a phased strategy which I can feed to claude 3.7 who can see my entire codebase, to implement these changes.
+
+Ask me any clarifying questions.  Maybe you don't know pico park?  Ask me to bring you more info about it!  Anything at all.
+
+Hajimemashou!

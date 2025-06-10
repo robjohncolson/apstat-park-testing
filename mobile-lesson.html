@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>apstat-park - Mobile Lesson</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #e8f5e8 0%, #d4f4d4 50%, #c1f2c1 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .mobile-header {
+            background: #2d5a2d;
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .lesson-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .lesson-description {
+            opacity: 0.9;
+            font-size: 0.9em;
+        }
+
+        .content-section {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .section-title {
+            color: #2d5a2d;
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .video-container {
+            background: #f5f5f5;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .video-link {
+            display: block;
+            background: #4CAF50;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: bold;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .video-link:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .pdf-container {
+            display: grid;
+            gap: 15px;
+        }
+
+        .pdf-item {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            border-left: 4px solid #FF7043;
+        }
+
+        .pdf-title {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .pdf-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .pdf-button {
+            background: #FF7043;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.9em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .pdf-button:hover {
+            background: #E64A19;
+            transform: translateY(-1px);
+        }
+
+        .grok-button {
+            background: #2196F3;
+        }
+
+        .grok-button:hover {
+            background: #1976D2;
+        }
+
+        .completion-section {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .complete-button {
+            background: white;
+            color: #4CAF50;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .complete-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .progress-indicator {
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            padding: 10px;
+            margin-top: 10px;
+        }
+
+        .back-link {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            text-decoration: none;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .back-link:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .error-message {
+            background: #f44336;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <script src="js/allUnitsData.js"></script>
+    
+    <div class="mobile-header">
+        <div class="lesson-title" id="lessonTitle">Loading...</div>
+        <div class="lesson-description" id="lessonDescription">Please wait...</div>
+    </div>
+
+    <div id="lessonContent">
+        <!-- Will be populated by JavaScript -->
+    </div>
+
+    <script>
+        // Parse URL parameters
+        function getUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            return {
+                mobile: params.get('mobile'),
+                lesson: params.get('lesson'),
+                unit: params.get('unit')
+            };
+        }
+
+        // Load lesson data
+        function loadLessonData() {
+            const params = getUrlParams();
+            
+            if (!params.mobile || !params.lesson || !params.unit) {
+                showError('Invalid QR code or URL parameters missing.');
+                return;
+            }
+
+            // Find the lesson data
+            const unitData = ALL_UNITS_DATA.find(unit => unit.unitId === params.unit);
+            if (!unitData) {
+                showError('Unit not found.');
+                return;
+            }
+
+            const lessonData = unitData.topics.find(topic => topic.id === params.lesson);
+            if (!lessonData) {
+                showError('Lesson not found.');
+                return;
+            }
+
+            // Display lesson
+            displayLesson(lessonData, unitData);
+        }
+
+        // Display lesson content
+        function displayLesson(lesson, unit) {
+            document.getElementById('lessonTitle').textContent = lesson.name;
+            document.getElementById('lessonDescription').textContent = lesson.description;
+            
+            const content = document.getElementById('lessonContent');
+            content.innerHTML = '';
+
+            // Videos section
+            if (lesson.videos && lesson.videos.length > 0) {
+                const videoSection = document.createElement('div');
+                videoSection.className = 'content-section';
+                videoSection.innerHTML = `
+                    <div class="section-title">
+                        🎥 Videos (${lesson.videos.length})
+                    </div>
+                `;
+
+                lesson.videos.forEach((video, index) => {
+                    const videoContainer = document.createElement('div');
+                    videoContainer.className = 'video-container';
+                    videoContainer.innerHTML = `
+                        <a href="${video.url}" target="_blank" class="video-link">
+                            📺 Watch Video ${index + 1} (AP Classroom)
+                        </a>
+                        ${video.altUrl ? `<a href="${video.altUrl}" target="_blank" class="video-link" style="background: #2196F3;">
+                            🎬 Alternative Link (Google Drive)
+                        </a>` : ''}
+                    `;
+                    videoSection.appendChild(videoContainer);
+                });
+
+                content.appendChild(videoSection);
+            }
+
+            // Quizzes/PDFs section
+            if (lesson.quizzes && lesson.quizzes.length > 0) {
+                const pdfSection = document.createElement('div');
+                pdfSection.className = 'content-section';
+                pdfSection.innerHTML = `
+                    <div class="section-title">
+                        📄 Practice Quizzes (${lesson.quizzes.length})
+                    </div>
+                `;
+
+                lesson.quizzes.forEach((quiz, index) => {
+                    const pdfItem = document.createElement('div');
+                    pdfItem.className = 'pdf-item';
+                    pdfItem.innerHTML = `
+                        <div class="pdf-title">Quiz ${index + 1}</div>
+                        <div class="pdf-actions">
+                            <a href="${quiz.questionPdf}" target="_blank" class="pdf-button">
+                                📋 Download Questions
+                            </a>
+                            <a href="${quiz.answersPdf}" target="_blank" class="pdf-button">
+                                ✅ Download Answers
+                            </a>
+                            <button class="pdf-button grok-button" onclick="openInGrok('${quiz.questionPdf}')">
+                                🤖 Open in Grok
+                            </button>
+                        </div>
+                    `;
+                    pdfSection.appendChild(pdfItem);
+                });
+
+                content.appendChild(pdfSection);
+            }
+
+            // Completion section
+            const completionSection = document.createElement('div');
+            completionSection.className = 'completion-section';
+            completionSection.innerHTML = `
+                <div style="font-size: 1.2em; margin-bottom: 10px;">
+                    Ready to mark as complete?
+                </div>
+                <div style="opacity: 0.9; margin-bottom: 15px;">
+                    Complete videos and practice quizzes, then mark this lesson as finished.
+                </div>
+                <button class="complete-button" onclick="markComplete()">
+                    ✅ Mark Lesson Complete
+                </button>
+                <div class="progress-indicator">
+                    <strong>${unit.displayName}</strong><br>
+                    Lesson ${lesson.id.split('-')[1]} of ${unit.topics.length}
+                </div>
+                <a href="index.html" class="back-link">
+                    ← Back to Main App
+                </a>
+            `;
+            content.appendChild(completionSection);
+        }
+
+        // Open PDF in Grok
+        function openInGrok(pdfUrl) {
+            alert(`Opening PDF in Grok!\n\nPDF: ${pdfUrl}\n\nThis would:\n• Upload PDF to Grok\n• Open Grok chat interface\n• Enable AI tutoring for this specific content`);
+            window.open('https://grok.com', '_blank');
+        }
+
+        // Mark lesson as complete
+        function markComplete() {
+            const params = getUrlParams();
+            
+            // Get existing progress
+            const saved = localStorage.getItem('apStatsProgress');
+            let progress = { completedLessons: [], currentLesson: '1-1' };
+            
+            if (saved) {
+                progress = JSON.parse(saved);
+            }
+
+            // Add this lesson to completed
+            if (!progress.completedLessons.includes(params.lesson)) {
+                progress.completedLessons.push(params.lesson);
+                localStorage.setItem('apStatsProgress', JSON.stringify(progress));
+                
+                alert('✅ Lesson marked as complete!\n\nProgress has been saved. Return to the main app to see your updated progress and unlock the next lesson.');
+            } else {
+                alert('✅ This lesson is already marked as complete!');
+            }
+        }
+
+        // Show error message
+        function showError(message) {
+            const content = document.getElementById('lessonContent');
+            content.innerHTML = `
+                <div class="error-message">
+                    <strong>Error:</strong> ${message}
+                    <br><br>
+                    <a href="index.html" style="color: white; text-decoration: underline;">
+                        Return to Main App
+                    </a>
+                </div>
+            `;
+        }
+
+        // Initialize on load
+        window.addEventListener('load', function() {
+            loadLessonData();
+        });
+    </script>
+</body>
+</html>
