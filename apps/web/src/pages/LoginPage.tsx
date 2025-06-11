@@ -34,8 +34,8 @@ export function LoginPage() {
       console.log('About to call login...');
       await login(username.trim());
       console.log('Login successful, about to navigate...');
-      // Navigate to dashboard after successful login
-      navigate('/dashboard');
+      // Force full page reload so top-level App sees new auth state
+      window.location.href = '/dashboard';
       console.log('Navigate called');
     } catch (error) {
       console.error('Login error:', error);
