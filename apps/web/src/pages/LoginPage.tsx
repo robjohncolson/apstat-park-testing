@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
 export function LoginPage() {
   const { login, generateUsername, isLoading } = useAuth();
+  const navigate = useNavigate();
   const [suggestedUsername, setSuggestedUsername] = useState<string>('');
   const [customUsername, setCustomUsername] = useState<string>('');
   const [error, setError] = useState<string>('');
@@ -29,8 +31,14 @@ export function LoginPage() {
 
     setError('');
     try {
+      console.log('About to call login...');
       await login(username.trim());
+      console.log('Login successful, about to navigate...');
+      // Navigate to dashboard after successful login
+      navigate('/dashboard');
+      console.log('Navigate called');
     } catch (error) {
+      console.error('Login error:', error);
       setError('Failed to log in. Please try again.');
     }
   };
