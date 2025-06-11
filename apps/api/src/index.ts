@@ -244,6 +244,8 @@ app.use(express.json());
 // In-memory storage fallback when database is not available
 const inMemoryUsers = new Map<string, User>();
 let nextUserId = 1;
+const inMemoryProgress = new Map<number, Progress[]>();
+const inMemoryBookmarks = new Map<number, Bookmark[]>();
 
 // Username generation lists
 const adjectives = [
@@ -334,191 +336,126 @@ app.post('/api/users/get-or-create', async (req: ExtendedRequest, res: Response)
 });
 
 // Get user progress
-app.get('/api/users/:userId/progress', async (req: Request, res: Response) => {
+app.get('/api/users/:userId/progress', async (req: ExtendedRequest, res: Response) => {
     try {
         const { userId } = req.params;
+        let progress: Progress[] = [];
+
+        try {
+            // Try to use database first
+            const result = await pool.query('SELECT * FROM progress WHERE user_id = $1', [userId]);
+            progress = result.rows;
+        } catch (dbError) {
+            req.logger?.warn('Database unavailable, getting progress from memory', { userId });
+            progress = inMemoryProgress.get(parseInt(userId, 10)) || [];
+        }
         
-        const result = await pool.query(
-            'SELECT * FROM progress WHERE user_id = $1',
-            [userId]
-        );
-        
-        res.json({ progress: result.rows });
+        res.json(progress); // Return the progress data directly as array
     } catch (error) {
-        console.error('Error getting progress:', error);
+        req.logger?.error('Error getting progress:', { error, userId: req.params.userId });
         res.status(500).json({ error: 'Internal server error' });
     }
 });
 
 // Sync progress with real-time notifications
-app.post('/api/users/:userId/progress/sync', async (req: Request, res: Response) => {
+app.post('/api/users/:userId/progress/sync', async (req: ExtendedRequest, res: Response) => {
     try {
         const { userId } = req.params;
-        const { progressData } = req.body;
-        
-        // Get username for notifications
-        const userResult = await pool.query('SELECT username FROM users WHERE id = $1', [userId]);
-        if (userResult.rows.length === 0) {
-            return res.status(404).json({ error: 'User not found' });
-        }
-        const username = userResult.rows[0].username;
-        
-        const client = await pool.connect();
-        
+        const { lesson_id, lesson_completed, completion_date } = req.body;
+        const userIdNum = parseInt(userId, 10);
+
+        const progressEntry: Partial<Progress> = {
+            user_id: userIdNum,
+            lesson_id,
+            lesson_completed,
+            completed_at: new Date(completion_date),
+            updated_at: new Date()
+        };
+
         try {
-            await client.query('BEGIN');
-            
-            for (const [lessonId, localProgress] of Object.entries(progressData)) {
-                const progress = localProgress as any; // Type assertion for now
-                
-                // Get existing progress
-                const existingResult = await client.query(
-                    'SELECT * FROM progress WHERE user_id = $1 AND lesson_id = $2',
-                    [userId, lessonId]
-                );
-                
-                if (existingResult.rows.length > 0) {
-                    // Merge progress (union of arrays, latest completion)
-                    const existing = existingResult.rows[0];
-                    const mergedVideos = [...new Set([...existing.videos_watched, ...progress.videosWatched])];
-                    const mergedQuizzes = [...new Set([...existing.quizzes_completed, ...progress.quizzesCompleted])];
-                    const lessonCompleted = existing.lesson_completed || progress.lessonCompleted;
-                    const completedAt = lessonCompleted ? 
-                        (progress.completedAt && new Date(progress.completedAt) > new Date(existing.completed_at) ? 
-                         progress.completedAt : existing.completed_at) : null;
-                    
-                    await client.query(
-                        `UPDATE progress SET 
-                         videos_watched = $3, 
-                         quizzes_completed = $4, 
-                         lesson_completed = $5, 
-                         completed_at = $6,
-                         updated_at = NOW()
-                         WHERE user_id = $1 AND lesson_id = $2`,
-                        [userId, lessonId, mergedVideos, mergedQuizzes, lessonCompleted, completedAt]
-                    );
-                } else {
-                    // Insert new progress
-                    await client.query(
-                        `INSERT INTO progress (user_id, lesson_id, videos_watched, quizzes_completed, lesson_completed, completed_at)
-                         VALUES ($1, $2, $3, $4, $5, $6)`,
-                        [userId, lessonId, progress.videosWatched, progress.quizzesCompleted, 
-                         progress.lessonCompleted, progress.completedAt]
-                    );
-                }
-            }
-            
-            // Update user's last sync time
-            await client.query('UPDATE users SET last_sync = NOW() WHERE id = $1', [userId]);
-            
-            await client.query('COMMIT');
-            
-            // Real-time notification
-            const notificationPayload = JSON.stringify({
-                username: username,
-                userId: userId,
-                progressData: progressData,
-                timestamp: new Date().toISOString()
-            });
-            await pool.query(`NOTIFY progress_updates, $1`, [notificationPayload]);
-            
-            // Return updated progress
-            const finalResult = await client.query(
-                'SELECT * FROM progress WHERE user_id = $1',
-                [userId]
+            // Database upsert logic
+            await pool.query(
+                `INSERT INTO progress (user_id, lesson_id, lesson_completed, completed_at, videos_watched, quizzes_completed)
+                 VALUES ($1, $2, $3, $4, '{}', '{}')
+                 ON CONFLICT (user_id, lesson_id) 
+                 DO UPDATE SET lesson_completed = $3, completed_at = $4, updated_at = NOW()`,
+                [userIdNum, lesson_id, lesson_completed, completion_date]
             );
+        } catch (dbError) {
+            req.logger?.warn('Database unavailable, syncing progress to memory', { userId });
+            let userProgress = inMemoryProgress.get(userIdNum) || [];
             
-            res.json({ success: true, progress: finalResult.rows });
-            
-        } catch (error) {
-            await client.query('ROLLBACK');
-            throw error;
-        } finally {
-            client.release();
+            const existingIndex = userProgress.findIndex(p => p.lesson_id === lesson_id);
+            if (existingIndex > -1) {
+                userProgress[existingIndex] = { ...userProgress[existingIndex], ...progressEntry } as Progress;
+            } else {
+                // Add default empty arrays for new entries
+                userProgress.push({ videos_watched: [], quizzes_completed: [], ...progressEntry } as Progress);
+            }
+            inMemoryProgress.set(userIdNum, userProgress);
         }
         
+        const updatedProgress = (inMemoryProgress.get(userIdNum) || []);
+        res.json({ success: true, progress: updatedProgress });
+
     } catch (error) {
-        console.error('Error syncing progress:', error);
+        req.logger?.error('Error syncing progress:', { error, userId: req.params.userId });
         res.status(500).json({ error: 'Internal server error' });
     }
 });
 
 // Get bookmarks
-app.get('/api/users/:userId/bookmarks', async (req: Request, res: Response) => {
+app.get('/api/users/:userId/bookmarks', async (req: ExtendedRequest, res: Response) => {
     try {
         const { userId } = req.params;
+        let bookmarks: Bookmark[] = [];
+
+        try {
+            const result = await pool.query('SELECT * FROM bookmarks WHERE user_id = $1', [userId]);
+            bookmarks = result.rows;
+        } catch (dbError) {
+            req.logger?.warn('Database unavailable, getting bookmarks from memory', { userId });
+            bookmarks = inMemoryBookmarks.get(parseInt(userId, 10)) || [];
+        }
         
-        const result = await pool.query(
-            'SELECT * FROM bookmarks WHERE user_id = $1 ORDER BY created_at DESC',
-            [userId]
-        );
-        
-        res.json({ bookmarks: result.rows });
+        res.json({ bookmarks });
     } catch (error) {
-        console.error('Error getting bookmarks:', error);
+        req.logger?.error('Error getting bookmarks:', { error, userId: req.params.userId });
         res.status(500).json({ error: 'Internal server error' });
     }
 });
 
-// Sync bookmarks with real-time notifications
-app.post('/api/users/:userId/bookmarks/sync', async (req: Request, res: Response) => {
+// Sync bookmarks
+app.post('/api/users/:userId/bookmarks/sync', async (req: ExtendedRequest, res: Response) => {
     try {
         const { userId } = req.params;
-        const { bookmarks } = req.body;
-        
-        // Get username for notifications
-        const userResult = await pool.query('SELECT username FROM users WHERE id = $1', [userId]);
-        if (userResult.rows.length === 0) {
-            return res.status(404).json({ error: 'User not found' });
-        }
-        const username = userResult.rows[0].username;
-        
-        const client = await pool.connect();
-        
+        const { bookmarks } = req.body; // Expects an array from the client
+        const userIdNum = parseInt(userId, 10);
+
         try {
+            const client = await pool.connect();
             await client.query('BEGIN');
-            
-            // Clear existing bookmarks (since we only allow one bookmark at a time)
-            await client.query('DELETE FROM bookmarks WHERE user_id = $1', [userId]);
-            
-            // Insert new bookmark if provided
+            await client.query('DELETE FROM bookmarks WHERE user_id = $1', [userIdNum]);
             if (bookmarks && bookmarks.length > 0) {
-                const bookmark = bookmarks[0]; // Only take the latest one
-                await client.query(
-                    `INSERT INTO bookmarks (user_id, bookmark_type, lesson_id, item_index, item_type, item_title)
-                     VALUES ($1, $2, $3, $4, $5, $6)`,
-                    [userId, bookmark.type, bookmark.lessonId, bookmark.index, bookmark.itemType, bookmark.title]
-                );
+                for (const bookmark of bookmarks) {
+                     await client.query(
+                        `INSERT INTO bookmarks (user_id, bookmark_type, lesson_id, item_index, item_type, item_title)
+                         VALUES ($1, $2, $3, $4, $5, $6)`,
+                        [userId, bookmark.bookmark_type, bookmark.lesson_id, bookmark.item_index, bookmark.item_type, bookmark.item_title]
+                    );
+                }
             }
-            
             await client.query('COMMIT');
-            
-            // Real-time notification
-            const bookmarkNotificationPayload = JSON.stringify({
-                username: username,
-                userId: userId,
-                bookmarks: bookmarks,
-                timestamp: new Date().toISOString()
-            });
-            await pool.query(`NOTIFY bookmark_updates, $1`, [bookmarkNotificationPayload]);
-            
-            // Return updated bookmarks
-            const result = await pool.query(
-                'SELECT * FROM bookmarks WHERE user_id = $1 ORDER BY created_at DESC',
-                [userId]
-            );
-            
-            res.json({ success: true, bookmarks: result.rows });
-            
-        } catch (error) {
-            await client.query('ROLLBACK');
-            throw error;
-        } finally {
             client.release();
+        } catch (dbError) {
+            req.logger?.warn('Database unavailable, syncing bookmarks to memory', { userId });
+            inMemoryBookmarks.set(userIdNum, bookmarks || []);
         }
-        
+
+        res.json({ success: true, bookmarks: inMemoryBookmarks.get(userIdNum) || [] });
+
     } catch (error) {
-        console.error('Error syncing bookmarks:', error);
+        req.logger?.error('Error syncing bookmarks:', { error, userId: req.params.userId });
         res.status(500).json({ error: 'Internal server error' });
     }
 });
