@@ -18,7 +18,7 @@ interface Progress {
   lesson_id: string;
   videos_watched: number[];
   quizzes_completed: number[];
-  lesson_completed: boolean;
+  lesson_completed?: boolean;
   completed_at?: Date;
   updated_at: Date;
 }
@@ -361,42 +361,95 @@ app.get('/api/users/:userId/progress', async (req: ExtendedRequest, res: Respons
 app.post('/api/users/:userId/progress/sync', async (req: ExtendedRequest, res: Response) => {
     try {
         const { userId } = req.params;
-        const { lesson_id, lesson_completed, completion_date } = req.body;
+        const { lesson_id, video_index, quiz_index, completed_at, lesson_completed } = req.body;
+        const { completion_date } = req.body; // legacy param
+        const completedAtIso = completed_at || completion_date;
+
+        if (!lesson_id) {
+            return res.status(400).json({ error: 'lesson_id is required' });
+        }
+
+        if (video_index === undefined && quiz_index === undefined && lesson_completed === undefined) {
+            return res.status(400).json({ error: 'Either video_index, quiz_index, or lesson_completed must be provided' });
+        }
+
         const userIdNum = parseInt(userId, 10);
 
-        const progressEntry: Partial<Progress> = {
-            user_id: userIdNum,
-            lesson_id,
-            lesson_completed,
-            completed_at: new Date(completion_date),
-            updated_at: new Date()
-        };
-
+        // ---------------------------
+        // Database first strategy
+        // ---------------------------
         try {
-            // Database upsert logic
+            // Fetch existing row (if any)
+            const selectResult = await pool.query(
+                'SELECT videos_watched, quizzes_completed FROM progress WHERE user_id = $1 AND lesson_id = $2',
+                [userIdNum, lesson_id]
+            );
+
+            let videosWatched: number[] = selectResult.rows[0]?.videos_watched || [];
+            let quizzesCompleted: number[] = selectResult.rows[0]?.quizzes_completed || [];
+
+            if (typeof video_index === 'number' && !videosWatched.includes(video_index)) {
+                videosWatched.push(video_index);
+            }
+
+            if (typeof quiz_index === 'number' && !quizzesCompleted.includes(quiz_index)) {
+                quizzesCompleted.push(quiz_index);
+            }
+
+            // Upsert logic
             await pool.query(
-                `INSERT INTO progress (user_id, lesson_id, lesson_completed, completed_at, videos_watched, quizzes_completed)
-                 VALUES ($1, $2, $3, $4, '{}', '{}')
-                 ON CONFLICT (user_id, lesson_id) 
-                 DO UPDATE SET lesson_completed = $3, completed_at = $4, updated_at = NOW()`,
-                [userIdNum, lesson_id, lesson_completed, completion_date]
+                `INSERT INTO progress (user_id, lesson_id, videos_watched, quizzes_completed, completed_at, lesson_completed)
+                 VALUES ($1, $2, $3, $4, $5, $6)
+                 ON CONFLICT (user_id, lesson_id)
+                 DO UPDATE SET videos_watched = EXCLUDED.videos_watched, quizzes_completed = EXCLUDED.quizzes_completed, lesson_completed = COALESCE(EXCLUDED.lesson_completed, progress.lesson_completed), completed_at = COALESCE(EXCLUDED.completed_at, progress.completed_at), updated_at = NOW()`,
+                [userIdNum, lesson_id, videosWatched, quizzesCompleted, completedAtIso ? new Date(completedAtIso) : null, lesson_completed]
             );
         } catch (dbError) {
+            // ---------------------------
+            // Fallback to in-memory
+            // ---------------------------
             req.logger?.warn('Database unavailable, syncing progress to memory', { userId });
             let userProgress = inMemoryProgress.get(userIdNum) || [];
-            
-            const existingIndex = userProgress.findIndex(p => p.lesson_id === lesson_id);
-            if (existingIndex > -1) {
-                userProgress[existingIndex] = { ...userProgress[existingIndex], ...progressEntry } as Progress;
+
+            const existing = userProgress.find(p => p.lesson_id === lesson_id);
+
+            if (existing) {
+                if (typeof video_index === 'number' && !existing.videos_watched.includes(video_index)) {
+                    existing.videos_watched.push(video_index);
+                }
+                if (typeof quiz_index === 'number' && !existing.quizzes_completed.includes(quiz_index)) {
+                    existing.quizzes_completed.push(quiz_index);
+                }
+                if (lesson_completed !== undefined) {
+                    existing.lesson_completed = lesson_completed;
+                }
+                existing.updated_at = new Date();
             } else {
-                // Add default empty arrays for new entries
-                userProgress.push({ videos_watched: [], quizzes_completed: [], ...progressEntry } as Progress);
+                userProgress.push({
+                    id: Date.now(), // temp id for in-memory
+                    user_id: userIdNum,
+                    lesson_id,
+                    videos_watched: typeof video_index === 'number' ? [video_index] : [],
+                    quizzes_completed: typeof quiz_index === 'number' ? [quiz_index] : [],
+                    lesson_completed: lesson_completed ?? false,
+                    completed_at: completedAtIso ? new Date(completedAtIso) : undefined,
+                    updated_at: new Date()
+                } as Progress);
             }
+
             inMemoryProgress.set(userIdNum, userProgress);
         }
-        
-        const updatedProgress = (inMemoryProgress.get(userIdNum) || []);
-        res.json({ success: true, progress: updatedProgress });
+
+        // For response, try DB first then memory
+        let latestProgress: Progress[] = [];
+        try {
+            const result = await pool.query('SELECT * FROM progress WHERE user_id = $1', [userIdNum]);
+            latestProgress = result.rows;
+        } catch {
+            latestProgress = inMemoryProgress.get(userIdNum) || [];
+        }
+
+        res.json({ success: true, progress: latestProgress });
 
     } catch (error) {
         req.logger?.error('Error syncing progress:', { error, userId: req.params.userId });

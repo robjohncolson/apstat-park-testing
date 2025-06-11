@@ -7,6 +7,8 @@ export interface Video {
   altUrl?: string;
   completed: boolean;
   completionDate: string | null;
+  /** Unique index within its lesson */
+  index?: number;
 }
 
 export interface Quiz {
@@ -15,12 +17,15 @@ export interface Quiz {
   quizId: string;
   completed: boolean;
   completionDate: string | null;
+  /** Unique index within its lesson */
+  index?: number;
 }
 
 export interface Blooket {
   url: string;
   completed: boolean;
   completionDate: string | null;
+  index?: number;
 }
 
 export interface Origami {
@@ -28,6 +33,7 @@ export interface Origami {
   description: string;
   videoUrl: string;
   reflection: string;
+  index?: number;
 }
 
 export interface Topic {
@@ -40,6 +46,7 @@ export interface Topic {
   quizzes: Quiz[];
   current: boolean;
   isCapstone?: boolean;
+  index?: number;
 }
 
 export interface Unit {
@@ -65,22 +72,23 @@ export const ALL_UNITS_DATA: Unit[] = [
                 url: "https://apclassroom.collegeboard.org/d/708w9bpk60?sui=33,1",
                 altUrl: "https://drive.google.com/file/d/1wEbNmDM4KBUWvvoRoQIgIYKYWxG3x6Cv/view?usp=drive_link",
                 completed: false,
-                completionDate: null
+                completionDate: null,
+                index: 0
             }
         ],
         blooket: {
             url: "https://dashboard.blooket.com/set/6847bb74fe947147cb3c05de",
             completed: false,
-            completionDate: null
+            completionDate: null,
         },
         origami: {
             name: "Paper Airplane (Classic Dart)",
             description: "Perfect starter - turn your notes into flight!",
             videoUrl: "https://www.youtube.com/watch?v=veyZNyurlwU",
-            reflection: "As your paper airplane soars, think about how data can help us explore and understand our world, just like this lesson introduced you to statistics."
+            reflection: "As your paper airplane soars, think about how data can help us explore and understand our world, just like this lesson introduced you to statistics.",
         },
         quizzes: [],
-        current: false
+        current: false,
     },
     {
         id: "1-2",
@@ -91,19 +99,20 @@ export const ALL_UNITS_DATA: Unit[] = [
                 url: "https://apclassroom.collegeboard.org/d/o7atnjt521?sui=33,1",
                 altUrl: "https://drive.google.com/file/d/1cJ3a5DSlZ0w3vta901HVyADfQ-qKVQcD/view?usp=drive_link",
                 completed: false,
-                completionDate: null
+                completionDate: null,
+                index: 1
             }
         ],
         blooket: {
             url: "https://dashboard.blooket.com/set/6847beef46fe0cb8b31e937f",
             completed: false,
-            completionDate: null
+            completionDate: null,
         },
         origami: {
             name: "Simple Boat",
             description: "Navigate the waters of variables with your paper boat",
             videoUrl: "https://www.youtube.com/watch?v=vNba3jbBSOw",
-            reflection: "Like variables that take different values, your boat can sail different paths. Reflect on how data varies and what that tells us."
+            reflection: "Like variables that take different values, your boat can sail different paths. Reflect on how data varies and what that tells us.",
         },
         quizzes: [
             {
@@ -111,10 +120,11 @@ export const ALL_UNITS_DATA: Unit[] = [
                 answersPdf: "pdfs/unit1/unit1_section1.2_answers.pdf",
                 quizId: "1-2_q1",
                 completed: false,
-                completionDate: null
+                completionDate: null,
+                index: 0
             }
         ],
-        current: false
+        current: false,
     },
     {
         id: "1-3",
@@ -125,19 +135,20 @@ export const ALL_UNITS_DATA: Unit[] = [
                 url: "https://apclassroom.collegeboard.org/d/5umo3jmlhy?sui=33,1",
                 altUrl: "https://drive.google.com/file/d/1F9_jLryrjHyXUN21eZmNHrTIGATBhhDw/view?usp=drive_link",
                 completed: false,
-                completionDate: null
+                completionDate: null,
+                index: 2
             }
         ],
         blooket: {
             url: "https://dashboard.blooket.com/set/6847c1aa46fe0cb8b31e93b4",
             completed: false,
-            completionDate: null
+            completionDate: null,
         },
         origami: {
             name: "Paper Hat",
             description: "Crown yourself with categorical thinking",
             videoUrl: "https://www.youtube.com/watch?v=2FHjUT8At0Y",
-            reflection: "Just as your hat sits in the category 'headwear,' think about how we organize data into meaningful categories and tables."
+            reflection: "Just as your hat sits in the category 'headwear,' think about how we organize data into meaningful categories and tables.",
         },
         quizzes: [
             {
@@ -145,10 +156,11 @@ export const ALL_UNITS_DATA: Unit[] = [
                 answersPdf: "pdfs/unit1/unit1_section1.3_answers.pdf",
                 quizId: "1-3_q1",
                 completed: false,
-                completionDate: null
+                completionDate: null,
+                index: 0
             }
         ],
-        current: false
+        current: false,
     },
     {
         id: "1-4",
@@ -159,25 +171,27 @@ export const ALL_UNITS_DATA: Unit[] = [
                 url: "https://apclassroom.collegeboard.org/d/nnomwwtzqc?sui=33,1",
                 altUrl: "https://drive.google.com/file/d/1vo3zsZu4wZAAkf-fPTuCmKXudgs0Gnl4/view?usp=drive_link",
                 completed: false,
-                completionDate: null
+                completionDate: null,
+                index: 3
             },
             {
                 url: "https://apclassroom.collegeboard.org/d/yd2t974opr?sui=33,1",
                 altUrl: "https://drive.google.com/file/d/1Hp7GWdTzjPQNvcAnnrrt_QYXV27gCEHh/view?usp=drive_link",
                 completed: false,
-                completionDate: null
+                completionDate: null,
+                index: 4
             }
         ],
         blooket: {
             url: "https://dashboard.blooket.com/set/6847c3b146fe0cb8b31e93d9",
             completed: false,
-            completionDate: null
+            completionDate: null,
         },
         origami: {
             name: "Fortune Teller (Cootie Catcher)",
             description: "Interactive origami for graphical exploration",
             videoUrl: "https://www.youtube.com/watch?v=FlX35Tg-lDk",
-            reflection: "As you play with your fortune teller, think about how graphs help us visualize and interact with categorical data patterns."
+            reflection: "As you play with your fortune teller, think about how graphs help us visualize and interact with categorical data patterns.",
         },
         quizzes: [
             {
@@ -185,10 +199,11 @@ export const ALL_UNITS_DATA: Unit[] = [
                 answersPdf: "pdfs/unit1/unit1_section1.4_answers.pdf",
                 quizId: "1-4_q1",
                 completed: false,
-                completionDate: null
+                completionDate: null,
+                index: 0
             }
         ],
-        current: false
+        current: false,
     },
     {
         id: "1-5",
@@ -199,19 +214,20 @@ export const ALL_UNITS_DATA: Unit[] = [
                 url: "https://apclassroom.collegeboard.org/d/o142s0yu7e?sui=33,1",
                 altUrl: "https://drive.google.com/file/d/1jlopxNducZRaqXtU9c2NvXxq_tGK90ue/view?usp=drive_link",
                 completed: false,
-                completionDate: null
+                completionDate: null,
+                index: 5
             }
         ],
         blooket: {
             url: "https://dashboard.blooket.com/set/6847c89646fe0cb8b31e9430",
             completed: false,
-            completionDate: null
+            completionDate: null,
         },
         origami: {
             name: "Paper Cup",
             description: "A practical fold for holding quantitative insights",
             videoUrl: "https://www.youtube.com/watch?v=2FHjUT8At0Y",
-            reflection: "Your paper cup can hold water just as graphs hold data points. Consider how different graph types can contain and display quantitative information in meaningful ways."
+            reflection: "Your paper cup can hold water just as graphs hold data points. Consider how different graph types can contain and display quantitative information in meaningful ways.",
         },
         quizzes: [
             {
@@ -219,10 +235,11 @@ export const ALL_UNITS_DATA: Unit[] = [
                 answersPdf: "pdfs/unit1/unit1_section1.5_answers.pdf",
                 quizId: "1-5_q1",
                 completed: false,
-                completionDate: null
+                completionDate: null,
+                index: 0
             }
         ],
-        current: false
+        current: false,
     },
     {
         id: "1-6",
@@ -233,19 +250,20 @@ export const ALL_UNITS_DATA: Unit[] = [
                 url: "https://apclassroom.collegeboard.org/d/q0wwgrkzqb?sui=33,1",
                 altUrl: "https://drive.google.com/file/d/1oWGqzk4meQ6HuXE-mTDHMStp-qOGDUZJ/view?usp=drive_link",
                 completed: false,
-                completionDate: null
+                completionDate: null,
+                index: 6
             }
         ],
         blooket: {
             url: "https://dashboard.blooket.com/set/6847c9c646fe0cb8b31e9442",
             completed: false,
-            completionDate: null
+            completionDate: null,
         },
         origami: {
             name: "Simple Flower (Tulip)",
             description: "Beauty blooms in data distributions",
             videoUrl: "https://www.youtube.com/watch?v=QPKBF-D1wNk",
-            reflection: "Like a tulip that shows the beautiful distribution of petals, data distributions reveal the elegant patterns hidden within numbers."
+            reflection: "Like a tulip that shows the beautiful distribution of petals, data distributions reveal the elegant patterns hidden within numbers.",
         },
         quizzes: [
             {
@@ -253,10 +271,11 @@ export const ALL_UNITS_DATA: Unit[] = [
                 answersPdf: "pdfs/unit1/unit1_section1.6_answers.pdf",
                 quizId: "1-6_q1",
                 completed: false,
-                completionDate: null
+                completionDate: null,
+                index: 0
             }
         ],
-        current: false
+        current: false,
     }
     // Note: This is a sample with just Unit 1, Topic 1.1-1.6
     // The full data from the original file would include all 9 units
@@ -305,4 +324,27 @@ export function findTopicById(unitId: string, topicId: string, data: Unit[] = AL
 
 export function getAllTopics(data: Unit[] = ALL_UNITS_DATA): Topic[] {
     return data.flatMap(unit => unit.topics);
-} 
+}
+
+// -------------------------------
+// Utility: Ensure every video and quiz has a unique index within its lesson
+// -------------------------------
+function initializeIndexes(): void {
+  ALL_UNITS_DATA.forEach((unit) => {
+    unit.topics.forEach((topic) => {
+      topic.videos.forEach((video, idx) => {
+        if (video.index === undefined) {
+          (video as Video).index = idx;
+        }
+      });
+      topic.quizzes.forEach((quiz, idx) => {
+        if (quiz.index === undefined) {
+          (quiz as Quiz).index = idx;
+        }
+      });
+    });
+  });
+}
+
+// Execute at module load
+initializeIndexes(); 

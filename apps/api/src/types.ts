@@ -14,7 +14,11 @@ export interface Progress {
   lesson_id: string;
   videos_watched: number[];
   quizzes_completed: number[];
-  lesson_completed: boolean;
+  /**
+   * @deprecated Lesson-level completion is now tracked via videos_watched & quizzes_completed.
+   * This flag remains optional for backward compatibility and will be removed in a future version.
+   */
+  lesson_completed?: boolean;
   completed_at?: Date;
   updated_at: Date;
 }
@@ -63,14 +67,18 @@ export interface CreateUserRequest {
   username?: string;
 }
 
+/**
+ * Request payload for syncing granular progress updates.
+ * Client should send either a video_index or quiz_index for the given lesson.
+ */
 export interface SyncProgressRequest {
-  progress: Array<{
-    lesson_id: string;
-    videos_watched: number[];
-    quizzes_completed: number[];
-    lesson_completed: boolean;
-    completed_at?: string;
-  }>;
+  lesson_id: string;
+  /** Index of the video that was just watched (0-based). */
+  video_index?: number;
+  /** Index of the quiz that was just completed (0-based). */
+  quiz_index?: number;
+  /** Optional ISO date string when the item was completed. */
+  completed_at?: string;
 }
 
 export interface SyncBookmarksRequest {
