@@ -1,7 +1,15 @@
 import { useAuth } from '../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 
 export function DashboardPage() {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    // Force navigation to login page
+    navigate('/', { replace: true });
+  };
 
   return (
     <div className="dashboard-page">
@@ -10,7 +18,7 @@ export function DashboardPage() {
           <h1>🏞️ APStat Park Dashboard</h1>
           <p>Welcome back, <strong>{user?.username}</strong>!</p>
         </div>
-        <button onClick={logout} className="logout-btn">
+        <button onClick={handleLogout} className="logout-btn">
           Logout
         </button>
       </header>
