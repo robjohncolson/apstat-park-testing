@@ -89,9 +89,12 @@ export function useAuth() {
       const data = await response.json();
       const user = data.user;
 
+      console.log('Login successful, user data:', user);
+
       // Save to localStorage
       localStorage.setItem('apstat-user', JSON.stringify(user));
 
+      console.log('Setting authenticated state to true');
       setAuthState({
         user,
         isLoading: false,
