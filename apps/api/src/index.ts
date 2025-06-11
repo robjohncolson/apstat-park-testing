@@ -241,6 +241,10 @@ io.on('connection', (socket: CustomSocket) => {
 app.use(cors());
 app.use(express.json());
 
+// In-memory storage fallback when database is not available
+const inMemoryUsers = new Map<string, User>();
+let nextUserId = 1;
+
 // Username generation lists
 const adjectives = [
     'happy', 'cheerful', 'wise', 'brave', 'calm', 'bright', 'clever', 'gentle', 
@@ -283,21 +287,45 @@ app.post('/api/users/get-or-create', async (req: ExtendedRequest, res: Response)
             return res.status(400).json({ error: 'Valid username is required' });
         }
 
-        // Try to find existing user
-        let result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
-        
-        if (result.rows.length === 0) {
-            // Create new user
-            result = await pool.query(
-                'INSERT INTO users (username) VALUES ($1) RETURNING *',
-                [username]
-            );
-            req.logger?.info('Created new user', { username });
-        } else {
-            req.logger?.info('Found existing user', { username });
+        let user: User;
+
+        try {
+            // Try to use database first
+            let result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
+            
+            if (result.rows.length === 0) {
+                // Create new user
+                result = await pool.query(
+                    'INSERT INTO users (username) VALUES ($1) RETURNING *',
+                    [username]
+                );
+                req.logger?.info('Created new user in database', { username });
+            } else {
+                req.logger?.info('Found existing user in database', { username });
+            }
+
+            user = result.rows[0];
+        } catch (dbError) {
+            // Fallback to in-memory storage if database is not available
+            req.logger?.warn('Database unavailable, using in-memory storage', { username });
+            
+            // Check if user exists in memory
+            if (inMemoryUsers.has(username)) {
+                user = inMemoryUsers.get(username)!;
+                req.logger?.info('Found existing user in memory', { username });
+            } else {
+                // Create new user in memory
+                user = {
+                    id: nextUserId++,
+                    username: username,
+                    created_at: new Date(),
+                    last_sync: new Date()
+                };
+                inMemoryUsers.set(username, user);
+                req.logger?.info('Created new user in memory', { username });
+            }
         }
 
-        const user: User = result.rows[0];
         res.json({ user });
     } catch (error) {
         req.logger?.error('Error in get-or-create user', error);
