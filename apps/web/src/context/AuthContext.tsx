@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 
 interface User {
   id: number;
@@ -85,23 +85,35 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // Generate username if not provided
       const finalUsername = username || await generateUsername();
 
-      // Create or get user from API
-      const response = await fetch('http://localhost:3001/api/users/get-or-create', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username: finalUsername }),
-      });
+      // Try to create user via API, but fall back to offline mode if it fails
+      let user;
+      try {
+        const response = await fetch('http://localhost:3001/api/users/get-or-create', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ username: finalUsername }),
+        });
 
-      if (!response.ok) {
-        throw new Error('Failed to create user');
+        if (response.ok) {
+          const data = await response.json();
+          user = data.user;
+          console.log('Login successful with API, user data:', user);
+        } else {
+          throw new Error('API call failed');
+        }
+      } catch (apiError) {
+        // Fallback to offline mode
+        console.log('API unavailable, using offline mode');
+        user = {
+          id: Math.floor(Math.random() * 10000),
+          username: finalUsername,
+          created_at: new Date().toISOString(),
+          last_sync: new Date().toISOString(),
+        };
+        console.log('Login successful in offline mode, user data:', user);
       }
-
-      const data = await response.json();
-      const user = data.user;
-
-      console.log('Login successful, user data:', user);
 
       // Save to localStorage
       localStorage.setItem('apstat-user', JSON.stringify(user));
