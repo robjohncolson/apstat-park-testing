@@ -33,15 +33,37 @@ export function LeaderboardPage() {
           throw new Error(data.error || 'An unknown error occurred.');
         }
       } catch (err: any) {
-        setError(err.message);
-        console.error(err);
+        console.warn('API not available - showing offline leaderboard');
+        // Offline fallback - show mock data or empty state
+        const mockLeaderboard: LeaderboardEntry[] = [
+          { rank: 1, username: 'StudyBot', completed_videos: 7, completed_quizzes: 5, total_completed: 12 },
+          { rank: 2, username: 'MathWhiz', completed_videos: 6, completed_quizzes: 4, total_completed: 10 },
+          { rank: 3, username: 'StatGuru', completed_videos: 5, completed_quizzes: 3, total_completed: 8 },
+        ];
+        
+        // If current user exists, add them to the mock leaderboard
+        if (user?.username) {
+          const userInList = mockLeaderboard.find(entry => entry.username === user.username);
+          if (!userInList) {
+            mockLeaderboard.push({
+              rank: mockLeaderboard.length + 1,
+              username: user.username,
+              completed_videos: 2,
+              completed_quizzes: 1,
+              total_completed: 3
+            });
+          }
+        }
+        
+        setLeaderboard(mockLeaderboard);
+        setError('API unavailable - showing sample data');
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchLeaderboard();
-  }, []);
+  }, [user?.username]);
 
   const userRank = leaderboard.find(entry => entry.username === user?.username);
 
@@ -54,7 +76,12 @@ export function LeaderboardPage() {
       </header>
 
       {isLoading && <div className="loading-spinner">Loading leaderboard...</div>}
-      {error && <div className="error-message">Error: {error}</div>}
+      {error && (
+        <div className={`error-message ${error.includes('sample data') ? 'offline-notice' : ''}`}>
+          {error.includes('sample data') ? '📱 ' : '⚠️ '}
+          {error}
+        </div>
+      )}
 
       {!isLoading && !error && (
         <div className="leaderboard-container">

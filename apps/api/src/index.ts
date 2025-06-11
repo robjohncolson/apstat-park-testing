@@ -552,20 +552,19 @@ app.get('/api/leaderboard', async (req: ExtendedRequest, res: Response) => {
       } catch (dbError) {
           req.logger?.warn('Database unavailable, building leaderboard from memory', { dbError });
           // Fallback to in-memory
-          const userScores: { [userId: string]: { username: string, videos: number, quizzes: number } } = {};
+          const userScores: { [userId: number]: { username: string, videos: number, quizzes: number } } = {};
 
           for (const [userId, progresses] of inMemoryProgress.entries()) {
               const user = inMemoryUsers.get(userId);
               if (!user) continue;
 
-              const userIdStr = String(userId);
-              if (!userScores[userIdStr]) {
-                  userScores[userIdStr] = { username: user.username, videos: 0, quizzes: 0 };
+              if (!userScores[userId]) {
+                  userScores[userId] = { username: user.username, videos: 0, quizzes: 0 };
               }
               
               for (const p of progresses) {
-                  userScores[userIdStr].videos += p.videos_watched?.length || 0;
-                  userScores[userIdStr].quizzes += p.quizzes_completed?.length || 0;
+                  userScores[userId].videos += p.videos_watched?.length || 0;
+                  userScores[userId].quizzes += p.quizzes_completed?.length || 0;
               }
           }
           
