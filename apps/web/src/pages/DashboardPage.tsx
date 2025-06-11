@@ -7,8 +7,8 @@ export function DashboardPage() {
 
   const handleLogout = () => {
     logout();
-    // Force navigation to login page
-    navigate('/', { replace: true });
+    // Force navigation to login page using full page reload
+    window.location.href = '/';
   };
 
   return (
