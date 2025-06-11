@@ -4,9 +4,11 @@
   "description": "API server for APStat Park student progress tracking",
   "main": "dist/index.js",
   "scripts": {
-    "dev": "nodemon src/index.js",
+    "dev": "nodemon src/index.ts",
+    "dev:js": "nodemon src/index.js",
     "build": "tsc",
-    "start": "node src/index.js",
+    "start": "node dist/index.js",
+    "start:dev": "npm run build && npm start",
     "lint": "eslint src --ext .ts",
     "type-check": "tsc --noEmit"
   },

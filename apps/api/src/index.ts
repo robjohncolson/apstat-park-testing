@@ -1,14 +1,68 @@
-// TypeScript conversion in progress - temporarily using require for dependencies
-const express = require('express');
-const { Pool } = require('pg');
-const cors = require('cors');
-const { createServer } = require('http');
-const { Server } = require('socket.io');
-// TODO: Uncomment when dependencies are installed
-// import { logger } from './logger.js';
+import express, { Request, Response, NextFunction } from 'express';
+import { Pool, Client } from 'pg';
+import cors from 'cors';
+import { createServer } from 'http';
+import { Server, Socket } from 'socket.io';
 
-// Simple console logger for now
-const logger = {
+// Types
+interface User {
+  id: number;
+  username: string;
+  created_at: Date;
+  last_sync: Date;
+}
+
+interface Progress {
+  id: number;
+  user_id: number;
+  lesson_id: string;
+  videos_watched: number[];
+  quizzes_completed: number[];
+  lesson_completed: boolean;
+  completed_at?: Date;
+  updated_at: Date;
+}
+
+interface Bookmark {
+  id: number;
+  user_id: number;
+  bookmark_type: string;
+  lesson_id: string;
+  item_index?: number;
+  item_type?: string;
+  item_title?: string;
+  created_at: Date;
+}
+
+interface GoldStar {
+  id: number;
+  user_id: number;
+  total_stars: number;
+  current_streak: number;
+  last_lesson_time?: Date;
+  last_target_hours?: number;
+  updated_at: Date;
+}
+
+interface Logger {
+  info: (msg: string, context?: any) => void;
+  warn: (msg: string, context?: any) => void;
+  error: (msg: string, context?: any) => void;
+  debug: (msg: string, context?: any) => void;
+  child: (context: any) => Logger;
+}
+
+interface ExtendedRequest extends Request {
+  requestId?: string;
+  logger?: Logger;
+}
+
+interface CustomSocket extends Socket {
+  username?: string;
+}
+
+// Simple structured logger
+const logger: Logger = {
   info: (msg: string, context?: any) => console.log(`[INFO] ${msg}`, context || ''),
   warn: (msg: string, context?: any) => console.warn(`[WARN] ${msg}`, context || ''),
   error: (msg: string, context?: any) => console.error(`[ERROR] ${msg}`, context || ''),
@@ -31,43 +85,28 @@ const io = new Server(server, {
 const port = process.env.PORT || 3000;
 
 // Add request ID middleware for better debugging
-app.use((req: Request, res: Response, next: NextFunction) => {
-    const requestId = Math.random().toString(36).substring(2, 15);
-    req.requestId = requestId;
-    res.setHeader('X-Request-ID', requestId);
-    
-    const childLogger = logger.child({ requestId });
-    req.logger = childLogger;
-    
-    childLogger.info(`${req.method} ${req.path}`, {
-        method: req.method,
-        path: req.path,
-        userAgent: req.get('User-Agent'),
-        ip: req.ip
-    });
-    
-    next();
+app.use((req: ExtendedRequest, res: Response, next: NextFunction) => {
+  const requestId = Math.random().toString(36).substring(2, 15);
+  req.requestId = requestId;
+  res.setHeader('X-Request-ID', requestId);
+  
+  const childLogger = logger.child({ requestId });
+  req.logger = childLogger;
+  
+  childLogger.info(`${req.method} ${req.path}`, {
+    method: req.method,
+    path: req.path,
+    userAgent: req.get('User-Agent'),
+    ip: req.ip
+  });
+  
+  next();
 });
-
-// Extend Express Request interface
-declare global {
-    namespace Express {
-        interface Request {
-            requestId: string;
-            logger: typeof logger;
-        }
-    }
-}
-
-// Socket interface extension
-interface SocketWithUser extends Socket {
-    username?: string;
-}
 
 // Database connections
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
 // Dedicated listener connection for PostgreSQL LISTEN/NOTIFY
@@ -77,7 +116,7 @@ let notificationListener: Pool | null = null;
 const connectedUsers = new Map<string, Set<string>>(); // username -> Set of socket.ids
 
 // Initialize PostgreSQL notification listener
-async function initializeNotificationListener() {
+async function initializeNotificationListener(): Promise<void> {
     try {
         notificationListener = new Pool({
             connectionString: process.env.DATABASE_URL,
@@ -95,6 +134,7 @@ async function initializeNotificationListener() {
         
         client.on('notification', (msg) => {
             try {
+                if (!msg.payload) return;
                 const data = JSON.parse(msg.payload);
                 console.log(`📡 Real-time notification: ${msg.channel}`, data);
                 
@@ -116,7 +156,7 @@ async function initializeNotificationListener() {
 }
 
 // Broadcast message to all of a user's connected devices
-function broadcastToUser(username, message) {
+function broadcastToUser(username: string, message: any): void {
     const userSockets = connectedUsers.get(username);
     if (userSockets && userSockets.size > 0) {
         userSockets.forEach(socketId => {
@@ -127,36 +167,36 @@ function broadcastToUser(username, message) {
 }
 
 // WebSocket connection handling
-io.on('connection', (socket) => {
+io.on('connection', (socket: CustomSocket) => {
     console.log('🔌 Client connected:', socket.id);
     
     // User joins with their username
-    socket.on('join', ({ username }) => {
+    socket.on('join', ({ username }: { username: string }) => {
         if (!username) return;
         
         // Track this socket for the user
         if (!connectedUsers.has(username)) {
             connectedUsers.set(username, new Set());
         }
-        connectedUsers.get(username).add(socket.id);
+        connectedUsers.get(username)!.add(socket.id);
         
         // Store username on socket for cleanup
         socket.username = username;
         
-        console.log(`👤 User ${username} connected (${connectedUsers.get(username).size} devices)`);
+        console.log(`👤 User ${username} connected (${connectedUsers.get(username)!.size} devices)`);
         
         // Notify other devices that a new device connected
         broadcastToUser(username, {
             type: 'device_connected',
             data: { 
                 socketId: socket.id,
-                deviceCount: connectedUsers.get(username).size
+                deviceCount: connectedUsers.get(username)!.size
             }
         });
     });
     
     // Handle user activity (opening lessons, etc.)
-    socket.on('user_activity', async (activity) => {
+    socket.on('user_activity', async (activity: any) => {
         if (!socket.username) return;
         
         try {
@@ -166,7 +206,7 @@ io.on('connection', (socket) => {
                 activity: activity,
                 timestamp: new Date().toISOString()
             });
-            await pool.query(`NOTIFY user_activity, '${activityPayload.replace(/'/g, "''")}'`);
+            await pool.query(`NOTIFY user_activity, $1`, [activityPayload]);
         } catch (error) {
             console.error('Error notifying user activity:', error);
         }
@@ -217,104 +257,56 @@ const plants = [
     'ivy', 'rose', 'lily', 'iris', 'mint', 'basil', 'lavender', 'bamboo'
 ];
 
-const foods = [
-    'mango', 'honey', 'berry', 'apple', 'lemon', 'peach', 'cocoa', 'mint', 
-    'vanilla', 'caramel', 'cinnamon', 'ginger', 'nutmeg', 'papaya', 'kiwi'
-];
-
-// Generate random username
-function generateUsername() {
-    const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
-    const nouns = [...animals, ...plants, ...foods];
-    const noun = nouns[Math.floor(Math.random() * nouns.length)];
-    const num = Math.floor(Math.random() * 100);
-    return `${adj}${noun}${num}`;
+function generateUsername(): string {
+    const adjective = adjectives[Math.floor(Math.random() * adjectives.length)];
+    const nature = Math.random() < 0.5 ? 
+        animals[Math.floor(Math.random() * animals.length)] : 
+        plants[Math.floor(Math.random() * plants.length)];
+    const number = Math.floor(Math.random() * 100);
+    return `${adjective}${nature}${number}`;
 }
 
+// API Routes
+
+// Generate username
+app.get('/api/generate-username', (req: Request, res: Response) => {
+    const username = generateUsername();
+    res.json({ username });
+});
+
 // Get or create user
-app.post('/api/users/get-or-create', async (req, res) => {
+app.post('/api/users/get-or-create', async (req: ExtendedRequest, res: Response) => {
     try {
-        console.log('Creating user request received');
         const { username } = req.body;
         
-        if (username) {
-            console.log('Checking for existing username:', username);
-            
-            // Validate custom username
-            if (!/^[a-zA-Z0-9]+$/.test(username)) {
-                return res.status(400).json({ error: 'Username can only contain letters and numbers' });
-            }
-            
-            if (username.length < 3 || username.length > 20) {
-                return res.status(400).json({ error: 'Username must be 3-20 characters long' });
-            }
-            
-            // Try to get existing user
-            const result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
-            if (result.rows.length > 0) {
-                console.log('Found existing user');
-                return res.json({ user: result.rows[0] });
-            }
-            
-            // Create user with the custom username if it doesn't exist
-            console.log('Creating new user with custom username:', username);
-            try {
-                const insertResult = await pool.query(
-                    'INSERT INTO users (username) VALUES ($1) RETURNING *',
-                    [username]
-                );
-                console.log('User created successfully with custom username:', insertResult.rows[0]);
-                return res.json({ user: insertResult.rows[0] });
-            } catch (dbError) {
-                if (dbError.code === '23505') { // Unique constraint violation
-                    return res.status(409).json({ error: 'Username already taken' });
-                }
-                throw dbError;
-            }
+        if (!username || typeof username !== 'string') {
+            return res.status(400).json({ error: 'Valid username is required' });
         }
+
+        // Try to find existing user
+        let result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
         
-        // Generate new random username if none provided
-        let newUsername;
-        let attempts = 0;
-        
-        do {
-            newUsername = generateUsername();
-            attempts++;
-            
-            // Check if this generated username already exists
-            const existingResult = await pool.query('SELECT * FROM users WHERE username = $1', [newUsername]);
-            if (existingResult.rows.length === 0) {
-                break; // Username is available
-            }
-        } while (attempts < 10); // Prevent infinite loop
-        
-        console.log('Creating new user with generated username:', newUsername);
-        
-        // Create new user
-        const insertResult = await pool.query(
-            'INSERT INTO users (username) VALUES ($1) RETURNING *',
-            [newUsername]
-        );
-        
-        console.log('User created successfully:', insertResult.rows[0]);
-        res.json({ user: insertResult.rows[0] });
+        if (result.rows.length === 0) {
+            // Create new user
+            result = await pool.query(
+                'INSERT INTO users (username) VALUES ($1) RETURNING *',
+                [username]
+            );
+            req.logger?.info('Created new user', { username });
+        } else {
+            req.logger?.info('Found existing user', { username });
+        }
+
+        const user: User = result.rows[0];
+        res.json({ user });
     } catch (error) {
-        console.error('Error in get-or-create user:', error);
-        console.error('Error details:', {
-            message: error.message,
-            code: error.code,
-            detail: error.detail
-        });
-        res.status(500).json({ 
-            error: error.message,
-            code: error.code,
-            detail: error.detail
-        });
+        req.logger?.error('Error in get-or-create user', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 
 // Get user progress
-app.get('/api/users/:userId/progress', async (req, res) => {
+app.get('/api/users/:userId/progress', async (req: Request, res: Response) => {
     try {
         const { userId } = req.params;
         
@@ -326,12 +318,12 @@ app.get('/api/users/:userId/progress', async (req, res) => {
         res.json({ progress: result.rows });
     } catch (error) {
         console.error('Error getting progress:', error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 
-// Sync progress - NOW WITH REAL-TIME NOTIFICATIONS!
-app.post('/api/users/:userId/progress/sync', async (req, res) => {
+// Sync progress with real-time notifications
+app.post('/api/users/:userId/progress/sync', async (req: Request, res: Response) => {
     try {
         const { userId } = req.params;
         const { progressData } = req.body;
@@ -349,6 +341,8 @@ app.post('/api/users/:userId/progress/sync', async (req, res) => {
             await client.query('BEGIN');
             
             for (const [lessonId, localProgress] of Object.entries(progressData)) {
+                const progress = localProgress as any; // Type assertion for now
+                
                 // Get existing progress
                 const existingResult = await client.query(
                     'SELECT * FROM progress WHERE user_id = $1 AND lesson_id = $2',
@@ -358,12 +352,12 @@ app.post('/api/users/:userId/progress/sync', async (req, res) => {
                 if (existingResult.rows.length > 0) {
                     // Merge progress (union of arrays, latest completion)
                     const existing = existingResult.rows[0];
-                    const mergedVideos = [...new Set([...existing.videos_watched, ...localProgress.videosWatched])];
-                    const mergedQuizzes = [...new Set([...existing.quizzes_completed, ...localProgress.quizzesCompleted])];
-                    const lessonCompleted = existing.lesson_completed || localProgress.lessonCompleted;
+                    const mergedVideos = [...new Set([...existing.videos_watched, ...progress.videosWatched])];
+                    const mergedQuizzes = [...new Set([...existing.quizzes_completed, ...progress.quizzesCompleted])];
+                    const lessonCompleted = existing.lesson_completed || progress.lessonCompleted;
                     const completedAt = lessonCompleted ? 
-                        (localProgress.completedAt && new Date(localProgress.completedAt) > new Date(existing.completed_at) ? 
-                         localProgress.completedAt : existing.completed_at) : null;
+                        (progress.completedAt && new Date(progress.completedAt) > new Date(existing.completed_at) ? 
+                         progress.completedAt : existing.completed_at) : null;
                     
                     await client.query(
                         `UPDATE progress SET 
@@ -380,8 +374,8 @@ app.post('/api/users/:userId/progress/sync', async (req, res) => {
                     await client.query(
                         `INSERT INTO progress (user_id, lesson_id, videos_watched, quizzes_completed, lesson_completed, completed_at)
                          VALUES ($1, $2, $3, $4, $5, $6)`,
-                        [userId, lessonId, localProgress.videosWatched, localProgress.quizzesCompleted, 
-                         localProgress.lessonCompleted, localProgress.completedAt]
+                        [userId, lessonId, progress.videosWatched, progress.quizzesCompleted, 
+                         progress.lessonCompleted, progress.completedAt]
                     );
                 }
             }
@@ -391,14 +385,14 @@ app.post('/api/users/:userId/progress/sync', async (req, res) => {
             
             await client.query('COMMIT');
             
-            // 🚀 REAL-TIME MAGIC: Notify other devices about progress update
+            // Real-time notification
             const notificationPayload = JSON.stringify({
                 username: username,
                 userId: userId,
                 progressData: progressData,
                 timestamp: new Date().toISOString()
             });
-            await pool.query(`NOTIFY progress_updates, '${notificationPayload.replace(/'/g, "''")}'`);
+            await pool.query(`NOTIFY progress_updates, $1`, [notificationPayload]);
             
             // Return updated progress
             const finalResult = await client.query(
@@ -417,12 +411,12 @@ app.post('/api/users/:userId/progress/sync', async (req, res) => {
         
     } catch (error) {
         console.error('Error syncing progress:', error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 
 // Get bookmarks
-app.get('/api/users/:userId/bookmarks', async (req, res) => {
+app.get('/api/users/:userId/bookmarks', async (req: Request, res: Response) => {
     try {
         const { userId } = req.params;
         
@@ -434,12 +428,12 @@ app.get('/api/users/:userId/bookmarks', async (req, res) => {
         res.json({ bookmarks: result.rows });
     } catch (error) {
         console.error('Error getting bookmarks:', error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 
-// Sync bookmarks - NOW WITH REAL-TIME NOTIFICATIONS!
-app.post('/api/users/:userId/bookmarks/sync', async (req, res) => {
+// Sync bookmarks with real-time notifications
+app.post('/api/users/:userId/bookmarks/sync', async (req: Request, res: Response) => {
     try {
         const { userId } = req.params;
         const { bookmarks } = req.body;
@@ -471,14 +465,14 @@ app.post('/api/users/:userId/bookmarks/sync', async (req, res) => {
             
             await client.query('COMMIT');
             
-            // 🚀 REAL-TIME MAGIC: Notify other devices about bookmark update
+            // Real-time notification
             const bookmarkNotificationPayload = JSON.stringify({
                 username: username,
                 userId: userId,
                 bookmarks: bookmarks,
                 timestamp: new Date().toISOString()
             });
-            await pool.query(`NOTIFY bookmark_updates, '${bookmarkNotificationPayload.replace(/'/g, "''")}'`);
+            await pool.query(`NOTIFY bookmark_updates, $1`, [bookmarkNotificationPayload]);
             
             // Return updated bookmarks
             const result = await pool.query(
@@ -497,12 +491,12 @@ app.post('/api/users/:userId/bookmarks/sync', async (req, res) => {
         
     } catch (error) {
         console.error('Error syncing bookmarks:', error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 
 // Health check
-app.get('/api/health', (req, res) => {
+app.get('/api/health', (req: Request, res: Response) => {
     res.json({ 
         status: 'OK', 
         timestamp: new Date().toISOString(),
@@ -512,320 +506,21 @@ app.get('/api/health', (req, res) => {
 });
 
 // Real-time status endpoint
-app.get('/api/realtime/status', (req, res) => {
-    const userStats = {};
+app.get('/api/realtime/status', (req: Request, res: Response) => {
+    const userStats: { [key: string]: number } = {};
     connectedUsers.forEach((sockets, username) => {
         userStats[username] = sockets.size;
     });
     
     res.json({
-        totalUsers: connectedUsers.size,
+        connectedUsers: connectedUsers.size,
         totalConnections: Array.from(connectedUsers.values()).reduce((sum, sockets) => sum + sockets.size, 0),
-        userConnections: userStats
+        userStats
     });
 });
 
-// 🌟 GOLD STAR SYSTEM ENDPOINTS 🌟
-
-// Calculate gold star when lesson is completed
-app.post('/api/users/:userId/gold-star', async (req, res) => {
-    try {
-        const { userId } = req.params;
-        const { lessonId, completionTime } = req.body;
-        
-        if (!lessonId || !completionTime) {
-            return res.status(400).json({ error: 'Missing lessonId or completionTime' });
-        }
-        
-        // Get user info
-        const userResult = await pool.query('SELECT username FROM users WHERE id = $1', [userId]);
-        if (userResult.rows.length === 0) {
-            return res.status(404).json({ error: 'User not found' });
-        }
-        const username = userResult.rows[0].username;
-        
-        // Get user's completed lessons count
-        const progressResult = await pool.query(
-            'SELECT COUNT(*) as completed_count FROM progress WHERE user_id = $1 AND lesson_completed = true',
-            [userId]
-        );
-        const completedCount = parseInt(progressResult.rows[0].completed_count);
-        
-        // Calculate dynamic target time
-        const apExamDate = new Date('2026-05-07T00:00:00Z');
-        const completionDateTime = new Date(completionTime);
-        const msUntilExam = apExamDate.getTime() - completionDateTime.getTime();
-        const daysUntilExam = msUntilExam / (24 * 60 * 60 * 1000);
-        
-        const totalLessons = 89; // Could be made dynamic
-        const remainingLessons = totalLessons - completedCount;
-        const hoursPerLesson = remainingLessons > 0 ? (daysUntilExam * 24) / remainingLessons : 0;
-        
-        // Get user's gold star data
-        let goldStarResult = await pool.query(
-            'SELECT * FROM gold_stars WHERE user_id = $1',
-            [userId]
-        );
-        
-        let currentStreak = 0;
-        let totalStars = 0;
-        let lastLessonTime = null;
-        
-        if (goldStarResult.rows.length > 0) {
-            const goldStarData = goldStarResult.rows[0];
-            currentStreak = goldStarData.current_streak || 0;
-            totalStars = goldStarData.total_stars || 0;
-            lastLessonTime = goldStarData.last_lesson_time;
-        }
-        
-        // Calculate time since last lesson (if any)
-        let timeSinceLastLesson = null;
-        let earnedGoldStar = false;
-        let targetHours = hoursPerLesson;
-        
-        if (lastLessonTime) {
-            const lastTime = new Date(lastLessonTime);
-            timeSinceLastLesson = (completionDateTime - lastTime) / (1000 * 60 * 60); // hours
-            
-            // Check if they earned a gold star (completed within target window)
-            earnedGoldStar = timeSinceLastLesson <= targetHours;
-        } else {
-            // First lesson - calculate initial target based on total time divided by total lessons
-            const initialHoursPerLesson = (daysUntilExam * 24) / totalLessons;
-            targetHours = initialHoursPerLesson;
-            earnedGoldStar = true; // First lesson completion is always a gold star!
-        }
-        
-        if (earnedGoldStar) {
-            currentStreak += 1;
-            totalStars += 1;
-        } else {
-            currentStreak = 0; // Reset streak
-        }
-        
-        // Update or insert gold star data
-        await pool.query(`
-            INSERT INTO gold_stars (user_id, total_stars, current_streak, last_lesson_time, last_target_hours, updated_at)
-            VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)
-            ON CONFLICT (user_id) 
-            DO UPDATE SET 
-                total_stars = $2,
-                current_streak = $3,
-                last_lesson_time = $4,
-                last_target_hours = $5,
-                updated_at = CURRENT_TIMESTAMP
-        `, [userId, totalStars, currentStreak, completionTime, targetHours]);
-        
-        // Calculate next lesson target
-        const nextRemainingLessons = remainingLessons - 1;
-        const nextTargetHours = nextRemainingLessons > 0 ? 
-            (daysUntilExam * 24) / nextRemainingLessons : 0;
-        
-        const response = {
-            earnedGoldStar,
-            currentStreak,
-            totalStars,
-            timeSinceLastLesson,
-            currentTargetHours: targetHours,
-            nextTargetHours,
-            remainingLessons: nextRemainingLessons,
-            daysUntilExam: Math.round(daysUntilExam * 10) / 10
-        };
-        
-        // 🚀 REAL-TIME LEADERBOARD UPDATE
-        const leaderboardPayload = JSON.stringify({ 
-            username, 
-            userId,
-            action: 'gold_star_update',
-            data: response,
-            timestamp: new Date().toISOString() 
-        });
-        await pool.query(`NOTIFY leaderboard_updates, '${leaderboardPayload.replace(/'/g, "''")}'`);
-        
-        res.json(response);
-        
-    } catch (error) {
-        console.error('Gold star calculation error:', error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
-
-// Get leaderboard
-app.get('/api/leaderboard', async (req, res) => {
-    try {
-        const result = await pool.query(`
-            SELECT u.username, g.total_stars, g.current_streak, g.last_lesson_time, g.updated_at
-            FROM gold_stars g
-            JOIN users u ON g.user_id = u.id
-            ORDER BY g.current_streak DESC, g.total_stars DESC, g.updated_at DESC
-            LIMIT 20
-        `);
-        
-        const leaderboard = result.rows.map(row => ({
-            username: row.username,
-            totalStars: row.total_stars || 0,
-            currentStreak: row.current_streak || 0,
-            lastActive: row.updated_at
-        }));
-        
-        res.json({ leaderboard });
-        
-    } catch (error) {
-        console.error('Leaderboard error:', error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
-
-// Get user's gold star stats
-app.get('/api/users/:userId/gold-stars', async (req, res) => {
-    try {
-        const { userId } = req.params;
-        
-        const result = await pool.query(
-            'SELECT * FROM gold_stars WHERE user_id = $1',
-            [userId]
-        );
-        
-        if (result.rows.length === 0) {
-            return res.json({
-                totalStars: 0,
-                currentStreak: 0,
-                lastTargetHours: null,
-                nextTargetHours: null
-            });
-        }
-        
-        const data = result.rows[0];
-        
-        // Calculate next target hours
-        const progressResult = await pool.query(
-            'SELECT COUNT(*) as completed_count FROM progress WHERE user_id = $1 AND lesson_completed = true',
-            [userId]
-        );
-        const completedCount = parseInt(progressResult.rows[0].completed_count);
-        
-        const apExamDate = new Date('2026-05-07T00:00:00Z');
-        const now = new Date();
-        const msUntilExam = apExamDate.getTime() - now.getTime();
-        const daysUntilExam = msUntilExam / (24 * 60 * 60 * 1000);
-        
-        const totalLessons = 89;
-        const remainingLessons = totalLessons - completedCount;
-        const nextTargetHours = remainingLessons > 0 ? (daysUntilExam * 24) / remainingLessons : 0;
-        
-        res.json({
-            totalStars: data.total_stars || 0,
-            currentStreak: data.current_streak || 0,
-            lastTargetHours: data.last_target_hours,
-            nextTargetHours: Math.round(nextTargetHours * 10) / 10,
-            remainingLessons,
-            daysUntilExam: Math.round(daysUntilExam * 10) / 10
-        });
-        
-    } catch (error) {
-        console.error('Gold star stats error:', error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
-
-// 🚨 DANGER ZONE: Reset endpoints for testing
-// TODO: Remove in production or add proper authentication
-
-// Reset all progress and gold stars (for testing only)
-app.post('/api/reset-all-data', async (req, res) => {
-    try {
-        // Only allow in development or with specific key
-        const { resetKey } = req.body;
-        if (resetKey !== 'RESET_TESTING_2024') {
-            return res.status(403).json({ error: 'Invalid reset key' });
-        }
-        
-        const client = await pool.connect();
-        
-        try {
-            await client.query('BEGIN');
-            
-            // Delete all progress data
-            const progressResult = await client.query('DELETE FROM progress');
-            console.log(`🗑️ Deleted ${progressResult.rowCount} progress records`);
-            
-            // Delete all gold star data
-            const goldStarResult = await client.query('DELETE FROM gold_stars');
-            console.log(`🗑️ Deleted ${goldStarResult.rowCount} gold star records`);
-            
-            // Reset user sync times
-            await client.query('UPDATE users SET last_sync = NOW()');
-            
-            await client.query('COMMIT');
-            
-            res.json({ 
-                success: true, 
-                message: 'All progress and gold star data has been reset',
-                deletedProgress: progressResult.rowCount,
-                deletedGoldStars: goldStarResult.rowCount
-            });
-            
-        } catch (error) {
-            await client.query('ROLLBACK');
-            throw error;
-        } finally {
-            client.release();
-        }
-        
-    } catch (error) {
-        console.error('Reset error:', error);
-        res.status(500).json({ error: 'Reset failed: ' + error.message });
-    }
-});
-
-// Reset specific user's data
-app.post('/api/users/:userId/reset', async (req, res) => {
-    try {
-        const { userId } = req.params;
-        const { resetKey } = req.body;
-        
-        if (resetKey !== 'RESET_TESTING_2024') {
-            return res.status(403).json({ error: 'Invalid reset key' });
-        }
-        
-        const client = await pool.connect();
-        
-        try {
-            await client.query('BEGIN');
-            
-            // Delete user's progress
-            const progressResult = await client.query('DELETE FROM progress WHERE user_id = $1', [userId]);
-            
-            // Delete user's gold stars
-            const goldStarResult = await client.query('DELETE FROM gold_stars WHERE user_id = $1', [userId]);
-            
-            // Reset user sync time
-            await client.query('UPDATE users SET last_sync = NOW() WHERE id = $1', [userId]);
-            
-            await client.query('COMMIT');
-            
-            res.json({ 
-                success: true, 
-                message: 'User data has been reset',
-                deletedProgress: progressResult.rowCount,
-                deletedGoldStars: goldStarResult.rowCount
-            });
-            
-        } catch (error) {
-            await client.query('ROLLBACK');
-            throw error;
-        } finally {
-            client.release();
-        }
-        
-    } catch (error) {
-        console.error('User reset error:', error);
-        res.status(500).json({ error: 'User reset failed: ' + error.message });
-    }
-});
-
 // Initialize database tables on startup
-async function initializeDatabase() {
+async function initializeDatabase(): Promise<void> {
     try {
         console.log('Initializing database...');
         
@@ -918,4 +613,4 @@ server.listen(port, () => {
     console.log(`Database URL: ${process.env.DATABASE_URL ? 'Set from environment' : 'Using fallback'}`);
 });
 
-module.exports = app; 
+export default app; 
