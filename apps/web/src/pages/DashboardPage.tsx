@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { ALL_UNITS_DATA, getTotalItemCounts } from '../data/allUnitsData';
 import { PaceTracker } from '../components/PaceTracker';
 import type { Unit, Topic } from '../data/allUnitsData';
+import './DashboardPage.css';
 
 interface UserProgress {
   lesson_id: string;
@@ -97,23 +98,19 @@ export function DashboardPage() {
   const stats = calculateStats();
 
   return (
-    <div className="dashboard-page">
+    <div className="dashboard-container">
       <header className="dashboard-header">
         <div className="user-info">
-          <h1>🏞️ APStat Park Dashboard</h1>
-          <p>Welcome back, <strong>{user?.username}</strong>!</p>
-          {isOfflineMode && (
-            <div className="offline-indicator">
-              📱 Offline Mode - Progress saved locally
-            </div>
-          )}
+          <h1>Welcome, {user?.username || 'Explorer'}!</h1>
+          <p>Your journey to mastering AP Statistics starts here.</p>
         </div>
-        <button onClick={handleLogout} className="logout-btn">
-          Logout
-        </button>
+        <div className="header-actions">
+          <Link to="/leaderboard" className="leaderboard-link">🏆 Leaderboard</Link>
+          <button onClick={handleLogout} className="logout-button">Logout</button>
+        </div>
       </header>
 
-      <main className="dashboard-main">
+      <main>
         <section className="dashboard-overview">
           <h2>Your Learning Journey</h2>
           

@@ -121,11 +121,15 @@ export interface SyncResponse {
   message?: string;
 }
 
+/**
+ * Represents a single user's entry on the leaderboard.
+ */
 export interface LeaderboardEntry {
+  rank: number;
   username: string;
-  totalStars: number;
-  currentStreak: number;
-  lastActive: Date;
+  completed_videos: number;
+  completed_quizzes: number;
+  total_completed: number;
 }
 
 export interface GoldStarResponse {

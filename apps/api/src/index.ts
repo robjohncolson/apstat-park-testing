@@ -3,37 +3,15 @@ import { Pool, Client } from 'pg';
 import cors from 'cors';
 import { createServer } from 'http';
 import { Server, Socket } from 'socket.io';
+import {
+  User,
+  Progress,
+  Bookmark,
+  SyncProgressRequest,
+  LeaderboardEntry,
+} from './types';
 
 // Types
-interface User {
-  id: number;
-  username: string;
-  created_at: Date;
-  last_sync: Date;
-}
-
-interface Progress {
-  id: number;
-  user_id: number;
-  lesson_id: string;
-  videos_watched: number[];
-  quizzes_completed: number[];
-  lesson_completed?: boolean;
-  completed_at?: Date;
-  updated_at: Date;
-}
-
-interface Bookmark {
-  id: number;
-  user_id: number;
-  bookmark_type: string;
-  lesson_id: string;
-  item_index?: number;
-  item_type?: string;
-  item_title?: string;
-  created_at: Date;
-}
-
 interface GoldStar {
   id: number;
   user_id: number;
@@ -535,6 +513,83 @@ app.get('/api/realtime/status', (req: Request, res: Response) => {
         totalConnections: Array.from(connectedUsers.values()).reduce((sum, sockets) => sum + sockets.size, 0),
         userStats
     });
+});
+
+// GET /api/leaderboard - Get top users by progress
+app.get('/api/leaderboard', async (req: ExtendedRequest, res: Response) => {
+  try {
+      let leaderboard: LeaderboardEntry[] = [];
+      
+      // Database first strategy
+      try {
+          const query = `
+              SELECT
+                  u.username,
+                  SUM(COALESCE(array_length(p.videos_watched, 1), 0)) as completed_videos,
+                  SUM(COALESCE(array_length(p.quizzes_completed, 1), 0)) as completed_quizzes,
+                  (SUM(COALESCE(array_length(p.videos_watched, 1), 0)) + SUM(COALESCE(array_length(p.quizzes_completed, 1), 0))) as total_completed
+              FROM
+                  progress p
+              JOIN
+                  users u ON p.user_id = u.id
+              GROUP BY
+                  u.id, u.username
+              ORDER BY
+                  total_completed DESC,
+                  u.username ASC
+              LIMIT 20;
+          `;
+          const result = await pool.query(query);
+          
+          leaderboard = result.rows.map((row, index) => ({
+              rank: index + 1,
+              username: row.username,
+              completed_videos: parseInt(row.completed_videos, 10),
+              completed_quizzes: parseInt(row.completed_quizzes, 10),
+              total_completed: parseInt(row.total_completed, 10),
+          }));
+
+      } catch (dbError) {
+          req.logger?.warn('Database unavailable, building leaderboard from memory', { dbError });
+          // Fallback to in-memory
+          const userScores: { [userId: string]: { username: string, videos: number, quizzes: number } } = {};
+
+          for (const [userId, progresses] of inMemoryProgress.entries()) {
+              const user = inMemoryUsers.get(userId);
+              if (!user) continue;
+
+              const userIdStr = String(userId);
+              if (!userScores[userIdStr]) {
+                  userScores[userIdStr] = { username: user.username, videos: 0, quizzes: 0 };
+              }
+              
+              for (const p of progresses) {
+                  userScores[userIdStr].videos += p.videos_watched?.length || 0;
+                  userScores[userIdStr].quizzes += p.quizzes_completed?.length || 0;
+              }
+          }
+          
+          leaderboard = Object.values(userScores)
+              .map(score => ({
+                  username: score.username,
+                  completed_videos: score.videos,
+                  completed_quizzes: score.quizzes,
+                  total_completed: score.videos + score.quizzes,
+              }))
+              .sort((a, b) => b.total_completed - a.total_completed || a.username.localeCompare(b.username))
+              .slice(0, 20)
+              .map((score, index) => ({
+                  rank: index + 1,
+                  ...score,
+              }));
+      }
+
+      res.json({ success: true, leaderboard });
+
+  } catch (error) {
+      req.logger?.error('Error fetching leaderboard:', { error });
+      res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 // Initialize database tables on startup
