@@ -167,10 +167,8 @@ export function formatTimeRemaining(metrics: PaceMetrics): string {
     return `🔥 ${metrics.daysUntilExam} days until exam!`;
   }
   
-  if (metrics.daysUntilExam <= 30) {
-    return `📅 ${metrics.daysUntilExam} days until exam`;
-  }
-  
+  // --- START OF CORRECTED LOGIC ---
+  // For anything > 7 days, show weeks and days format
   const weeks = Math.floor(metrics.daysUntilExam / 7);
   const remainingDays = metrics.daysUntilExam % 7;
   
@@ -179,6 +177,7 @@ export function formatTimeRemaining(metrics: PaceMetrics): string {
   }
   
   return `📅 ${weeks}w ${remainingDays}d until exam`;
+  // --- END OF CORRECTED LOGIC ---
 }
 
 /**

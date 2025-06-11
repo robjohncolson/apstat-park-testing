@@ -72,14 +72,14 @@ describe('timeTracking Utilities', () => {
   });
 
   describe('formatTimeRemaining', () => {
-    it('should format weeks and days correctly for > 30 days', () => {
-      const metrics = { daysUntilExam: 37 } as any; // 5 weeks and 2 days
-      expect(formatTimeRemaining(metrics)).toBe('📅 5w 2d until exam');
+    it('should format weeks and days correctly', () => {
+      const metrics = { daysUntilExam: 23 } as any; // 3 weeks and 2 days
+      expect(formatTimeRemaining(metrics)).toBe('📅 3w 2d until exam');
     });
 
-    it('should format exact weeks correctly for > 30 days', () => {
-      const metrics = { daysUntilExam: 35 } as any; // Exactly 5 weeks
-      expect(formatTimeRemaining(metrics)).toBe('📅 5 weeks until exam');
+    it('should format exact weeks correctly', () => {
+      const metrics = { daysUntilExam: 14 } as any; // Exactly 2 weeks
+      expect(formatTimeRemaining(metrics)).toBe('📅 2 weeks until exam');
     });
 
     it('should show a special message for the last 7 days', () => {
@@ -97,9 +97,9 @@ describe('timeTracking Utilities', () => {
       expect(formatTimeRemaining(metrics)).toBe('🎓 Exam day!');
     });
 
-    it('should show days only for 30 days or less but more than 7', () => {
+    it('should format weeks properly for 15 days (2w 1d)', () => {
       const metrics = { daysUntilExam: 15 } as any;
-      expect(formatTimeRemaining(metrics)).toBe('📅 15 days until exam');
+      expect(formatTimeRemaining(metrics)).toBe('📅 2w 1d until exam');
     });
   });
 
