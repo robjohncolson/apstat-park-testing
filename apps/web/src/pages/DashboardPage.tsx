@@ -2,6 +2,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { ALL_UNITS_DATA, getTotalItemCounts } from '../data/allUnitsData';
+import { PaceTracker } from '../components/PaceTracker';
 import type { Unit, Topic } from '../data/allUnitsData';
 
 interface UserProgress {
@@ -103,6 +104,12 @@ export function DashboardPage() {
       <main className="dashboard-main">
         <section className="dashboard-overview">
           <h2>Your Learning Journey</h2>
+          
+          {/* Pace Tracker */}
+          <PaceTracker 
+            completedLessons={stats.completedLessons}
+            totalLessons={stats.totalLessons}
+          />
           
           {/* Progress Overview */}
           <div className="progress-overview">
