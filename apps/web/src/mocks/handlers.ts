@@ -23,4 +23,34 @@ export const handlers = [
     };
     return HttpResponse.json({ success: true, user: mockUser });
   }),
+
+  // Mock for leaderboard data
+  http.get('/api/leaderboard', () => {
+    return HttpResponse.json({
+      success: true,
+      leaderboard: [
+        {
+          rank: 1,
+          username: 'MSW-Champion',
+          completed_videos: 15,
+          completed_quizzes: 12,
+          total_completed: 27
+        },
+        {
+          rank: 2,
+          username: 'TestMaster',
+          completed_videos: 10,
+          completed_quizzes: 8,
+          total_completed: 18
+        },
+        {
+          rank: 3,
+          username: 'mocked-user-123',
+          completed_videos: 5,
+          completed_quizzes: 4,
+          total_completed: 9
+        }
+      ]
+    });
+  }),
 ]; 
