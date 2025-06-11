@@ -7,6 +7,8 @@ import type { Unit, Topic } from '../data/allUnitsData';
 
 interface UserProgress {
   lesson_id: string;
+  videos_watched?: number[];
+  quizzes_completed?: number[];
   lesson_completed: boolean;
   completion_date?: string;
 }
@@ -65,6 +67,16 @@ export function DashboardPage() {
   // Helper function to check if a lesson is completed
   const isLessonCompleted = (topicId: string): boolean => {
     return progress.some(p => p.lesson_id === topicId && p.lesson_completed);
+  };
+
+  // Helper function to get granular progress for a topic
+  const getTopicProgress = (topicId: string) => {
+    const topicProgress = progress.find(p => p.lesson_id === topicId);
+    return {
+      videosWatched: topicProgress?.videos_watched || [],
+      quizzesCompleted: topicProgress?.quizzes_completed || [],
+      isCompleted: topicProgress?.lesson_completed || false
+    };
   };
 
   // Calculate overall progress statistics
@@ -129,6 +141,7 @@ export function DashboardPage() {
                 key={unit.unitId} 
                 unit={unit} 
                 isLessonCompleted={isLessonCompleted}
+                getTopicProgress={getTopicProgress}
               />
             ))}
           </div>
@@ -163,9 +176,14 @@ export function DashboardPage() {
 interface UnitAccordionProps {
   unit: Unit;
   isLessonCompleted: (topicId: string) => boolean;
+  getTopicProgress: (topicId: string) => {
+    videosWatched: number[];
+    quizzesCompleted: number[];
+    isCompleted: boolean;
+  };
 }
 
-function UnitAccordion({ unit, isLessonCompleted }: UnitAccordionProps) {
+function UnitAccordion({ unit, isLessonCompleted, getTopicProgress }: UnitAccordionProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   
   const completedTopics = unit.topics.filter(topic => isLessonCompleted(topic.id)).length;
@@ -210,7 +228,7 @@ function UnitAccordion({ unit, isLessonCompleted }: UnitAccordionProps) {
               key={topic.id}
               topic={topic}
               unitId={unit.unitId}
-              isCompleted={isLessonCompleted(topic.id)}
+              progress={getTopicProgress(topic.id)}
             />
           ))}
         </div>
@@ -223,15 +241,21 @@ function UnitAccordion({ unit, isLessonCompleted }: UnitAccordionProps) {
 interface TopicItemProps {
   topic: Topic;
   unitId: string;
-  isCompleted: boolean;
+  progress: {
+    videosWatched: number[];
+    quizzesCompleted: number[];
+    isCompleted: boolean;
+  };
 }
 
-function TopicItem({ topic, unitId, isCompleted }: TopicItemProps) {
+function TopicItem({ topic, unitId, progress }: TopicItemProps) {
   const videosCount = topic.videos.length;
   const quizzesCount = topic.quizzes.length;
+  const videosWatchedCount = progress.videosWatched.length;
+  const quizzesCompletedCount = progress.quizzesCompleted.length;
 
   return (
-    <div className={`topic-item ${isCompleted ? 'completed' : ''}`}>
+    <div className={`topic-item ${progress.isCompleted ? 'completed' : ''}`}>
       <Link 
         to={`/unit/${unitId}/lesson/${topic.id}`}
         className="topic-link"
@@ -239,12 +263,20 @@ function TopicItem({ topic, unitId, isCompleted }: TopicItemProps) {
         <div className="topic-content">
           <div className="topic-header">
             <h4>{topic.name}</h4>
-            {isCompleted && <span className="completed-checkmark">✅</span>}
+            {progress.isCompleted && <span className="completed-checkmark">✅</span>}
           </div>
           <p className="topic-description">{topic.description}</p>
           <div className="topic-meta">
-            {videosCount > 0 && <span className="content-count">🎥 {videosCount} video{videosCount !== 1 ? 's' : ''}</span>}
-            {quizzesCount > 0 && <span className="content-count">📝 {quizzesCount} quiz{quizzesCount !== 1 ? 'zes' : ''}</span>}
+            {videosCount > 0 && (
+              <span className="content-count">
+                📺 {videosWatchedCount}/{videosCount} video{videosCount !== 1 ? 's' : ''}
+              </span>
+            )}
+            {quizzesCount > 0 && (
+              <span className="content-count">
+                📝 {quizzesCompletedCount}/{quizzesCount} quiz{quizzesCount !== 1 ? 'zes' : ''}
+              </span>
+            )}
             {topic.origami && <span className="content-count">🎨 Origami</span>}
             {topic.blooket.url && <span className="content-count">🎮 Blooket</span>}
           </div>

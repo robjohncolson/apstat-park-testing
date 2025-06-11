@@ -1,17 +1,27 @@
 import { useParams, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useBookmark } from '../context/BookmarkContext';
 import { findTopicById, findUnitById } from '../data/allUnitsData';
 import type { Topic, Unit } from '../data/allUnitsData';
+
+// Interface for granular progress tracking
+interface LessonProgress {
+  lesson_id: string;
+  videos_watched: number[];
+  quizzes_completed: number[];
+  lesson_completed?: boolean;
+}
 
 export function LessonPage() {
   const { unitId, lessonId } = useParams<{ unitId: string; lessonId: string }>();
   const { user } = useAuth();
+  const { setBookmark, isItemBookmarked } = useBookmark();
   const [topic, setTopic] = useState<Topic | null>(null);
   const [unit, setUnit] = useState<Unit | null>(null);
-  const [isCompleted, setIsCompleted] = useState(false);
+  const [progress, setProgress] = useState<LessonProgress | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isUpdating, setIsUpdating] = useState(false);
+  const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set());
 
   // Load lesson data and progress
   useEffect(() => {
@@ -35,18 +45,47 @@ export function LessonPage() {
         if (response.ok) {
           const progressData = await response.json();
           const lessonProgress = progressData.find(
-            (p: any) => p.lesson_id === lessonId && p.lesson_completed
+            (p: any) => p.lesson_id === lessonId
           );
-          setIsCompleted(!!lessonProgress);
+          if (lessonProgress) {
+            setProgress({
+              lesson_id: lessonProgress.lesson_id,
+              videos_watched: lessonProgress.videos_watched || [],
+              quizzes_completed: lessonProgress.quizzes_completed || [],
+              lesson_completed: lessonProgress.lesson_completed || false,
+            });
+          } else {
+            // No progress yet, initialize empty state
+            setProgress({
+              lesson_id: lessonId,
+              videos_watched: [],
+              quizzes_completed: [],
+              lesson_completed: false,
+            });
+          }
         } else {
           // Offline mode - check localStorage
           const offlineProgress = localStorage.getItem(`progress_${user.id}`);
           if (offlineProgress) {
             const progressData = JSON.parse(offlineProgress);
             const lessonProgress = progressData.find(
-              (p: any) => p.lesson_id === lessonId && p.lesson_completed
+              (p: any) => p.lesson_id === lessonId
             );
-            setIsCompleted(!!lessonProgress);
+            if (lessonProgress) {
+              setProgress({
+                lesson_id: lessonProgress.lesson_id,
+                videos_watched: lessonProgress.videos_watched || [],
+                quizzes_completed: lessonProgress.quizzes_completed || [],
+                lesson_completed: lessonProgress.lesson_completed || false,
+              });
+            } else {
+              setProgress({
+                lesson_id: lessonId,
+                videos_watched: [],
+                quizzes_completed: [],
+                lesson_completed: false,
+              });
+            }
           }
         }
       } catch (error) {
@@ -56,9 +95,31 @@ export function LessonPage() {
         if (offlineProgress) {
           const progressData = JSON.parse(offlineProgress);
           const lessonProgress = progressData.find(
-            (p: any) => p.lesson_id === lessonId && p.lesson_completed
+            (p: any) => p.lesson_id === lessonId
           );
-          setIsCompleted(!!lessonProgress);
+          if (lessonProgress) {
+            setProgress({
+              lesson_id: lessonProgress.lesson_id,
+              videos_watched: lessonProgress.videos_watched || [],
+              quizzes_completed: lessonProgress.quizzes_completed || [],
+              lesson_completed: lessonProgress.lesson_completed || false,
+            });
+          } else {
+            setProgress({
+              lesson_id: lessonId,
+              videos_watched: [],
+              quizzes_completed: [],
+              lesson_completed: false,
+            });
+          }
+        } else {
+          // No offline data, initialize empty
+          setProgress({
+            lesson_id: lessonId,
+            videos_watched: [],
+            quizzes_completed: [],
+            lesson_completed: false,
+          });
         }
       } finally {
         setIsLoading(false);
@@ -70,13 +131,18 @@ export function LessonPage() {
 
   // Handle marking lesson as complete
   const handleMarkComplete = async () => {
-    if (!user?.id || !lessonId || isUpdating) return;
+    if (!user?.id || !lessonId || updatingItems.size > 0) return;
 
-    setIsUpdating(true);
+    setUpdatingItems(new Set([lessonId]));
     
     // Optimistic update - immediately update UI
-    const previousState = isCompleted;
-    setIsCompleted(true);
+    const previousState = progress;
+    setProgress(prev => ({
+      lesson_id: lessonId!,
+      videos_watched: prev?.videos_watched || [],
+      quizzes_completed: prev?.quizzes_completed || [],
+      lesson_completed: true,
+    }));
 
     const progressEntry = {
       lesson_id: lessonId,
@@ -123,8 +189,170 @@ export function LessonPage() {
       localStorage.setItem(`progress_${user.id}`, JSON.stringify(progressData));
       console.log('Progress saved locally for offline use');
     } finally {
-      setIsUpdating(false);
+      setUpdatingItems(new Set());
     }
+  };
+
+  // Handle marking individual video as watched
+  const handleVideoWatched = async (videoIndex: number) => {
+    if (!user?.id || !lessonId || !progress || updatingItems.has(`video-${videoIndex}`)) return;
+
+    const itemKey = `video-${videoIndex}`;
+    setUpdatingItems(prev => new Set([...prev, itemKey]));
+
+    // Optimistic update
+    const previousProgress = progress;
+    if (!progress.videos_watched.includes(videoIndex)) {
+      setProgress(prev => prev ? {
+        ...prev,
+        videos_watched: [...prev.videos_watched, videoIndex]
+      } : null);
+    }
+
+    try {
+      const response = await fetch(`http://localhost:3001/api/users/${user.id}/progress/sync`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          lesson_id: lessonId,
+          video_index: videoIndex,
+          completed_at: new Date().toISOString(),
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to sync video progress');
+      }
+
+      console.log(`Video ${videoIndex} marked as watched for lesson ${lessonId}`);
+    } catch (error) {
+      console.warn('API not available - saving video progress locally');
+      
+      // Fallback to localStorage
+      const offlineProgress = localStorage.getItem(`progress_${user.id}`);
+      let progressData = offlineProgress ? JSON.parse(offlineProgress) : [];
+      
+      const existingIndex = progressData.findIndex((p: any) => p.lesson_id === lessonId);
+      if (existingIndex >= 0) {
+        const existing = progressData[existingIndex];
+        if (!existing.videos_watched.includes(videoIndex)) {
+          existing.videos_watched.push(videoIndex);
+        }
+      } else {
+        progressData.push({
+          lesson_id: lessonId,
+          videos_watched: [videoIndex],
+          quizzes_completed: [],
+          lesson_completed: false,
+        });
+      }
+      
+      localStorage.setItem(`progress_${user.id}`, JSON.stringify(progressData));
+    } finally {
+      setUpdatingItems(prev => {
+        const next = new Set(prev);
+        next.delete(itemKey);
+        return next;
+      });
+    }
+  };
+
+  // Handle marking individual quiz as complete
+  const handleQuizCompleted = async (quizIndex: number) => {
+    if (!user?.id || !lessonId || !progress || updatingItems.has(`quiz-${quizIndex}`)) return;
+
+    const itemKey = `quiz-${quizIndex}`;
+    setUpdatingItems(prev => new Set([...prev, itemKey]));
+
+    // Optimistic update
+    const previousProgress = progress;
+    if (!progress.quizzes_completed.includes(quizIndex)) {
+      setProgress(prev => prev ? {
+        ...prev,
+        quizzes_completed: [...prev.quizzes_completed, quizIndex]
+      } : null);
+    }
+
+    try {
+      const response = await fetch(`http://localhost:3001/api/users/${user.id}/progress/sync`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          lesson_id: lessonId,
+          quiz_index: quizIndex,
+          completed_at: new Date().toISOString(),
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to sync quiz progress');
+      }
+
+      console.log(`Quiz ${quizIndex} marked as completed for lesson ${lessonId}`);
+    } catch (error) {
+      console.warn('API not available - saving quiz progress locally');
+      
+      // Fallback to localStorage
+      const offlineProgress = localStorage.getItem(`progress_${user.id}`);
+      let progressData = offlineProgress ? JSON.parse(offlineProgress) : [];
+      
+      const existingIndex = progressData.findIndex((p: any) => p.lesson_id === lessonId);
+      if (existingIndex >= 0) {
+        const existing = progressData[existingIndex];
+        if (!existing.quizzes_completed.includes(quizIndex)) {
+          existing.quizzes_completed.push(quizIndex);
+        }
+      } else {
+        progressData.push({
+          lesson_id: lessonId,
+          videos_watched: [],
+          quizzes_completed: [quizIndex],
+          lesson_completed: false,
+        });
+      }
+      
+      localStorage.setItem(`progress_${user.id}`, JSON.stringify(progressData));
+    } finally {
+      setUpdatingItems(prev => {
+        const next = new Set(prev);
+        next.delete(itemKey);
+        return next;
+      });
+    }
+  };
+
+  // Handle bookmarking a video
+  const handleBookmarkVideo = async (videoIndex: number) => {
+    if (!topic || !unit) return;
+    
+    await setBookmark({
+      lesson_id: lessonId!,
+      lesson_title: topic.name,
+      unit_id: unitId!,
+      bookmark_type: 'item',
+      item_index: videoIndex,
+      item_type: 'video',
+      item_title: `${topic.name} - Video ${videoIndex + 1}`,
+    });
+  };
+
+  // Handle bookmarking a quiz
+  const handleBookmarkQuiz = async (quizIndex: number) => {
+    if (!topic || !unit) return;
+    
+    await setBookmark({
+      lesson_id: lessonId!,
+      lesson_title: topic.name,
+      unit_id: unitId!,
+      bookmark_type: 'item',
+      item_index: quizIndex,
+      item_type: 'quiz',
+      item_title: `${topic.name} - Quiz ${quizIndex + 1}`,
+    });
   };
 
   if (isLoading) {
@@ -162,16 +390,16 @@ export function LessonPage() {
         <div className="lesson-info">
           <h1>{topic.name}</h1>
           <p>{unit.displayName}</p>
-          {isCompleted && <span className="completion-badge">✅ Completed</span>}
+          {progress?.lesson_completed && <span className="completion-badge">✅ Completed</span>}
         </div>
         <div className="lesson-actions">
-          {!isCompleted && (
+          {!progress?.lesson_completed && (
             <button 
               className="complete-btn"
               onClick={handleMarkComplete}
-              disabled={isUpdating}
+              disabled={updatingItems.size > 0}
             >
-              {isUpdating ? 'Saving...' : 'Mark as Complete'}
+              {updatingItems.size > 0 ? 'Saving...' : 'Mark as Complete'}
             </button>
           )}
         </div>
@@ -188,9 +416,36 @@ export function LessonPage() {
             <section className="content-section">
               <h3>📺 Videos</h3>
               <div className="videos-grid">
-                {topic.videos.map((video, index) => (
+                {topic.videos.map((video, index) => {
+                  const videoIndex = video.index ?? index;
+                  const isWatched = progress?.videos_watched.includes(videoIndex) || false;
+                  const isUpdating = updatingItems.has(`video-${videoIndex}`);
+                  const isBookmarked = isItemBookmarked(lessonId!, 'video', videoIndex);
+                  
+                  return (
                   <div key={index} className="video-card">
-                    <h4>Video {index + 1}</h4>
+                    <div className="video-header">
+                      <h4>Video {index + 1}</h4>
+                      <div className="video-header-actions">
+                        {isWatched && <span className="completion-indicator">✅ Watched</span>}
+                        <button
+                          className="bookmark-btn"
+                          onClick={() => handleBookmarkVideo(videoIndex)}
+                          disabled={isBookmarked}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            fontSize: '1.2rem',
+                            cursor: isBookmarked ? 'not-allowed' : 'pointer',
+                            opacity: isBookmarked ? 0.5 : 1,
+                            marginLeft: '0.5rem',
+                          }}
+                          title={isBookmarked ? 'Already bookmarked' : 'Bookmark this video'}
+                        >
+                          {isBookmarked ? '📌' : '📍'}
+                        </button>
+                      </div>
+                    </div>
                     <div className="video-links">
                       <a 
                         href={video.url} 
@@ -211,8 +466,29 @@ export function LessonPage() {
                         </a>
                       )}
                     </div>
+                    <div className="item-actions">
+                      <button
+                        className={`item-complete-btn ${isWatched ? 'completed' : ''}`}
+                        onClick={() => handleVideoWatched(videoIndex)}
+                        disabled={isWatched || isUpdating}
+                        style={{
+                          background: isWatched ? '#28a745' : '#007bff',
+                          color: 'white',
+                          border: 'none',
+                          padding: '0.5rem 1rem',
+                          borderRadius: '4px',
+                          cursor: isWatched || isUpdating ? 'not-allowed' : 'pointer',
+                          fontSize: '0.9rem',
+                          marginTop: '0.5rem',
+                          width: '100%'
+                        }}
+                      >
+                        {isUpdating ? 'Saving...' : isWatched ? '✓ Watched' : 'Mark as Watched'}
+                      </button>
+                    </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </section>
           )}
@@ -222,9 +498,36 @@ export function LessonPage() {
             <section className="content-section">
               <h3>📝 Quizzes</h3>
               <div className="quizzes-grid">
-                {topic.quizzes.map((quiz, index) => (
+                {topic.quizzes.map((quiz, index) => {
+                  const quizIndex = quiz.index ?? index;
+                  const isCompleted = progress?.quizzes_completed.includes(quizIndex) || false;
+                  const isUpdating = updatingItems.has(`quiz-${quizIndex}`);
+                  const isBookmarked = isItemBookmarked(lessonId!, 'quiz', quizIndex);
+                  
+                  return (
                   <div key={quiz.quizId} className="quiz-card">
-                    <h4>Quiz {index + 1}</h4>
+                    <div className="quiz-header">
+                      <h4>Quiz {index + 1}</h4>
+                      <div className="quiz-header-actions">
+                        {isCompleted && <span className="completion-indicator">✅ Complete</span>}
+                        <button
+                          className="bookmark-btn"
+                          onClick={() => handleBookmarkQuiz(quizIndex)}
+                          disabled={isBookmarked}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            fontSize: '1.2rem',
+                            cursor: isBookmarked ? 'not-allowed' : 'pointer',
+                            opacity: isBookmarked ? 0.5 : 1,
+                            marginLeft: '0.5rem',
+                          }}
+                          title={isBookmarked ? 'Already bookmarked' : 'Bookmark this quiz'}
+                        >
+                          {isBookmarked ? '📌' : '📍'}
+                        </button>
+                      </div>
+                    </div>
                     <div className="quiz-links">
                       {quiz.questionPdf && (
                         <a 
@@ -245,8 +548,29 @@ export function LessonPage() {
                         📄 Answers
                       </a>
                     </div>
+                    <div className="item-actions">
+                      <button
+                        className={`item-complete-btn ${isCompleted ? 'completed' : ''}`}
+                        onClick={() => handleQuizCompleted(quizIndex)}
+                        disabled={isCompleted || isUpdating}
+                        style={{
+                          background: isCompleted ? '#28a745' : '#007bff',
+                          color: 'white',
+                          border: 'none',
+                          padding: '0.5rem 1rem',
+                          borderRadius: '4px',
+                          cursor: isCompleted || isUpdating ? 'not-allowed' : 'pointer',
+                          fontSize: '0.9rem',
+                          marginTop: '0.5rem',
+                          width: '100%'
+                        }}
+                      >
+                        {isUpdating ? 'Saving...' : isCompleted ? '✓ Complete' : 'Mark Complete'}
+                      </button>
+                    </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </section>
           )}
