@@ -1,4 +1,4 @@
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 export function DashboardPage() {
@@ -7,8 +7,8 @@ export function DashboardPage() {
 
   const handleLogout = () => {
     logout();
-    // Force navigation to login page using full page reload
-    window.location.href = '/';
+    // Now navigate using React Router since AuthContext will update the App component
+    navigate('/', { replace: true });
   };
 
   return (

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../context/AuthContext';
 
 export function LoginPage() {
   const { login, generateUsername, isLoading } = useAuth();
@@ -34,8 +34,8 @@ export function LoginPage() {
       console.log('About to call login...');
       await login(username.trim());
       console.log('Login successful, about to navigate...');
-      // Force full page reload so top-level App sees new auth state
-      window.location.href = '/dashboard';
+      // Now navigate using React Router since AuthContext will update the App component
+      navigate('/dashboard', { replace: true });
       console.log('Navigate called');
     } catch (error) {
       console.error('Login error:', error);
