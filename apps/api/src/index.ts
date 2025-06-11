@@ -551,36 +551,45 @@ app.get('/api/leaderboard', async (req: ExtendedRequest, res: Response) => {
 
       } catch (dbError) {
           req.logger?.warn('Database unavailable, building leaderboard from memory', { dbError });
-          // Fallback to in-memory
-          const userScores: { [userId: number]: { username: string, videos: number, quizzes: number } } = {};
+          // --- START OF CORRECTED FALLBACK LOGIC ---
+          const userScores: Map<number, { username: string, videos: number, quizzes: number }> = new Map();
 
+          // Step 1: Aggregate scores for each userId from the progress map
           for (const [userId, progresses] of inMemoryProgress.entries()) {
-              const user = inMemoryUsers.get(userId);
-              if (!user) continue;
-
-              if (!userScores[userId]) {
-                  userScores[userId] = { username: user.username, videos: 0, quizzes: 0 };
-              }
-              
+              let currentScore = userScores.get(userId) || { username: '', videos: 0, quizzes: 0 };
               for (const p of progresses) {
-                  userScores[userId].videos += p.videos_watched?.length || 0;
-                  userScores[userId].quizzes += p.quizzes_completed?.length || 0;
+                  currentScore.videos += p.videos_watched?.length || 0;
+                  currentScore.quizzes += p.quizzes_completed?.length || 0;
               }
+              userScores.set(userId, currentScore);
           }
           
-          leaderboard = Object.values(userScores)
+          // Step 2: Find the username for each scored userId
+          for (const user of inMemoryUsers.values()){
+              if(userScores.has(user.id)){
+                  const score = userScores.get(user.id)!;
+                  score.username = user.username;
+              }
+          }
+
+          // Step 3: Calculate total, sort, rank, and format the output
+          leaderboard = Array.from(userScores.values())
+              // Filter out any users we couldn't find a username for
+              .filter(score => score.username !== '')
               .map(score => ({
-                  username: score.username,
-                  completed_videos: score.videos,
-                  completed_quizzes: score.quizzes,
+                  ...score,
                   total_completed: score.videos + score.quizzes,
               }))
               .sort((a, b) => b.total_completed - a.total_completed || a.username.localeCompare(b.username))
               .slice(0, 20)
               .map((score, index) => ({
                   rank: index + 1,
-                  ...score,
+                  username: score.username,
+                  completed_videos: score.videos,
+                  completed_quizzes: score.quizzes,
+                  total_completed: score.total_completed,
               }));
+          // --- END OF CORRECTED FALLBACK LOGIC ---
       }
 
       res.json({ success: true, leaderboard });
