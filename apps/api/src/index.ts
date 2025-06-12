@@ -10,6 +10,16 @@ import {
   SyncProgressRequest,
   LeaderboardEntry,
 } from './types';
+import { appLogger, requestLogger, Logger as WinstonLogger } from './logger';
+import {
+  observabilityMiddleware,
+  healthCheckHandler,
+  metricsHandler,
+  errorHandler,
+  setupProcessErrorHandlers,
+  logStartupInfo
+} from './observability';
+import MigrationRunner from './migrations/migrationRunner';
 
 // Types
 interface GoldStar {
@@ -22,35 +32,14 @@ interface GoldStar {
   updated_at: Date;
 }
 
-interface Logger {
-  info: (msg: string, context?: any) => void;
-  warn: (msg: string, context?: any) => void;
-  error: (msg: string, context?: any) => void;
-  debug: (msg: string, context?: any) => void;
-  child: (context: any) => Logger;
-}
-
 interface ExtendedRequest extends Request {
   requestId?: string;
-  logger?: Logger;
+  logger?: WinstonLogger;
 }
 
 interface CustomSocket extends Socket {
   username?: string;
 }
-
-// Simple structured logger
-const logger: Logger = {
-  info: (msg: string, context?: any) => console.log(`[INFO] ${msg}`, context || ''),
-  warn: (msg: string, context?: any) => console.warn(`[WARN] ${msg}`, context || ''),
-  error: (msg: string, context?: any) => console.error(`[ERROR] ${msg}`, context || ''),
-  debug: (msg: string, context?: any) => {
-    if (process.env.NODE_ENV !== 'production') {
-      console.log(`[DEBUG] ${msg}`, context || '');
-    }
-  },
-  child: (context: any) => logger
-};
 
 const app = express();
 const server = createServer(app);
@@ -60,26 +49,13 @@ const io = new Server(server, {
         methods: ["GET", "POST"]
     }
 });
-const port = process.env.PORT || 3000;
+const port = parseInt(process.env.PORT || '3000', 10);
 
-// Add request ID middleware for better debugging
-app.use((req: ExtendedRequest, res: Response, next: NextFunction) => {
-  const requestId = Math.random().toString(36).substring(2, 15);
-  req.requestId = requestId;
-  res.setHeader('X-Request-ID', requestId);
-  
-  const childLogger = logger.child({ requestId });
-  req.logger = childLogger;
-  
-  childLogger.info(`${req.method} ${req.path}`, {
-    method: req.method,
-    path: req.path,
-    userAgent: req.get('User-Agent'),
-    ip: req.ip
-  });
-  
-  next();
-});
+// Add Winston request logger middleware
+app.use(requestLogger);
+
+// Add observability middleware for metrics and enhanced monitoring
+app.use(observabilityMiddleware);
 
 // Database connections
 const pool = new Pool({
@@ -114,7 +90,10 @@ async function initializeNotificationListener(): Promise<void> {
             try {
                 if (!msg.payload) return;
                 const data = JSON.parse(msg.payload);
-                console.log(`📡 Real-time notification: ${msg.channel}`, data);
+                appLogger.info(`Real-time notification received`, {
+                    channel: msg.channel,
+                    data: data
+                });
                 
                 // Broadcast to user's connected devices
                 broadcastToUser(data.username, {
@@ -122,14 +101,14 @@ async function initializeNotificationListener(): Promise<void> {
                     data: data
                 });
             } catch (error) {
-                console.error('Error processing notification:', error);
+                appLogger.error('Error processing notification', { error }, error instanceof Error ? error : undefined);
             }
         });
         
-        console.log('🚀 PostgreSQL notification listener initialized');
+        appLogger.info('PostgreSQL notification listener initialized successfully');
         
     } catch (error) {
-        console.error('❌ Failed to initialize notification listener:', error);
+        appLogger.error('Failed to initialize notification listener', { error }, error instanceof Error ? error : undefined);
     }
 }
 
@@ -140,13 +119,17 @@ function broadcastToUser(username: string, message: any): void {
         userSockets.forEach(socketId => {
             io.to(socketId).emit('realtime_update', message);
         });
-        console.log(`📤 Broadcasted to ${userSockets.size} devices for user: ${username}`);
+        appLogger.debug('Broadcasted message to user devices', {
+            username,
+            deviceCount: userSockets.size,
+            messageType: message.type
+        });
     }
 }
 
 // WebSocket connection handling
 io.on('connection', (socket: CustomSocket) => {
-    console.log('🔌 Client connected:', socket.id);
+    appLogger.info('WebSocket client connected', { socketId: socket.id });
     
     // User joins with their username
     socket.on('join', ({ username }: { username: string }) => {
@@ -161,7 +144,11 @@ io.on('connection', (socket: CustomSocket) => {
         // Store username on socket for cleanup
         socket.username = username;
         
-        console.log(`👤 User ${username} connected (${connectedUsers.get(username)!.size} devices)`);
+        appLogger.info('User connected via WebSocket', {
+            username,
+            socketId: socket.id,
+            deviceCount: connectedUsers.get(username)!.size
+        });
         
         // Notify other devices that a new device connected
         broadcastToUser(username, {
@@ -186,7 +173,11 @@ io.on('connection', (socket: CustomSocket) => {
             });
             await pool.query(`NOTIFY user_activity, $1`, [activityPayload]);
         } catch (error) {
-            console.error('Error notifying user activity:', error);
+            appLogger.error('Error notifying user activity', { 
+                username: socket.username,
+                activity,
+                error 
+            }, error instanceof Error ? error : undefined);
         }
     });
     
@@ -210,7 +201,11 @@ io.on('connection', (socket: CustomSocket) => {
                     });
                 }
             }
-            console.log(`👋 User ${socket.username} disconnected`);
+            appLogger.info('User WebSocket disconnected', {
+                username: socket.username,
+                socketId: socket.id,
+                remainingDevices: userSockets ? userSockets.size : 0
+            });
         }
     });
 });
@@ -224,6 +219,13 @@ const inMemoryUsers = new Map<string, User>();
 let nextUserId = 1;
 const inMemoryProgress = new Map<number, Progress[]>();
 const inMemoryBookmarks = new Map<number, Bookmark[]>();
+
+// Set up process-level error handlers for better observability
+setupProcessErrorHandlers();
+
+// Observability endpoints
+app.get('/health', healthCheckHandler);
+app.get('/metrics', metricsHandler);
 
 // Username generation lists
 const adjectives = [
@@ -600,71 +602,18 @@ app.get('/api/leaderboard', async (req: ExtendedRequest, res: Response) => {
   }
 });
 
-// Initialize database tables on startup
+// Initialize database using migrations
 async function initializeDatabase(): Promise<void> {
     try {
-        console.log('Initializing database...');
+        appLogger.info('Running database migrations...');
         
-        // Create tables if they don't exist
-        await pool.query(`
-            CREATE TABLE IF NOT EXISTS users (
-                id SERIAL PRIMARY KEY,
-                username VARCHAR(50) UNIQUE NOT NULL,
-                created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-                last_sync TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-            );
-        `);
+        const migrationRunner = new MigrationRunner(pool);
+        await migrationRunner.runMigrations();
         
-        await pool.query(`
-            CREATE TABLE IF NOT EXISTS progress (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-                lesson_id VARCHAR(20) NOT NULL,
-                videos_watched INTEGER[] DEFAULT '{}',
-                quizzes_completed INTEGER[] DEFAULT '{}',
-                lesson_completed BOOLEAN DEFAULT FALSE,
-                completed_at TIMESTAMP WITH TIME ZONE,
-                updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-                UNIQUE(user_id, lesson_id)
-            );
-        `);
-        
-        await pool.query(`
-            CREATE TABLE IF NOT EXISTS bookmarks (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-                bookmark_type VARCHAR(20) NOT NULL,
-                lesson_id VARCHAR(20) NOT NULL,
-                item_index INTEGER,
-                item_type VARCHAR(20),
-                item_title VARCHAR(200),
-                created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-            );
-        `);
-        
-        await pool.query(`
-            CREATE TABLE IF NOT EXISTS gold_stars (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE UNIQUE,
-                total_stars INTEGER DEFAULT 0,
-                current_streak INTEGER DEFAULT 0,
-                last_lesson_time TIMESTAMP WITH TIME ZONE,
-                last_target_hours DECIMAL(8,2),
-                updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-            );
-        `);
-        
-        // Create indexes
-        await pool.query(`CREATE INDEX IF NOT EXISTS idx_progress_user_lesson ON progress(user_id, lesson_id);`);
-        await pool.query(`CREATE INDEX IF NOT EXISTS idx_bookmarks_user ON bookmarks(user_id);`);
-        await pool.query(`CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);`);
-        await pool.query(`CREATE INDEX IF NOT EXISTS idx_gold_stars_user ON gold_stars(user_id);`);
-        await pool.query(`CREATE INDEX IF NOT EXISTS idx_gold_stars_leaderboard ON gold_stars(current_streak DESC, total_stars DESC);`);
-        
-        console.log('Database initialized successfully');
+        appLogger.info('Database migrations completed successfully');
         
     } catch (error) {
-        console.error('Database initialization failed:', error);
+        appLogger.error('Database migration failed', { error }, error instanceof Error ? error : undefined);
         throw error;
     }
 }
@@ -672,9 +621,9 @@ async function initializeDatabase(): Promise<void> {
 // Test database connection and initialize on startup
 pool.connect(async (err, client, done) => {
     if (err) {
-        console.error('Database connection failed:', err);
+        appLogger.error('Database connection failed', { error: err }, err instanceof Error ? err : undefined);
     } else {
-        console.log('Database connected successfully');
+        appLogger.info('Database connected successfully');
         done();
         
         // Initialize database tables
@@ -683,15 +632,16 @@ pool.connect(async (err, client, done) => {
             // Initialize real-time notifications after database is ready
             await initializeNotificationListener();
         } catch (initError) {
-            console.error('Failed to initialize database:', initError);
+            appLogger.error('Failed to initialize database', { error: initError }, initError instanceof Error ? initError : undefined);
         }
     }
 });
 
+// Add global error handler
+app.use(errorHandler);
+
 server.listen(port, () => {
-    console.log(`🚀 APStat Park API with real-time sync running on port ${port}`);
-    console.log(`📡 WebSocket server ready for real-time updates`);
-    console.log(`Database URL: ${process.env.DATABASE_URL ? 'Set from environment' : 'Using fallback'}`);
+    logStartupInfo(port);
 });
 
 export default app; 

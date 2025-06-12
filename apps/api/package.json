@@ -10,7 +10,12 @@
     "start": "node dist/index.js",
     "start:dev": "npm run build && npm start",
     "lint": "eslint src --ext .ts",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "migrate:create": "ts-node src/migrations/cli.ts create",
+    "migrate:run": "ts-node src/migrations/cli.ts run",
+    "migrate:rollback": "ts-node src/migrations/cli.ts rollback",
+    "migrate:status": "ts-node src/migrations/cli.ts status",
+    "migrate:reset": "ts-node src/migrations/cli.ts reset"
   },
   "keywords": [
     "education",

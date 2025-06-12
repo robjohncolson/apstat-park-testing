@@ -1,57 +1,159 @@
-// Simple structured logger
-interface LogContext {
-  requestId?: string;
-  userId?: number;
-  username?: string;
-  [key: string]: unknown;
-}
+import winston from 'winston';
 
-class Logger {
-  private generateRequestId(): string {
-    return Math.random().toString(36).substring(2, 15);
-  }
+// Define log levels
+const levels = {
+  error: 0,
+  warn: 1,
+  info: 2,
+  http: 3,
+  debug: 4,
+};
 
-  private formatMessage(level: string, message: string, context?: LogContext): string {
-    const timestamp = new Date().toISOString();
-    const logEntry = {
-      timestamp,
-      level: level.toUpperCase(),
-      message,
-      ...context,
-    };
-    return JSON.stringify(logEntry);
-  }
+// Define colors for each level
+const colors = {
+  error: 'red',
+  warn: 'yellow',
+  info: 'green',
+  http: 'magenta',
+  debug: 'blue',
+};
 
-  info(message: string, context?: LogContext): void {
-    console.log(this.formatMessage('info', message, context));
-  }
+winston.addColors(colors);
 
-  warn(message: string, context?: LogContext): void {
-    console.warn(this.formatMessage('warn', message, context));
-  }
-
-  error(message: string, context?: LogContext): void {
-    console.error(this.formatMessage('error', message, context));
-  }
-
-  debug(message: string, context?: LogContext): void {
-    if (process.env.NODE_ENV !== 'production') {
-      console.log(this.formatMessage('debug', message, context));
+// Create the logger format
+const format = winston.format.combine(
+  winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss:ms' }),
+  winston.format.colorize({ all: true }),
+  winston.format.printf((info) => {
+    let message = `${info.timestamp} [${info.level}]: ${info.message}`;
+    
+    // Add context if available
+    if (info.context && typeof info.context === 'object') {
+      message += ` ${JSON.stringify(info.context)}`;
+    } else if (info.context) {
+      message += ` ${info.context}`;
     }
-  }
+    
+    // Add error stack if available
+    if (info.error && typeof info.error === 'object' && 'stack' in info.error && typeof info.error.stack === 'string') {
+      message += `\n${info.error.stack}`;
+    }
+    
+    return message;
+  })
+);
 
-  // Create child logger with persistent context
-  child(context: LogContext): Logger {
-    const childLogger = new Logger();
-    const originalFormatMessage = childLogger.formatMessage.bind(childLogger);
+// Create the logger instance
+const logger = winston.createLogger({
+  level: process.env.LOG_LEVEL || 'info',
+  levels,
+  format,
+  transports: [
+    // Console transport for development
+    new winston.transports.Console({
+      format: winston.format.combine(
+        winston.format.colorize(),
+        format
+      )
+    }),
     
-    childLogger.formatMessage = (level: string, message: string, additionalContext?: LogContext) => {
-      return originalFormatMessage(level, message, { ...context, ...additionalContext });
-    };
+    // File transport for all logs
+    new winston.transports.File({
+      filename: 'logs/error.log',
+      level: 'error',
+      format: winston.format.combine(
+        winston.format.uncolorize(),
+        winston.format.json()
+      )
+    }),
     
-    return childLogger;
-  }
+    // File transport for all logs
+    new winston.transports.File({
+      filename: 'logs/combined.log',
+      format: winston.format.combine(
+        winston.format.uncolorize(),
+        winston.format.json()
+      )
+    }),
+  ],
+});
+
+// Create a structured logger interface
+export interface Logger {
+  info: (message: string, context?: any) => void;
+  warn: (message: string, context?: any) => void;
+  error: (message: string, context?: any, error?: Error) => void;
+  debug: (message: string, context?: any) => void;
+  http: (message: string, context?: any) => void;
+  child: (context: any) => Logger;
 }
 
-export const logger = new Logger();
-export type { LogContext }; 
+// Create child logger function
+function createChildLogger(parentContext: any = {}): Logger {
+  return {
+    info: (message: string, context?: any) => {
+      logger.info(message, { context: { ...parentContext, ...context } });
+    },
+    warn: (message: string, context?: any) => {
+      logger.warn(message, { context: { ...parentContext, ...context } });
+    },
+    error: (message: string, context?: any, error?: Error) => {
+      logger.error(message, { 
+        context: { ...parentContext, ...context },
+        error: error || (context instanceof Error ? context : undefined)
+      });
+    },
+    debug: (message: string, context?: any) => {
+      logger.debug(message, { context: { ...parentContext, ...context } });
+    },
+    http: (message: string, context?: any) => {
+      logger.http(message, { context: { ...parentContext, ...context } });
+    },
+    child: (context: any) => createChildLogger({ ...parentContext, ...context })
+  };
+}
+
+// Export the main logger instance
+export const appLogger: Logger = createChildLogger();
+
+// Export HTTP request logger middleware
+export const requestLogger = (req: any, res: any, next: any) => {
+  const requestId = Math.random().toString(36).substring(2, 15);
+  const startTime = Date.now();
+  
+  req.requestId = requestId;
+  res.setHeader('X-Request-ID', requestId);
+  
+  // Create child logger with request context
+  req.logger = appLogger.child({ 
+    requestId,
+    method: req.method,
+    path: req.path,
+    userAgent: req.get('User-Agent'),
+    ip: req.ip || req.connection.remoteAddress
+  });
+  
+  // Log the incoming request
+  req.logger.http(`${req.method} ${req.path}`, {
+    headers: req.headers,
+    query: req.query,
+    body: req.method !== 'GET' ? req.body : undefined
+  });
+  
+  // Log the response when it completes
+  res.on('finish', () => {
+    const duration = Date.now() - startTime;
+    req.logger.http(`${req.method} ${req.path} - ${res.statusCode}`, {
+      statusCode: res.statusCode,
+      duration: `${duration}ms`,
+      contentLength: res.get('content-length')
+    });
+  });
+  
+  next();
+};
+
+// Export utility functions
+export const createLogger = (context?: any) => appLogger.child(context || {});
+
+export default appLogger; 
