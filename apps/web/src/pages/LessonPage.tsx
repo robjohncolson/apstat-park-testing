@@ -2,7 +2,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useBookmark } from '../context/BookmarkContext';
-import { findTopicById, findUnitById } from '../data/allUnitsData';
+import { findTopicById, findUnitById, calculateTopicFraction } from '../data/allUnitsData';
 import type { Topic, Unit } from '../data/allUnitsData';
 
 // Interface for granular progress tracking
@@ -12,7 +12,7 @@ interface LessonProgress {
   quizzes_completed: number[];
   blooket_completed?: boolean;
   origami_completed?: boolean;
-  lesson_completed?: boolean;
+  // lesson_completed removed - now calculated from fractional progress
 }
 
 export function LessonPage() {
@@ -56,7 +56,6 @@ export function LessonPage() {
               quizzes_completed: lessonProgress.quizzes_completed || [],
               blooket_completed: lessonProgress.blooket_completed || false,
               origami_completed: lessonProgress.origami_completed || false,
-              lesson_completed: lessonProgress.lesson_completed || false,
             });
           } else {
             // No progress yet, initialize empty state
@@ -66,7 +65,6 @@ export function LessonPage() {
               quizzes_completed: [],
               blooket_completed: false,
               origami_completed: false,
-              lesson_completed: false,
             });
           }
         } else {
@@ -84,7 +82,6 @@ export function LessonPage() {
                 quizzes_completed: lessonProgress.quizzes_completed || [],
                 blooket_completed: lessonProgress.blooket_completed || false,
                 origami_completed: lessonProgress.origami_completed || false,
-                lesson_completed: lessonProgress.lesson_completed || false,
               });
             } else {
               setProgress({
@@ -93,7 +90,6 @@ export function LessonPage() {
                 quizzes_completed: [],
                 blooket_completed: false,
                 origami_completed: false,
-                lesson_completed: false,
               });
             }
           }
@@ -114,7 +110,6 @@ export function LessonPage() {
               quizzes_completed: lessonProgress.quizzes_completed || [],
               blooket_completed: lessonProgress.blooket_completed || false,
               origami_completed: lessonProgress.origami_completed || false,
-              lesson_completed: lessonProgress.lesson_completed || false,
             });
           } else {
             setProgress({
@@ -123,7 +118,6 @@ export function LessonPage() {
               quizzes_completed: [],
               blooket_completed: false,
               origami_completed: false,
-              lesson_completed: false,
             });
           }
         } else {
@@ -134,7 +128,6 @@ export function LessonPage() {
             quizzes_completed: [],
             blooket_completed: false,
             origami_completed: false,
-            lesson_completed: false,
           });
         }
       } finally {
@@ -145,131 +138,91 @@ export function LessonPage() {
     fetchProgress();
   }, [unitId, lessonId, user?.id]);
 
-  // Handle marking lesson as complete
-  const handleMarkComplete = async () => {
-    if (!user?.id || !lessonId || updatingItems.size > 0) return;
+  // Unified progress update handler
+  const updateProgress = async (itemType: 'video' | 'quiz' | 'blooket' | 'origami', itemIndex?: number, completed: boolean = true) => {
+    if (!user?.id || !lessonId || !progress) return;
 
-    setUpdatingItems(new Set([lessonId]));
-    
-    // Optimistic update - immediately update UI
-    const previousState = progress;
-    setProgress(prev => ({
-      lesson_id: lessonId!,
-      videos_watched: prev?.videos_watched || [],
-      quizzes_completed: prev?.quizzes_completed || [],
-      blooket_completed: prev?.blooket_completed || false,
-      origami_completed: prev?.origami_completed || false,
-      lesson_completed: true,
-    }));
+    const itemKey = itemIndex !== undefined ? `${itemType}-${itemIndex}` : itemType;
+    if (updatingItems.has(itemKey)) return;
 
-    const progressEntry = {
+    setUpdatingItems(prev => new Set([...prev, itemKey]));
+
+    // Optimistic update
+    const newProgress = { ...progress };
+    switch (itemType) {
+      case 'video':
+        if (completed && itemIndex !== undefined && !newProgress.videos_watched.includes(itemIndex)) {
+          newProgress.videos_watched = [...newProgress.videos_watched, itemIndex];
+        } else if (!completed && itemIndex !== undefined) {
+          newProgress.videos_watched = newProgress.videos_watched.filter(i => i !== itemIndex);
+        }
+        break;
+      case 'quiz':
+        if (completed && itemIndex !== undefined && !newProgress.quizzes_completed.includes(itemIndex)) {
+          newProgress.quizzes_completed = [...newProgress.quizzes_completed, itemIndex];
+        } else if (!completed && itemIndex !== undefined) {
+          newProgress.quizzes_completed = newProgress.quizzes_completed.filter(i => i !== itemIndex);
+        }
+        break;
+      case 'blooket':
+        newProgress.blooket_completed = completed;
+        break;
+      case 'origami':
+        newProgress.origami_completed = completed;
+        break;
+    }
+
+    setProgress(newProgress);
+
+    // Prepare API payload
+    const payload = {
       lesson_id: lessonId,
-      lesson_completed: true,
-      completion_date: new Date().toISOString(),
+      item_type: itemType,
+      item_index: itemIndex,
+      completed
     };
 
     try {
-      const response = await fetch(`http://localhost:3000/api/users/${user.id}/progress/sync`, {
+      const response = await fetch(`http://localhost:3000/api/users/${user.id}/progress/update`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(progressEntry),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to sync progress');
+        throw new Error('Failed to update progress');
       }
 
-      // Emit WebSocket activity (if available)
-      // TODO: Implement WebSocket connection
-      // socket.emit('user_activity', {
-      //   user_id: user.id,
-      //   lesson_id: lessonId,
-      //   activity_type: 'lesson_completed'
-      // });
+      const result = await response.json();
+      console.log('Progress updated successfully:', result);
 
     } catch (error) {
       console.warn('API not available - saving progress locally');
       
-      // Save to localStorage in offline mode
+      // Fallback to localStorage with self-cleaning
       const offlineProgress = localStorage.getItem(`progress_${user.id}`);
       let progressData = offlineProgress ? JSON.parse(offlineProgress) : [];
       
-      // Update or add progress entry
-      const existingIndex = progressData.findIndex((p: any) => p.lesson_id === lessonId);
-      if (existingIndex >= 0) {
-        progressData[existingIndex] = progressEntry;
-      } else {
-        progressData.push(progressEntry);
-      }
-      
-      localStorage.setItem(`progress_${user.id}`, JSON.stringify(progressData));
-      console.log('Progress saved locally for offline use');
-    } finally {
-      setUpdatingItems(new Set());
-    }
-  };
-
-  // Handle marking individual video as watched
-  const handleVideoWatched = async (videoIndex: number) => {
-    if (!user?.id || !lessonId || !progress || updatingItems.has(`video-${videoIndex}`)) return;
-
-    const itemKey = `video-${videoIndex}`;
-    setUpdatingItems(prev => new Set([...prev, itemKey]));
-
-    // Optimistic update
-    const previousProgress = progress;
-    if (!(progress.videos_watched || []).includes(videoIndex)) {
-      setProgress(prev => prev ? {
-        ...prev,
-        videos_watched: [...(prev.videos_watched || []), videoIndex]
-      } : null);
-    }
-
-    try {
-      const response = await fetch(`http://localhost:3000/api/users/${user.id}/progress/sync`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          lesson_id: lessonId,
-          video_index: videoIndex,
-          completed_at: new Date().toISOString(),
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to sync video progress');
-      }
-
-      console.log(`Video ${videoIndex} marked as watched for lesson ${lessonId}`);
-    } catch (error) {
-      console.warn('API not available - saving video progress locally');
-      
-      // Fallback to localStorage
-      const offlineProgress = localStorage.getItem(`progress_${user.id}`);
-      let progressData = offlineProgress ? JSON.parse(offlineProgress) : [];
+      // Self-cleaning: remove lesson_completed from loaded data
+      progressData.forEach((p: any) => delete p.lesson_completed);
       
       const existingIndex = progressData.findIndex((p: any) => p.lesson_id === lessonId);
       if (existingIndex >= 0) {
-        const existing = progressData[existingIndex];
-        // Ensure videos_watched is an array
-        if (!existing.videos_watched) {
-          existing.videos_watched = [];
-        }
-        if (!existing.videos_watched.includes(videoIndex)) {
-          existing.videos_watched.push(videoIndex);
-        }
+        Object.assign(progressData[existingIndex], {
+          videos_watched: newProgress.videos_watched,
+          quizzes_completed: newProgress.quizzes_completed,
+          blooket_completed: newProgress.blooket_completed,
+          origami_completed: newProgress.origami_completed,
+        });
       } else {
         progressData.push({
           lesson_id: lessonId,
-          videos_watched: [videoIndex],
-          quizzes_completed: [],
-          blooket_completed: false,
-          origami_completed: false,
-          lesson_completed: false,
+          videos_watched: newProgress.videos_watched,
+          quizzes_completed: newProgress.quizzes_completed,
+          blooket_completed: newProgress.blooket_completed,
+          origami_completed: newProgress.origami_completed,
         });
       }
       
@@ -283,216 +236,11 @@ export function LessonPage() {
     }
   };
 
-  // Handle marking individual quiz as completed
-  const handleQuizCompleted = async (quizIndex: number) => {
-    if (!user?.id || !lessonId || !progress || updatingItems.has(`quiz-${quizIndex}`)) return;
-
-    const itemKey = `quiz-${quizIndex}`;
-    setUpdatingItems(prev => new Set([...prev, itemKey]));
-
-    // Optimistic update - immediately update UI
-    const previousState = progress;
-    setProgress(prev => ({
-      ...prev!,
-      quizzes_completed: [...(prev!.quizzes_completed || []), quizIndex].filter((v, i, arr) => 
-        arr.indexOf(v) === i
-      ),
-    }));
-
-    const progressEntry = {
-      lesson_id: lessonId,
-      videos_watched: progress.videos_watched,
-      quizzes_completed: [...(progress.quizzes_completed || []), quizIndex].filter((v, i, arr) => 
-        arr.indexOf(v) === i
-      ),
-      blooket_completed: progress.blooket_completed,
-      origami_completed: progress.origami_completed,
-    };
-
-    try {
-      const response = await fetch(`http://localhost:3000/api/users/${user.id}/progress/sync`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(progressEntry),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to sync progress');
-      }
-
-    } catch (error) {
-      console.warn('API not available - saving quiz progress locally');
-      
-      // Fallback to localStorage
-      const offlineProgress = localStorage.getItem(`progress_${user.id}`);
-      let progressData = offlineProgress ? JSON.parse(offlineProgress) : [];
-      
-      const existingIndex = progressData.findIndex((p: any) => p.lesson_id === lessonId);
-      if (existingIndex >= 0) {
-        const existing = progressData[existingIndex];
-        // Ensure quizzes_completed is an array
-        if (!existing.quizzes_completed) {
-          existing.quizzes_completed = [];
-        }
-        if (!existing.quizzes_completed.includes(quizIndex)) {
-          existing.quizzes_completed.push(quizIndex);
-        }
-      } else {
-        progressData.push({
-          lesson_id: lessonId,
-          videos_watched: [],
-          quizzes_completed: [quizIndex],
-          blooket_completed: false,
-          origami_completed: false,
-          lesson_completed: false,
-        });
-      }
-      
-      localStorage.setItem(`progress_${user.id}`, JSON.stringify(progressData));
-    } finally {
-      setUpdatingItems(prev => {
-        const next = new Set(prev);
-        next.delete(itemKey);
-        return next;
-      });
-    }
-  };
-
-  // Handle marking Blooket as completed
-  const handleBlooketCompleted = async () => {
-    if (!user?.id || !lessonId || !progress || updatingItems.has('blooket')) return;
-
-    const itemKey = 'blooket';
-    const newCompletionState = !progress.blooket_completed;
-    
-    setUpdatingItems(prev => new Set([...prev, itemKey]));
-
-    // Optimistic update - immediately update UI
-    setProgress(prev => ({
-      ...prev!,
-      blooket_completed: newCompletionState,
-    }));
-
-    const progressEntry = {
-      lesson_id: lessonId,
-      videos_watched: progress.videos_watched || [],
-      quizzes_completed: progress.quizzes_completed || [],
-      blooket_completed: newCompletionState,
-      origami_completed: progress.origami_completed || false,
-    };
-
-    try {
-      const response = await fetch(`http://localhost:3000/api/users/${user.id}/progress/sync`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(progressEntry),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to sync progress');
-      }
-
-    } catch (error) {
-      console.warn('API not available - saving blooket progress locally');
-      
-      // Fallback to localStorage
-      const offlineProgress = localStorage.getItem(`progress_${user.id}`);
-      let progressData = offlineProgress ? JSON.parse(offlineProgress) : [];
-      
-      const existingIndex = progressData.findIndex((p: any) => p.lesson_id === lessonId);
-      if (existingIndex >= 0) {
-        progressData[existingIndex].blooket_completed = newCompletionState;
-      } else {
-        progressData.push({
-          lesson_id: lessonId,
-          videos_watched: [],
-          quizzes_completed: [],
-          blooket_completed: newCompletionState,
-          origami_completed: false,
-          lesson_completed: false,
-        });
-      }
-      
-      localStorage.setItem(`progress_${user.id}`, JSON.stringify(progressData));
-    } finally {
-      setUpdatingItems(prev => {
-        const next = new Set(prev);
-        next.delete(itemKey);
-        return next;
-      });
-    }
-  };
-
-  // Handle marking Origami as completed
-  const handleOrigamiCompleted = async () => {
-    if (!user?.id || !lessonId || !progress || updatingItems.has('origami')) return;
-
-    const itemKey = 'origami';
-    const newCompletionState = !progress.origami_completed;
-    
-    setUpdatingItems(prev => new Set([...prev, itemKey]));
-
-    // Optimistic update - immediately update UI
-    setProgress(prev => ({
-      ...prev!,
-      origami_completed: newCompletionState,
-    }));
-
-    const progressEntry = {
-      lesson_id: lessonId,
-      videos_watched: progress.videos_watched || [],
-      quizzes_completed: progress.quizzes_completed || [],
-      blooket_completed: progress.blooket_completed || false,
-      origami_completed: newCompletionState,
-    };
-
-    try {
-      const response = await fetch(`http://localhost:3000/api/users/${user.id}/progress/sync`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(progressEntry),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to sync progress');
-      }
-
-    } catch (error) {
-      console.warn('API not available - saving origami progress locally');
-      
-      // Fallback to localStorage
-      const offlineProgress = localStorage.getItem(`progress_${user.id}`);
-      let progressData = offlineProgress ? JSON.parse(offlineProgress) : [];
-      
-      const existingIndex = progressData.findIndex((p: any) => p.lesson_id === lessonId);
-      if (existingIndex >= 0) {
-        progressData[existingIndex].origami_completed = newCompletionState;
-      } else {
-        progressData.push({
-          lesson_id: lessonId,
-          videos_watched: [],
-          quizzes_completed: [],
-          blooket_completed: false,
-          origami_completed: newCompletionState,
-          lesson_completed: false,
-        });
-      }
-      
-      localStorage.setItem(`progress_${user.id}`, JSON.stringify(progressData));
-    } finally {
-      setUpdatingItems(prev => {
-        const next = new Set(prev);
-        next.delete(itemKey);
-        return next;
-      });
-    }
-  };
+  // Individual item handlers (now using unified handler)
+  const handleVideoWatched = (videoIndex: number) => updateProgress('video', videoIndex, true);
+  const handleQuizCompleted = (quizIndex: number) => updateProgress('quiz', quizIndex, true);
+  const handleBlooketCompleted = () => updateProgress('blooket', undefined, !progress?.blooket_completed);
+  const handleOrigamiCompleted = () => updateProgress('origami', undefined, !progress?.origami_completed);
 
   // Handle bookmarking a video
   const handleBookmarkVideo = async (videoIndex: number) => {
@@ -559,18 +307,25 @@ export function LessonPage() {
         <div className="lesson-info">
           <h1>{topic.name}</h1>
           <p>{unit.displayName}</p>
-          {progress?.lesson_completed && <span className="completion-badge">✅ Completed</span>}
+          {progress && topic && (() => {
+            const userProgress = {
+              videos_watched: progress.videos_watched,
+              quizzes_completed: progress.quizzes_completed,
+              blooket_completed: progress.blooket_completed,
+              origami_completed: progress.origami_completed
+            };
+            const fraction = calculateTopicFraction(topic, userProgress);
+            const percentage = Math.round(fraction * 100);
+            
+            return fraction === 1.0 ? (
+              <span className="completion-badge">✅ 100% Complete</span>
+            ) : percentage > 0 ? (
+              <span className="progress-badge">{percentage}% Complete</span>
+            ) : null;
+          })()}
         </div>
         <div className="lesson-actions">
-          {!progress?.lesson_completed && (
-            <button 
-              className="complete-btn"
-              onClick={handleMarkComplete}
-              disabled={updatingItems.size > 0}
-            >
-              {updatingItems.size > 0 ? 'Saving...' : 'Mark as Complete'}
-            </button>
-          )}
+          {/* Lesson completion removed - now based purely on fractional progress */}
         </div>
       </header>
 

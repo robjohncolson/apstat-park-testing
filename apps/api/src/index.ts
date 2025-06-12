@@ -437,6 +437,137 @@ app.post('/api/users/:userId/progress/sync', async (req: ExtendedRequest, res: R
     }
 });
 
+// NEW: Unified progress update endpoint
+app.post('/api/users/:userId/progress/update', async (req: ExtendedRequest, res: Response) => {
+    try {
+        const { userId } = req.params;
+        const { lesson_id, item_type, item_index, completed } = req.body;
+
+        if (!lesson_id) {
+            return res.status(400).json({ error: 'lesson_id is required' });
+        }
+
+        if (!['video', 'quiz', 'blooket', 'origami'].includes(item_type)) {
+            return res.status(400).json({ error: 'item_type must be video, quiz, blooket, or origami' });
+        }
+
+        if ((item_type === 'video' || item_type === 'quiz') && typeof item_index !== 'number') {
+            return res.status(400).json({ error: 'item_index is required for video and quiz items' });
+        }
+
+        if (typeof completed !== 'boolean') {
+            return res.status(400).json({ error: 'completed must be a boolean' });
+        }
+
+        const userIdNum = parseInt(userId, 10);
+
+        // Helper function to update progress arrays/fields
+        const updateProgress = (current: any) => {
+            const updated = {
+                videos_watched: current?.videos_watched || [],
+                quizzes_completed: current?.quizzes_completed || [],
+                blooket_completed: current?.blooket_completed || false,
+                origami_completed: current?.origami_completed || false
+            };
+
+            switch (item_type) {
+                case 'video':
+                    if (completed && !updated.videos_watched.includes(item_index)) {
+                        updated.videos_watched.push(item_index);
+                    } else if (!completed) {
+                        updated.videos_watched = updated.videos_watched.filter((i: number) => i !== item_index);
+                    }
+                    break;
+                case 'quiz':
+                    if (completed && !updated.quizzes_completed.includes(item_index)) {
+                        updated.quizzes_completed.push(item_index);
+                    } else if (!completed) {
+                        updated.quizzes_completed = updated.quizzes_completed.filter((i: number) => i !== item_index);
+                    }
+                    break;
+                case 'blooket':
+                    updated.blooket_completed = completed;
+                    break;
+                case 'origami':
+                    updated.origami_completed = completed;
+                    break;
+            }
+
+            return updated;
+        };
+
+        // Database first strategy
+        try {
+            const selectResult = await pool.query(
+                'SELECT videos_watched, quizzes_completed, blooket_completed, origami_completed FROM progress WHERE user_id = $1 AND lesson_id = $2',
+                [userIdNum, lesson_id]
+            );
+
+            const current = selectResult.rows[0];
+            const updated = updateProgress(current);
+
+            await pool.query(
+                `INSERT INTO progress (user_id, lesson_id, videos_watched, quizzes_completed, blooket_completed, origami_completed, updated_at)
+                 VALUES ($1, $2, $3, $4, $5, $6, NOW())
+                 ON CONFLICT (user_id, lesson_id)
+                 DO UPDATE SET 
+                   videos_watched = EXCLUDED.videos_watched, 
+                   quizzes_completed = EXCLUDED.quizzes_completed,
+                   blooket_completed = EXCLUDED.blooket_completed,
+                   origami_completed = EXCLUDED.origami_completed,
+                   updated_at = NOW()`,
+                [userIdNum, lesson_id, updated.videos_watched, updated.quizzes_completed, updated.blooket_completed, updated.origami_completed]
+            );
+
+            req.logger?.info('Progress updated successfully', { userId, lesson_id, item_type, item_index, completed });
+            
+            res.json({ 
+                success: true, 
+                lesson_progress: {
+                    lesson_id,
+                    ...updated
+                }
+            });
+
+        } catch (dbError) {
+            // Fallback to in-memory
+            req.logger?.warn('Database unavailable, updating progress in memory', { userId });
+            let userProgress = inMemoryProgress.get(userIdNum) || [];
+
+            const existing = userProgress.find(p => p.lesson_id === lesson_id);
+            const updated = updateProgress(existing);
+
+            if (existing) {
+                Object.assign(existing, updated);
+                existing.updated_at = new Date();
+            } else {
+                userProgress.push({
+                    id: Date.now(),
+                    user_id: userIdNum,
+                    lesson_id,
+                    ...updated,
+                    lesson_completed: false, // Keep for compatibility
+                    updated_at: new Date()
+                } as Progress);
+            }
+
+            inMemoryProgress.set(userIdNum, userProgress);
+            
+            res.json({ 
+                success: true, 
+                lesson_progress: {
+                    lesson_id,
+                    ...updated
+                }
+            });
+        }
+
+    } catch (error) {
+        req.logger?.error('Error updating progress:', { error, userId: req.params.userId });
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 // Get bookmarks
 app.get('/api/users/:userId/bookmarks', async (req: ExtendedRequest, res: Response) => {
     try {
