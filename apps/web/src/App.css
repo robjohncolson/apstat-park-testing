@@ -604,6 +604,25 @@ section h2 {
   font-size: 1rem;
 }
 
+.completion-percentage {
+  background: #f3f4f6;
+  color: #6b7280;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.completion-percentage.in-progress {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.topic-completion {
+  display: flex;
+  align-items: center;
+}
+
 .topic-description {
   color: #6b7280;
   margin: 0 0 0.75rem 0;
@@ -812,18 +831,115 @@ section h2 {
   background: #e5e7eb;
 }
 
+/* Common completion indicators and item actions */
+.completion-indicator {
+  background: #dcfce7;
+  color: #15803d;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.video-header, .quiz-header, .blooket-header, .origami-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.video-header-actions, .quiz-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.item-actions {
+  margin-top: 1rem;
+}
+
+.item-complete-btn {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.item-complete-btn:not(.completed) {
+  background: #3b82f6;
+  color: white;
+}
+
+.item-complete-btn:not(.completed):hover:not(:disabled) {
+  background: #2563eb;
+}
+
+.item-complete-btn.completed {
+  background: #10b981;
+  color: white;
+}
+
+.item-complete-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.bookmark-btn {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.bookmark-btn:hover:not(:disabled) {
+  opacity: 1;
+}
+
+.bookmark-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.3;
+}
+
 /* Blooket Card */
 .blooket-card {
   background: #fef3c7;
   border: 1px solid #fbbf24;
   border-radius: 8px;
   padding: 2rem;
-  text-align: center;
+}
+
+.blooket-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.blooket-header h4 {
+  margin: 0;
+  color: #92400e;
+  font-size: 1.1rem;
+}
+
+.blooket-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .blooket-card p {
   margin: 0 0 1rem 0;
   color: #92400e;
+}
+
+.blooket-links {
+  margin-bottom: 1rem;
 }
 
 .blooket-link {
@@ -849,16 +965,33 @@ section h2 {
   padding: 2rem;
 }
 
-.origami-card h4 {
-  margin: 0 0 1rem 0;
+.origami-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.origami-header h4 {
+  margin: 0;
   color: #be185d;
   font-size: 1.2rem;
+}
+
+.origami-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .origami-description {
   color: #92004b;
   margin: 0 0 1.5rem 0;
   line-height: 1.5;
+}
+
+.origami-links {
+  margin-bottom: 1.5rem;
 }
 
 .origami-link {
@@ -869,7 +1002,6 @@ section h2 {
   text-decoration: none;
   border-radius: 8px;
   font-weight: 600;
-  margin-bottom: 2rem;
   transition: background-color 0.2s ease;
 }
 
