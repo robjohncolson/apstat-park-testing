@@ -3569,3 +3569,5 @@ function getTotalItemCounts(allUnitsDataArray = ALL_UNITS_DATA) {
 
 // Example of how other scripts might use this (don't include this line if using getTotalItemCounts):
 // const globalCounts = getTotalItemCounts();
+
+export { ALL_UNITS_DATA, getTotalItemCounts };

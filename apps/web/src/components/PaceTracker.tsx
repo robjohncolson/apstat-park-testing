@@ -1,4 +1,13 @@
-import { calculatePaceMetrics, formatPaceStatus, formatTimeRemaining, getEncouragementMessage } from '../utils/timeTracking';
+import { 
+  calculatePaceMetrics, 
+  formatPaceStatus, 
+  formatTimeRemaining, 
+  getEncouragementMessage,
+  formatDeadlineCountdown,
+  formatBufferStatus,
+  formatTargetPace
+} from '../utils/timeTracking';
+import { useState, useEffect, useRef } from 'react';
 
 interface PaceTrackerProps {
   completedLessons: number;
@@ -7,7 +16,58 @@ interface PaceTrackerProps {
 }
 
 export function PaceTracker({ completedLessons, totalLessons, className = '' }: PaceTrackerProps) {
-  const metrics = calculatePaceMetrics(completedLessons, totalLessons);
+  // Phase 2: State for real-time countdown updates
+  const [now, setNow] = useState(new Date());
+  // Phase 2: State for fixed deadline (doesn't move with time)
+  const [fixedDeadline, setFixedDeadline] = useState<Date | undefined>(undefined);
+  // --- START OF FIX ---
+  // State for the buffer, which will now accumulate
+  const [bufferHours, setBufferHours] = useState(0); // TODO Phase 6: Load from persistence
+
+  // Ref to track initial render, so we don't calculate buffer on first load
+  const isInitialMount = useRef(true);
+  
+  // Update every second for countdown timer
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setNow(new Date());
+    }, 1000);
+    
+    return () => clearInterval(timer);
+  }, []);
+
+  // Recalculate and ACCUMULATE buffer when a lesson is completed
+  useEffect(() => {
+    // Don't run on the very first render
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+
+    // This code runs ONLY when `completedLessons` changes
+    if (fixedDeadline) {
+      // Calculate how much time was saved by completing the lesson early
+      const timeSavedInHours = (fixedDeadline.getTime() - now.getTime()) / (1000 * 60 * 60);
+      
+      // Add the saved time to our buffer
+      setBufferHours(prevBuffer => prevBuffer + timeSavedInHours);
+      
+      // Reset the deadline so a new one can be calculated with the new buffer
+      setFixedDeadline(undefined);
+    }
+  // This effect depends ONLY on completedLessons
+  }, [completedLessons]);
+
+  // Pass the STATEFUL buffer to the calculation function
+  const metrics = calculatePaceMetrics(completedLessons, totalLessons, undefined, now, bufferHours, fixedDeadline);
+  
+  // Set a new fixed deadline if one doesn't exist or has passed
+  useEffect(() => {
+    if (!fixedDeadline || fixedDeadline <= now) {
+      setFixedDeadline(metrics.nextDeadline);
+    }
+  }, [fixedDeadline, now, metrics.nextDeadline]);
+  // --- END OF FIX ---
   
   const paceTrackerStyle: React.CSSProperties = {
     background: '#f8f9fa',
@@ -78,11 +138,42 @@ export function PaceTracker({ completedLessons, totalLessons, className = '' }: 
   };
   
   return (
-    <div className={`pace-tracker ${className}`} style={paceTrackerStyle}>
-      <div style={paceHeaderStyle}>
-        <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#495057' }}>📊 Study Pace</h3>
-        <div style={timeRemainingStyle}>
-          {formatTimeRemaining(metrics)}
+    <div 
+      className={`pace-tracker p-6 rounded-lg border-2 border-gray-200 shadow-lg ${className}`}
+      style={paceTrackerStyle}
+    >
+      {/* Phase 2: Primary - Soft Deadline Countdown */}
+      <div className="deadline-section mb-4 p-4 bg-green-50 rounded-lg border border-green-200">
+        <h3 className="text-lg font-semibold text-green-800 mb-2">
+          📅 Next Lesson Deadline
+        </h3>
+        <div className="text-2xl font-mono text-green-900 mb-2">
+          {formatDeadlineCountdown(metrics.nextDeadline, now)}
+        </div>
+        <div className="text-sm text-green-700">
+          Complete next lesson by: {metrics.nextDeadline.toLocaleString()}
+        </div>
+      </div>
+
+      {/* Phase 2: Secondary - Buffer Status */}
+      <div className="buffer-section mb-4">
+        <div className="text-lg font-medium mb-1">
+          {formatBufferStatus(metrics)}
+        </div>
+        <div className="text-sm text-gray-600">
+          {formatTargetPace(metrics.targetLessonsPerDay)}
+        </div>
+      </div>
+
+      <h2 className="text-2xl font-bold mb-4 text-center">📊 Study Pace Tracker</h2>
+      
+      {/* Progress Summary */}
+      <div className="progress-summary mb-6">
+        <div className="text-lg">
+          <strong>{metrics.completedLessons.toFixed(1)}</strong> of <strong>{metrics.totalLessons}</strong> lessons completed
+        </div>
+        <div className="text-sm text-gray-600 mt-1">
+          {metrics.lessonsRemaining.toFixed(1)} lessons remaining
         </div>
       </div>
       
@@ -106,7 +197,7 @@ export function PaceTracker({ completedLessons, totalLessons, className = '' }: 
         </div>
         
         <div style={encouragementStyle}>
-          {getEncouragementMessage(metrics)}
+          {getEncouragementMessage(metrics.completedLessons / metrics.totalLessons)}
         </div>
       </div>
     </div>

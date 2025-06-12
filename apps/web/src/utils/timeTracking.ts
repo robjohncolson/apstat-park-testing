@@ -17,22 +17,30 @@ export interface PaceMetrics {
   // Targets
   targetLessonsPerDay: number;
   targetHoursPerDay: number;
+  
+  // Phase 1/2: Soft deadline and buffer system
+  nextDeadline: Date;
+  bufferHours: number;
+  aheadLessons: number;
 }
 
 /**
  * Calculate comprehensive pace and timing metrics
+ * Phase 2: Enhanced with soft deadline and buffer system
  */
 export function calculatePaceMetrics(
   completedLessons: number,
   totalLessons: number,
-  examDate: Date = getDefaultExamDate()
+  examDate: Date = getDefaultExamDate(),
+  now: Date = new Date(),
+  currentBufferHours: number = 0, // TODO Phase 6: Load from persistence
+  lastDeadline?: Date // TODO Phase 6: Load from persistence - the FIXED deadline for current lesson
 ): PaceMetrics {
-  const now = new Date();
   const msUntilExam = examDate.getTime() - now.getTime();
   
   // Basic time calculations
   const daysUntilExam = Math.max(0, Math.ceil(msUntilExam / (1000 * 60 * 60 * 24)));
-  const hoursUntilExam = Math.max(0, Math.ceil(msUntilExam / (1000 * 60 * 60)));
+  const hoursUntilExam = Math.max(0, msUntilExam / (1000 * 60 * 60)); // Use fractional hours for precision
   
   const lessonsRemaining = Math.max(0, totalLessons - completedLessons);
   
@@ -44,14 +52,40 @@ export function calculatePaceMetrics(
   let isOnTrack = true;
   let paceStatus: 'ahead' | 'on-track' | 'behind' | 'unknown' = 'unknown';
   
+  // Phase 2: Soft deadline and buffer calculations
+  let nextDeadline: Date = new Date(now); // Default fallback
+  let bufferHours = currentBufferHours;
+  let aheadLessons = 0;
+  
   if (daysUntilExam > 0) {
-    // Target pace needed
+    // Phase 2: Enhanced pace calculations
+    if (lessonsRemaining > 0) {
+      hoursPerLesson = hoursUntilExam / lessonsRemaining;
+      
+      // 🚨 CRITICAL BUG FIX: Use FIXED deadline, don't recalculate every second!
+      if (lastDeadline && lastDeadline > now) {
+        // Use existing fixed deadline if it's still in the future
+        nextDeadline = lastDeadline;
+      } else {
+        // Calculate NEW fixed deadline (only when starting or after completing a lesson)
+        nextDeadline = new Date(now.getTime() + (hoursPerLesson * 60 * 60 * 1000) + (bufferHours * 60 * 60 * 1000));
+      }
+      
+      if (hoursPerLesson > 0) {
+        aheadLessons = Math.round((bufferHours / hoursPerLesson) * 10) / 10; // 1 decimal place
+      }
+    } else {
+      // All lessons complete
+      hoursPerLesson = 0;
+      nextDeadline = examDate;
+      // When done, buffer is measured in "days" ahead of the exam
+      aheadLessons = Math.round((bufferHours / 24) * 10) / 10;
+    }
+    
+    // Legacy calculations for compatibility
     targetLessonsPerDay = lessonsRemaining / daysUntilExam;
     
-    // Assume 1.5 hours per lesson on average (adjustable)
-    const estimatedHoursPerLesson = 1.5;
-    targetHoursPerDay = targetLessonsPerDay * estimatedHoursPerLesson;
-    hoursPerLesson = estimatedHoursPerLesson;
+    targetHoursPerDay = targetLessonsPerDay * (hoursPerLesson > 0 ? hoursPerLesson : 1.5); // Use calculated or fallback
     
     // Current pace (if we have completion data)
     const daysElapsed = getDaysElapsed();
@@ -59,16 +93,13 @@ export function calculatePaceMetrics(
       lessonsPerDay = completedLessons / daysElapsed;
     }
     
-    // Determine pace status
-    if (targetLessonsPerDay <= 1) {
+    // Phase 2: Enhanced pace status based on buffer
+    if (aheadLessons >= 1.0) {
       paceStatus = 'ahead';
       isOnTrack = true;
-    } else if (targetLessonsPerDay <= 2) {
+    } else if (aheadLessons >= -0.5) {
       paceStatus = 'on-track';
       isOnTrack = true;
-    } else if (targetLessonsPerDay <= 3) {
-      paceStatus = 'behind';
-      isOnTrack = false;
     } else {
       paceStatus = 'behind';
       isOnTrack = false;
@@ -86,7 +117,10 @@ export function calculatePaceMetrics(
     isOnTrack,
     paceStatus,
     targetLessonsPerDay,
-    targetHoursPerDay
+    targetHoursPerDay,
+    nextDeadline,
+    bufferHours,
+    aheadLessons
   };
 }
 
@@ -137,17 +171,71 @@ function getSchoolYearStart(): Date {
 
 /**
  * Format pace status for display
+ * Phase 2: Enhanced with buffer-based status
  */
 export function formatPaceStatus(metrics: PaceMetrics): string {
   switch (metrics.paceStatus) {
     case 'ahead':
-      return `🎯 Ahead of schedule! ${metrics.targetLessonsPerDay.toFixed(1)} lessons/day needed`;
+      return `🎯 ${Math.abs(metrics.aheadLessons).toFixed(1)} lessons ahead!`;
     case 'on-track':
       return `✅ On track! ${metrics.targetLessonsPerDay.toFixed(1)} lessons/day needed`;
     case 'behind':
-      return `⚠️ Need to catch up! ${metrics.targetLessonsPerDay.toFixed(1)} lessons/day needed`;
+      return `⚠️ ${Math.abs(metrics.aheadLessons).toFixed(1)} lessons behind!`;
     default:
       return '📊 Calculating pace...';
+  }
+}
+
+/**
+ * Phase 2: Format the soft deadline countdown
+ * @param deadline The next lesson deadline
+ * @param now Current time (for testing)
+ * @returns Formatted countdown string (hh:mm:ss)
+ */
+export function formatDeadlineCountdown(deadline: Date, now: Date = new Date()): string {
+  const msRemaining = deadline.getTime() - now.getTime();
+  
+  if (msRemaining <= 0) {
+    return "⏰ Deadline passed!";
+  }
+  
+  const totalSeconds = Math.floor(msRemaining / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  
+  // Format as hh:mm:ss
+  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+}
+
+/**
+ * Phase 2: Format buffer status for display
+ * @param metrics Pace metrics containing buffer information
+ * @returns Formatted buffer string
+ */
+export function formatBufferStatus(metrics: PaceMetrics): string {
+  if (metrics.aheadLessons > 0) {
+    return `🟢 ${metrics.aheadLessons.toFixed(1)} lessons ahead`;
+  } else if (metrics.aheadLessons < 0) {
+    return `🔴 ${Math.abs(metrics.aheadLessons).toFixed(1)} lessons behind`;
+  } else {
+    return `⚪ On pace`;
+  }
+}
+
+/**
+ * Phase 2: Format target pace with smart display for < 1 lesson/day
+ * @param targetLessonsPerDay Target lessons per day
+ * @returns Human-readable pace description
+ */
+export function formatTargetPace(targetLessonsPerDay: number): string {
+  if (targetLessonsPerDay >= 1) {
+    return `${targetLessonsPerDay.toFixed(1)} lessons/day`;
+  } else if (targetLessonsPerDay > 0) {
+    const daysPerLesson = Math.round(1 / targetLessonsPerDay);
+    return `≈ 1 lesson every ${daysPerLesson} days`;
+  } else {
+    return "All lessons complete! 🎉";
   }
 }
 
@@ -156,47 +244,46 @@ export function formatPaceStatus(metrics: PaceMetrics): string {
  */
 export function formatTimeRemaining(metrics: PaceMetrics): string {
   if (metrics.daysUntilExam <= 0) {
-    return '🎓 Exam day!';
+    return '📚 EXAM DAY!';
   }
   
   if (metrics.daysUntilExam === 1) {
-    return '🔥 1 day until exam!';
+    return '🔥 EXAM TOMORROW!';
   }
   
   if (metrics.daysUntilExam <= 7) {
-    return `🔥 ${metrics.daysUntilExam} days until exam!`;
+    return `⚡ Final countdown: ${metrics.daysUntilExam} days!`;
   }
   
-  // --- START OF CORRECTED LOGIC ---
   // For anything > 7 days, show weeks and days format
   const weeks = Math.floor(metrics.daysUntilExam / 7);
   const remainingDays = metrics.daysUntilExam % 7;
   
   if (remainingDays === 0) {
-    return `📅 ${weeks} week${weeks !== 1 ? 's' : ''} until exam`;
+    return `${weeks}w until exam`;
   }
   
-  return `📅 ${weeks}w ${remainingDays}d until exam`;
-  // --- END OF CORRECTED LOGIC ---
+  return `${weeks}w ${remainingDays}d until exam`;
 }
 
 /**
  * Get encouragement message based on progress
+ * @param completionRatio A number between 0 and 1 representing completion percentage
  */
-export function getEncouragementMessage(metrics: PaceMetrics): string {
-  const progressPercent = (metrics.completedLessons / metrics.totalLessons) * 100;
+export function getEncouragementMessage(completionRatio: number): string {
+  const progressPercent = completionRatio * 100;
   
   if (progressPercent >= 90) {
-    return "🌟 Almost there! You've got this!";
+    return "🎉 Almost there! You're in the final stretch!";
   } else if (progressPercent >= 75) {
-    return "🔥 Strong progress! Keep it up!";
+    return "💪 Great progress! Keep up the momentum!";
   } else if (progressPercent >= 50) {
-    return "💪 Halfway there! Steady as she goes!";
+    return "🚀 Halfway there! You're building solid foundations!";
   } else if (progressPercent >= 25) {
-    return "🚀 Building momentum! Great start!";
-  } else if (metrics.completedLessons > 0) {
-    return "🌱 Every journey begins with a single step!";
+    return "📈 Good start! Every lesson counts!";
+  } else if (completionRatio > 0) {
+    return "🌱 Just getting started! The journey begins with a single step!";
   } else {
-    return "✨ Ready to begin your AP Stats journey?";
+    return "🎯 Ready to begin your AP Statistics journey!";
   }
 } 

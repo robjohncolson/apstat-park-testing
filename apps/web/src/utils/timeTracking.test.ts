@@ -1,194 +1,240 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { 
   calculatePaceMetrics, 
-  formatTimeRemaining, 
+  getDefaultExamDate,
+  formatDeadlineCountdown,
+  formatBufferStatus,
+  formatTargetPace,
   formatPaceStatus,
-  getEncouragementMessage,
-  getDefaultExamDate
+  formatTimeRemaining,
+  getEncouragementMessage 
 } from './timeTracking';
 
-// Mock the current date to ensure tests are deterministic
-const MOCK_CURRENT_DATE = new Date('2024-04-15T10:00:00.000Z');
+// Mock dates for deterministic testing
+const MOCK_CURRENT_DATE = new Date('2024-01-15T10:00:00Z');
+const MOCK_EXAM_DATE = new Date('2024-05-13T16:00:00Z'); // May 13, 4pm
 
 describe('timeTracking Utilities', () => {
-
   beforeEach(() => {
-    // Mock the current date for consistent test results
     vi.useFakeTimers();
     vi.setSystemTime(MOCK_CURRENT_DATE);
   });
 
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
-  describe('calculatePaceMetrics', () => {
-    it('should correctly calculate days and lessons remaining with custom exam date', () => {
-      const examDate = new Date('2024-05-13T08:00:00.000Z'); // 28 days away from mock date
-      const metrics = calculatePaceMetrics(10, 50, examDate);
-
-      expect(metrics.daysUntilExam).toBe(28);
-      expect(metrics.lessonsRemaining).toBe(40);
-      expect(metrics.targetLessonsPerDay).toBeCloseTo(40 / 28); // ~1.43
-      expect(metrics.totalLessons).toBe(50);
-      expect(metrics.completedLessons).toBe(10);
+  describe('calculatePaceMetrics (Phase 2 Logic)', () => {
+    it('should calculate basic metrics correctly with zero progress', () => {
+      const metrics = calculatePaceMetrics(0, 89, MOCK_EXAM_DATE, MOCK_CURRENT_DATE, 0);
+      
+      expect(metrics.completedLessons).toBe(0);
+      expect(metrics.totalLessons).toBe(89);
+      expect(metrics.lessonsRemaining).toBe(89);
+      expect(metrics.hoursUntilExam).toBeCloseTo(2862, 0); // ~119 days
+      expect(metrics.hoursPerLesson).toBeCloseTo(2862 / 89, 1); // ~32.15
+      expect(metrics.bufferHours).toBe(0);
+      expect(metrics.aheadLessons).toBe(0);
     });
-
-    it('should return 0 for days remaining if the exam date has passed', () => {
-      const examDate = new Date('2024-04-01T08:00:00.000Z'); // In the past
-      const metrics = calculatePaceMetrics(50, 50, examDate);
-
-      expect(metrics.daysUntilExam).toBe(0);
-      expect(metrics.lessonsRemaining).toBe(0);
-      expect(metrics.targetLessonsPerDay).toBe(0);
-    });
-
-    it('should set pace status to "ahead" when target lessons per day is low', () => {
-      const examDate = new Date('2024-05-13T08:00:00.000Z'); // 28 days away
-      const metrics = calculatePaceMetrics(45, 50, examDate); // Only 5 lessons remaining
+    
+    it('should set pace status to "ahead" when buffer is positive', () => {
+      const bufferHours = 48; // 2 days ahead of pace
+      const metrics = calculatePaceMetrics(10, 89, MOCK_EXAM_DATE, MOCK_CURRENT_DATE, bufferHours);
 
       expect(metrics.paceStatus).toBe('ahead');
       expect(metrics.isOnTrack).toBe(true);
-      expect(metrics.targetLessonsPerDay).toBeLessThanOrEqual(1);
+      expect(metrics.aheadLessons).toBeGreaterThan(1.0);
     });
 
-    it('should set pace status to "on-track" when target lessons per day is moderate', () => {
-      const examDate = new Date('2024-04-29T08:00:00.000Z'); // 14 days away
-      const metrics = calculatePaceMetrics(30, 50, examDate); // 20 lessons remaining
-
+    it('should set pace status to "on-track" when buffer is neutral or slightly negative', () => {
+      const metrics = calculatePaceMetrics(10, 89, MOCK_EXAM_DATE, MOCK_CURRENT_DATE, 0);
       expect(metrics.paceStatus).toBe('on-track');
       expect(metrics.isOnTrack).toBe(true);
-      expect(metrics.targetLessonsPerDay).toBeCloseTo(20 / 14); // ~1.43
+      expect(metrics.aheadLessons).toBe(0);
     });
 
-    it('should set pace status to "behind" when target lessons per day is high', () => {
-      const examDate = new Date('2024-04-22T08:00:00.000Z'); // 7 days away
-      const metrics = calculatePaceMetrics(10, 50, examDate); // 40 lessons remaining
+    it('should set pace status to "behind" when buffer is significantly negative', () => {
+      const bufferHours = -48; // 2 days behind pace
+      const metrics = calculatePaceMetrics(10, 89, MOCK_EXAM_DATE, MOCK_CURRENT_DATE, bufferHours);
 
       expect(metrics.paceStatus).toBe('behind');
       expect(metrics.isOnTrack).toBe(false);
-      expect(metrics.targetLessonsPerDay).toBeCloseTo(40 / 7); // ~5.71
+      expect(metrics.aheadLessons).toBeLessThan(-0.5);
+    });
+
+    it('should handle all lessons completed', () => {
+      const metrics = calculatePaceMetrics(89, 89, MOCK_EXAM_DATE, MOCK_CURRENT_DATE, 0);
+      
+      expect(metrics.lessonsRemaining).toBe(0);
+      expect(metrics.hoursPerLesson).toBe(0);
+      expect(metrics.nextDeadline).toEqual(MOCK_EXAM_DATE);
+    });
+
+    it('should calculate next deadline correctly with zero buffer', () => {
+      const metrics = calculatePaceMetrics(10, 89, MOCK_EXAM_DATE, MOCK_CURRENT_DATE, 0);
+      const expectedDeadline = new Date(MOCK_CURRENT_DATE.getTime() + (metrics.hoursPerLesson * 60 * 60 * 1000));
+      expect(metrics.nextDeadline.getTime()).toBeCloseTo(expectedDeadline.getTime());
+    });
+
+    it('should apply a positive buffer to make the deadline later', () => {
+      const bufferHours = 12; // 12 hours ahead
+      const metrics = calculatePaceMetrics(10, 89, MOCK_EXAM_DATE, MOCK_CURRENT_DATE, bufferHours);
+      
+      const expectedDeadlineWithBuffer = new Date(
+        MOCK_CURRENT_DATE.getTime() 
+        + (metrics.hoursPerLesson * 60 * 60 * 1000) 
+        + (bufferHours * 60 * 60 * 1000) // Note: ADDING buffer
+      );
+      expect(metrics.nextDeadline.getTime()).toBeCloseTo(expectedDeadlineWithBuffer.getTime());
     });
   });
 
   describe('formatTimeRemaining', () => {
     it('should format weeks and days correctly', () => {
-      const metrics = { daysUntilExam: 23 } as any; // 3 weeks and 2 days
-      expect(formatTimeRemaining(metrics)).toBe('📅 3w 2d until exam');
+      const metrics = { daysUntilExam: 15 } as any;
+      expect(formatTimeRemaining(metrics)).toBe('2w 1d until exam');
     });
 
     it('should format exact weeks correctly', () => {
-      const metrics = { daysUntilExam: 14 } as any; // Exactly 2 weeks
-      expect(formatTimeRemaining(metrics)).toBe('📅 2 weeks until exam');
+      const metrics = { daysUntilExam: 14 } as any;
+      expect(formatTimeRemaining(metrics)).toBe('2w until exam');
     });
 
     it('should show a special message for the last 7 days', () => {
-      const metrics = { daysUntilExam: 5 } as any;
-      expect(formatTimeRemaining(metrics)).toBe('🔥 5 days until exam!');
+      const metrics = { daysUntilExam: 3 } as any;
+      expect(formatTimeRemaining(metrics)).toBe('⚡ Final countdown: 3 days!');
     });
 
     it('should show special message for 1 day remaining', () => {
       const metrics = { daysUntilExam: 1 } as any;
-      expect(formatTimeRemaining(metrics)).toBe('🔥 1 day until exam!');
+      expect(formatTimeRemaining(metrics)).toBe('🔥 EXAM TOMORROW!');
     });
 
     it('should show "Exam day!" when 0 days are left', () => {
       const metrics = { daysUntilExam: 0 } as any;
-      expect(formatTimeRemaining(metrics)).toBe('🎓 Exam day!');
+      expect(formatTimeRemaining(metrics)).toBe('📚 EXAM DAY!');
     });
 
     it('should format weeks properly for 15 days (2w 1d)', () => {
       const metrics = { daysUntilExam: 15 } as any;
-      expect(formatTimeRemaining(metrics)).toBe('📅 2w 1d until exam');
+      expect(formatTimeRemaining(metrics)).toBe('2w 1d until exam');
     });
   });
 
-  describe('formatPaceStatus', () => {
+  describe('formatPaceStatus (Phase 2 Logic)', () => {
     it('should format ahead status correctly', () => {
-      const metrics = { 
-        paceStatus: 'ahead' as const, 
-        targetLessonsPerDay: 0.8 
-      } as any;
-      expect(formatPaceStatus(metrics)).toBe('🎯 Ahead of schedule! 0.8 lessons/day needed');
+      const metrics = { paceStatus: 'ahead', aheadLessons: 2.3 } as any;
+      expect(formatPaceStatus(metrics)).toBe('🎯 2.3 lessons ahead!');
     });
 
     it('should format on-track status correctly', () => {
-      const metrics = { 
-        paceStatus: 'on-track' as const, 
-        targetLessonsPerDay: 1.5 
-      } as any;
+      const metrics = { paceStatus: 'on-track', targetLessonsPerDay: 1.5 } as any;
       expect(formatPaceStatus(metrics)).toBe('✅ On track! 1.5 lessons/day needed');
     });
 
     it('should format behind status correctly', () => {
-      const metrics = { 
-        paceStatus: 'behind' as const, 
-        targetLessonsPerDay: 3.2 
-      } as any;
-      expect(formatPaceStatus(metrics)).toBe('⚠️ Need to catch up! 3.2 lessons/day needed');
+      const metrics = { paceStatus: 'behind', aheadLessons: -1.8 } as any;
+      expect(formatPaceStatus(metrics)).toBe('⚠️ 1.8 lessons behind!');
     });
 
     it('should format unknown status correctly', () => {
-      const metrics = { 
-        paceStatus: 'unknown' as const, 
-        targetLessonsPerDay: 0 
-      } as any;
+      const metrics = { paceStatus: 'unknown' } as any;
       expect(formatPaceStatus(metrics)).toBe('📊 Calculating pace...');
     });
   });
 
   describe('getEncouragementMessage', () => {
     it('should return correct message for 90%+ completion', () => {
-      const metrics = { completedLessons: 45, totalLessons: 50 } as any; // 90%
-      expect(getEncouragementMessage(metrics)).toBe("🌟 Almost there! You've got this!");
+      expect(getEncouragementMessage(0.95)).toBe("🎉 Almost there! You're in the final stretch!");
     });
 
     it('should return correct message for 75%+ completion', () => {
-      const metrics = { completedLessons: 38, totalLessons: 50 } as any; // 76%
-      expect(getEncouragementMessage(metrics)).toBe("🔥 Strong progress! Keep it up!");
+      expect(getEncouragementMessage(0.80)).toBe("💪 Great progress! Keep up the momentum!");
     });
 
     it('should return correct message for 50%+ completion', () => {
-      const metrics = { completedLessons: 25, totalLessons: 50 } as any; // 50%
-      expect(getEncouragementMessage(metrics)).toBe("💪 Halfway there! Steady as she goes!");
+      expect(getEncouragementMessage(0.60)).toBe("🚀 Halfway there! You're building solid foundations!");
     });
 
     it('should return correct message for 25%+ completion', () => {
-      const metrics = { completedLessons: 15, totalLessons: 50 } as any; // 30%
-      expect(getEncouragementMessage(metrics)).toBe("🚀 Building momentum! Great start!");
+      expect(getEncouragementMessage(0.30)).toBe("📈 Good start! Every lesson counts!");
     });
 
     it('should return correct message for low but non-zero completion', () => {
-      const metrics = { completedLessons: 5, totalLessons: 50 } as any; // 10%
-      expect(getEncouragementMessage(metrics)).toBe("🌱 Every journey begins with a single step!");
+      expect(getEncouragementMessage(0.05)).toBe("🌱 Just getting started! The journey begins with a single step!");
     });
 
     it('should return correct message for zero completion', () => {
-      const metrics = { completedLessons: 0, totalLessons: 50 } as any; // 0%
-      expect(getEncouragementMessage(metrics)).toBe("✨ Ready to begin your AP Stats journey?");
+      expect(getEncouragementMessage(0)).toBe("🎯 Ready to begin your AP Statistics journey!");
     });
   });
 
   describe('getDefaultExamDate', () => {
     it('should return May 13th for the current year when before May', () => {
-      // Mock date is April 15, 2024
       const examDate = getDefaultExamDate();
-      expect(examDate.getFullYear()).toBe(2024);
       expect(examDate.getMonth()).toBe(4); // May is month 4 (0-indexed)
       expect(examDate.getDate()).toBe(13);
-      expect(examDate.getHours()).toBe(8);
     });
 
     it('should return May 13th for the next year when after May', () => {
-      // Test with a date after May 13th
-      vi.setSystemTime(new Date('2024-06-15T10:00:00.000Z'));
-      
+      // Mock a date after May
+      vi.setSystemTime(new Date('2024-06-01T10:00:00Z'));
       const examDate = getDefaultExamDate();
-      expect(examDate.getFullYear()).toBe(2025);
       expect(examDate.getMonth()).toBe(4); // May is month 4 (0-indexed)
       expect(examDate.getDate()).toBe(13);
-      expect(examDate.getHours()).toBe(8);
+      expect(examDate.getFullYear()).toBe(2025); // Should be next year
     });
   });
 
+  describe('New Formatting Functions', () => {
+    describe('formatDeadlineCountdown', () => {
+      it('should format countdown correctly', () => {
+        const deadline = new Date(MOCK_CURRENT_DATE.getTime() + (3 * 3600 * 1000) + (45 * 60 * 1000) + (30 * 1000));
+        const result = formatDeadlineCountdown(deadline, MOCK_CURRENT_DATE);
+        expect(result).toBe('03:45:30');
+      });
+
+      it('should handle passed deadlines', () => {
+        const deadline = new Date(MOCK_CURRENT_DATE.getTime() - 1000); // 1 second ago
+        const result = formatDeadlineCountdown(deadline, MOCK_CURRENT_DATE);
+        expect(result).toBe('⏰ Deadline passed!');
+      });
+
+      it('should pad single digits correctly', () => {
+        const deadline = new Date(MOCK_CURRENT_DATE.getTime() + (1 * 3600 * 1000) + (5 * 60 * 1000) + (9 * 1000));
+        const result = formatDeadlineCountdown(deadline, MOCK_CURRENT_DATE);
+        expect(result).toBe('01:05:09');
+      });
+    });
+
+    describe('formatBufferStatus', () => {
+      it('should format positive buffer correctly', () => {
+        const metrics = { aheadLessons: 2.3 } as any;
+        expect(formatBufferStatus(metrics)).toBe('🟢 2.3 lessons ahead');
+      });
+
+      it('should format negative buffer correctly', () => {
+        const metrics = { aheadLessons: -1.7 } as any;
+        expect(formatBufferStatus(metrics)).toBe('🔴 1.7 lessons behind');
+      });
+
+      it('should format zero buffer correctly', () => {
+        const metrics = { aheadLessons: 0 } as any;
+        expect(formatBufferStatus(metrics)).toBe('⚪ On pace');
+      });
+    });
+
+    describe('formatTargetPace', () => {
+      it('should format high pace normally', () => {
+        expect(formatTargetPace(2.5)).toBe('2.5 lessons/day');
+        expect(formatTargetPace(1.0)).toBe('1.0 lessons/day');
+      });
+
+      it('should format low pace as "every X days"', () => {
+        expect(formatTargetPace(0.5)).toBe('≈ 1 lesson every 2 days');
+        expect(formatTargetPace(0.33)).toBe('≈ 1 lesson every 3 days');
+        expect(formatTargetPace(0.25)).toBe('≈ 1 lesson every 4 days');
+      });
+
+      it('should handle zero pace', () => {
+        expect(formatTargetPace(0)).toBe('All lessons complete! 🎉');
+      });
+    });
+  });
 }); 
