@@ -1,7 +1,7 @@
 // Here we define all our mock API request handlers
 import { http, HttpResponse } from 'msw';
 
-const API_BASE_URL = 'http://localhost:3001/api';
+const API_BASE_URL = 'http://localhost:3000/api';
 
 export const handlers = [
   // Mock for generating a username - try both absolute and relative URLs

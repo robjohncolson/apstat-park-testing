@@ -53,7 +53,7 @@ export function BookmarkProvider({ children }: BookmarkProviderProps) {
 
     setIsLoading(true);
     try {
-      const response = await fetch(`http://localhost:3001/api/users/${user.id}/bookmarks`);
+              const response = await fetch(`http://localhost:3000/api/users/${user.id}/bookmarks`);
       if (response.ok) {
         const data = await response.json();
         // We only support one bookmark, so take the first one
@@ -112,7 +112,7 @@ export function BookmarkProvider({ children }: BookmarkProviderProps) {
     setActiveBookmark(newBookmark);
 
     try {
-      const response = await fetch(`http://localhost:3001/api/users/${user.id}/bookmarks/sync`, {
+      const response = await fetch(`http://localhost:3000/api/users/${user.id}/bookmarks/sync`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -147,7 +147,7 @@ export function BookmarkProvider({ children }: BookmarkProviderProps) {
     setActiveBookmark(null);
 
     try {
-      const response = await fetch(`http://localhost:3001/api/users/${user.id}/bookmarks/sync`, {
+      const response = await fetch(`http://localhost:3000/api/users/${user.id}/bookmarks/sync`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

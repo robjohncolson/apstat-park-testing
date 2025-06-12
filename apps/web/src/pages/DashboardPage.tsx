@@ -36,7 +36,7 @@ export function DashboardPage() {
       }
       
       try {
-        const response = await fetch(`http://localhost:3001/api/users/${user.id}/progress`);
+        const response = await fetch(`http://localhost:3000/api/users/${user.id}/progress`);
         if (response.ok) {
           const progressData = await response.json();
           setProgress(progressData);

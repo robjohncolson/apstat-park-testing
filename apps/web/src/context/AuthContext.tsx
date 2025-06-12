@@ -63,7 +63,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const generateUsername = async (): Promise<string> => {
     try {
-      const response = await fetch('http://localhost:3001/api/generate-username');
+      const response = await fetch('http://localhost:3000/api/generate-username');
       const data = await response.json();
       return data.username;
     } catch (error) {
@@ -88,7 +88,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // Try to create user via API, but fall back to offline mode if it fails
       let user;
       try {
-        const response = await fetch('http://localhost:3001/api/users/get-or-create', {
+        const response = await fetch('http://localhost:3000/api/users/get-or-create', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

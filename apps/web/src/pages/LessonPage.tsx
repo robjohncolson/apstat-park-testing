@@ -41,7 +41,7 @@ export function LessonPage() {
       }
 
       try {
-        const response = await fetch(`http://localhost:3001/api/users/${user.id}/progress`);
+        const response = await fetch(`http://localhost:3000/api/users/${user.id}/progress`);
         if (response.ok) {
           const progressData = await response.json();
           const lessonProgress = progressData.find(
@@ -151,7 +151,7 @@ export function LessonPage() {
     };
 
     try {
-      const response = await fetch(`http://localhost:3001/api/users/${user.id}/progress/sync`, {
+      const response = await fetch(`http://localhost:3000/api/users/${user.id}/progress/sync`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -202,15 +202,15 @@ export function LessonPage() {
 
     // Optimistic update
     const previousProgress = progress;
-    if (!progress.videos_watched.includes(videoIndex)) {
+    if (!(progress.videos_watched || []).includes(videoIndex)) {
       setProgress(prev => prev ? {
         ...prev,
-        videos_watched: [...prev.videos_watched, videoIndex]
+        videos_watched: [...(prev.videos_watched || []), videoIndex]
       } : null);
     }
 
     try {
-      const response = await fetch(`http://localhost:3001/api/users/${user.id}/progress/sync`, {
+      const response = await fetch(`http://localhost:3000/api/users/${user.id}/progress/sync`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -237,6 +237,10 @@ export function LessonPage() {
       const existingIndex = progressData.findIndex((p: any) => p.lesson_id === lessonId);
       if (existingIndex >= 0) {
         const existing = progressData[existingIndex];
+        // Ensure videos_watched is an array
+        if (!existing.videos_watched) {
+          existing.videos_watched = [];
+        }
         if (!existing.videos_watched.includes(videoIndex)) {
           existing.videos_watched.push(videoIndex);
         }
@@ -268,15 +272,15 @@ export function LessonPage() {
 
     // Optimistic update
     const previousProgress = progress;
-    if (!progress.quizzes_completed.includes(quizIndex)) {
+    if (!(progress.quizzes_completed || []).includes(quizIndex)) {
       setProgress(prev => prev ? {
         ...prev,
-        quizzes_completed: [...prev.quizzes_completed, quizIndex]
+        quizzes_completed: [...(prev.quizzes_completed || []), quizIndex]
       } : null);
     }
 
     try {
-      const response = await fetch(`http://localhost:3001/api/users/${user.id}/progress/sync`, {
+      const response = await fetch(`http://localhost:3000/api/users/${user.id}/progress/sync`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -303,6 +307,10 @@ export function LessonPage() {
       const existingIndex = progressData.findIndex((p: any) => p.lesson_id === lessonId);
       if (existingIndex >= 0) {
         const existing = progressData[existingIndex];
+        // Ensure quizzes_completed is an array
+        if (!existing.quizzes_completed) {
+          existing.quizzes_completed = [];
+        }
         if (!existing.quizzes_completed.includes(quizIndex)) {
           existing.quizzes_completed.push(quizIndex);
         }
