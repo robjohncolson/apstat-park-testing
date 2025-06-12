@@ -6,13 +6,15 @@ import { PaceTracker } from '../components/PaceTracker';
 import type { Unit, Topic } from '../data/allUnitsData';
 import './DashboardPage.css';
 
+// Interface for user progress data
 interface UserProgress {
   lesson_id: string;
   videos_watched?: number[];
   quizzes_completed?: number[];
   blooket_completed?: boolean;
   origami_completed?: boolean;
-  lesson_completed: boolean;
+  // lesson_completed deprecated - now calculated from fractional progress
+  lesson_completed?: boolean;
   completion_date?: string;
 }
 
@@ -105,9 +107,22 @@ export function DashboardPage() {
     fetchProgress();
   }, [user?.id]);
 
-  // Helper function to check if a lesson is completed
+  // Check if a lesson is completed using fractional calculation
   const isLessonCompleted = (topicId: string): boolean => {
-    return progress.some(p => p.lesson_id === topicId && p.lesson_completed);
+    const topicProgress = progress.find(p => p.lesson_id === topicId);
+    if (!topicProgress) return false;
+    
+    const topic = ALL_UNITS_DATA.flatMap(unit => unit.topics).find(t => t.id === topicId);
+    if (!topic) return false;
+    
+    const userProgress = {
+      videos_watched: topicProgress.videos_watched || [],
+      quizzes_completed: topicProgress.quizzes_completed || [],
+      blooket_completed: topicProgress.blooket_completed || false,
+      origami_completed: topicProgress.origami_completed || false
+    };
+    
+    return calculateTopicFraction(topic, userProgress) === 1.0;
   };
 
   // Helper function to get granular progress for a topic
@@ -118,7 +133,6 @@ export function DashboardPage() {
       quizzesCompleted: topicProgress?.quizzes_completed || [],
       blooketCompleted: topicProgress?.blooket_completed || false,
       origamiCompleted: topicProgress?.origami_completed || false,
-      isCompleted: topicProgress?.lesson_completed || false
     };
   };
 
@@ -224,7 +238,6 @@ interface UnitAccordionProps {
     quizzesCompleted: number[];
     blooketCompleted: boolean;
     origamiCompleted: boolean;
-    isCompleted: boolean;
   };
 }
 
@@ -303,7 +316,6 @@ interface TopicItemProps {
     quizzesCompleted: number[];
     blooketCompleted: boolean;
     origamiCompleted: boolean;
-    isCompleted: boolean;
   };
   topicData: Topic;
 }
@@ -314,7 +326,7 @@ function TopicItem({ topic, unitId, progress, topicData }: TopicItemProps) {
   const videosWatchedCount = progress.videosWatched.length;
   const quizzesCompletedCount = progress.quizzesCompleted.length;
 
-  // Phase 1: Calculate fractional completion for this topic
+  // Calculate fractional completion for this topic
   const userProgress = {
     videos_watched: progress.videosWatched,
     quizzes_completed: progress.quizzesCompleted,
@@ -323,9 +335,10 @@ function TopicItem({ topic, unitId, progress, topicData }: TopicItemProps) {
   };
   const topicFraction = calculateTopicFraction(topicData, userProgress);
   const completionPercentage = Math.round(topicFraction * 100);
+  const isCompleted = topicFraction === 1.0;
 
   return (
-    <div className={`topic-item ${progress.isCompleted ? 'completed' : ''}`}>
+    <div className={`topic-item ${isCompleted ? 'completed' : ''}`}>
       <Link 
         to={`/unit/${unitId}/lesson/${topic.id}`}
         className="topic-link"
@@ -334,11 +347,11 @@ function TopicItem({ topic, unitId, progress, topicData }: TopicItemProps) {
           <div className="topic-header">
             <h4>{topic.name}</h4>
             <div className="topic-completion">
-              {progress.isCompleted ? (
+              {isCompleted ? (
                 <span className="completed-checkmark">✅ 100%</span>
               ) : (
                 <span className={`completion-percentage ${completionPercentage > 0 ? 'in-progress' : ''}`}>
-                  {completionPercentage.toFixed(2)}%
+                  {completionPercentage}%
                 </span>
               )}
             </div>
