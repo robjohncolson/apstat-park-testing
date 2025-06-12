@@ -8,6 +8,15 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      // Conditionally load MSW for testing
+      if (new URLSearchParams(window.location.search).get('msw') === 'true') {
+        const script = document.createElement('script');
+        script.src = '/msw-init.js';
+        script.type = 'module';
+        document.head.appendChild(script);
+      }
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

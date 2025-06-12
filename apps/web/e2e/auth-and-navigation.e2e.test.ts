@@ -39,8 +39,8 @@ test.describe('Full User Journey (Happy Path)', () => {
     await expect(page.getByText('MSW-Champion')).toBeVisible();
     await expect(page.getByText('TestMaster')).toBeVisible();
     
-    // Verify the current user appears in the leaderboard
-    await expect(page.getByText('mocked-user-123')).toBeVisible();
+    // Verify the current user appears in the leaderboard (should show as "You")
+    await expect(page.getByText('mocked-user-123 (You)')).toBeVisible();
   });
 
   test('should handle username generation and custom username input', async ({ page }) => {
@@ -62,15 +62,14 @@ test.describe('Full User Journey (Happy Path)', () => {
     await expect(page.getByText('Continue as mocked-user-123')).toBeVisible();
     
     // --- 3. Use Custom Username ---
-    // Switch to custom username input
-    await page.getByRole('button', { name: /Continue with Custom Name/ }).click();
-    
-    // Enter a custom username
+    // Enter a custom username first (this will enable the button)
     const customUsername = 'E2E-TestUser';
-    await page.getByPlaceholder('Enter your username').fill(customUsername);
+    await page.getByPlaceholder('Enter your preferred username').fill(customUsername);
     
-    // Login with custom username
-    await page.getByRole('button', { name: /Login/ }).click();
+    // Now the "Continue with Custom Name" button should be enabled and click it
+    const customButton = page.getByRole('button', { name: /Continue with Custom Name/ });
+    await expect(customButton).toBeEnabled();
+    await customButton.click();
     
     // --- 4. Verify Dashboard with Custom Username ---
     await expect(page).toHaveURL('/dashboard');
