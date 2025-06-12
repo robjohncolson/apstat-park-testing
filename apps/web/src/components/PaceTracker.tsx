@@ -24,8 +24,8 @@ export function PaceTracker({ completedLessons, totalLessons, className = '' }: 
   // State for the buffer, which will now accumulate
   const [bufferHours, setBufferHours] = useState(0); // TODO Phase 6: Load from persistence
 
-  // Ref to track initial render, so we don't calculate buffer on first load
-  const isInitialMount = useRef(true);
+  // Ref to track the previous number of completed lessons
+  const prevCompletedLessonsRef = useRef(completedLessons);
   
   // Update every second for countdown timer
   useEffect(() => {
@@ -36,27 +36,32 @@ export function PaceTracker({ completedLessons, totalLessons, className = '' }: 
     return () => clearInterval(timer);
   }, []);
 
-  // Recalculate and ACCUMULATE buffer when a lesson is completed
+  // Recalculate and ACCUMULATE buffer when a WHOLE lesson is completed
   useEffect(() => {
-    // Don't run on the very first render
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      return;
-    }
+    const prevFloored = Math.floor(prevCompletedLessonsRef.current);
+    const currentFloored = Math.floor(completedLessons);
 
-    // This code runs ONLY when `completedLessons` changes
-    if (fixedDeadline) {
-      // Calculate how much time was saved by completing the lesson early
+    // Only trigger if we've crossed a whole number threshold
+    if (currentFloored > prevFloored && fixedDeadline) {
+      // Calculate how much time was saved for the lesson that was just completed
       const timeSavedInHours = (fixedDeadline.getTime() - now.getTime()) / (1000 * 60 * 60);
       
-      // Add the saved time to our buffer
-      setBufferHours(prevBuffer => prevBuffer + timeSavedInHours);
+      // The number of whole lessons just completed (usually 1)
+      const lessonsFinished = currentFloored - prevFloored;
+
+      // Add the saved time to our buffer and cap it at 336 hours (14 days)
+      setBufferHours(prevBuffer => {
+        const newBuffer = prevBuffer + (timeSavedInHours * lessonsFinished);
+        return Math.min(newBuffer, 336);
+      });
       
-      // Reset the deadline so a new one can be calculated with the new buffer
+      // Reset the deadline so a new one is calculated
       setFixedDeadline(undefined);
     }
-  // This effect depends ONLY on completedLessons
-  }, [completedLessons]);
+
+    // Always update the ref to the latest value for the next check
+    prevCompletedLessonsRef.current = completedLessons;
+  }, [completedLessons, fixedDeadline, now]);
 
   // Pass the STATEFUL buffer to the calculation function
   const metrics = calculatePaceMetrics(completedLessons, totalLessons, undefined, now, bufferHours, fixedDeadline);
@@ -170,10 +175,10 @@ export function PaceTracker({ completedLessons, totalLessons, className = '' }: 
       {/* Progress Summary */}
       <div className="progress-summary mb-6">
         <div className="text-lg">
-          <strong>{metrics.completedLessons.toFixed(1)}</strong> of <strong>{metrics.totalLessons}</strong> lessons completed
+          <strong>{metrics.completedLessons.toFixed(2)}</strong> of <strong>{metrics.totalLessons}</strong> lessons completed
         </div>
         <div className="text-sm text-gray-600 mt-1">
-          {metrics.lessonsRemaining.toFixed(1)} lessons remaining
+          {metrics.lessonsRemaining.toFixed(2)} lessons remaining
         </div>
       </div>
       

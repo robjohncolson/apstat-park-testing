@@ -170,7 +170,7 @@ export function DashboardPage() {
                 style={{ width: `${stats.completionPercentage}%` }}
               ></div>
             </div>
-            <p>{stats.completedLessons} of {stats.totalLessons} lessons completed ({stats.completionPercentage}%)</p>
+            <p>{stats.completedLessons.toFixed(2)} of {stats.totalLessons} lessons completed ({stats.completionPercentage.toFixed(2)}%)</p>
           </div>
 
           {/* Units and Lessons */}
@@ -189,8 +189,8 @@ export function DashboardPage() {
         <section className="quick-stats">
           <div className="stat-card">
             <h3>Progress</h3>
-            <p>{stats.completionPercentage}% Complete</p>
-            <small>{stats.completedLessons}/{stats.totalLessons} lessons</small>
+            <p>{stats.completionPercentage.toFixed(2)}% Complete</p>
+            <small>{stats.completedLessons.toFixed(2)}/{stats.totalLessons} lessons</small>
           </div>
           <div className="stat-card">
             <h3>Content</h3>
@@ -229,10 +229,10 @@ function UnitAccordion({ unit, isLessonCompleted, getTopicProgress }: UnitAccord
   const unitFractionalProgress = unit.topics.reduce((total, topic) => {
     const topicProgress = getTopicProgress(topic.id);
     const userProgress = {
-      lesson_id: topic.id,
       videos_watched: topicProgress.videosWatched,
       quizzes_completed: topicProgress.quizzesCompleted,
-      lesson_completed: topicProgress.isCompleted
+      blooket_completed: false, // TODO: Hook into blooket completion tracking
+      origami_completed: false  // TODO: Hook into origami completion tracking
     };
     return total + calculateTopicFraction(topic, userProgress);
   }, 0);
@@ -263,7 +263,7 @@ function UnitAccordion({ unit, isLessonCompleted, getTopicProgress }: UnitAccord
                 style={{ width: `${unitProgress}%` }}
               ></div>
             </div>
-            <span>{unitFractionalProgress.toFixed(1)}/{totalTopics} topics</span>
+            <span>{unitFractionalProgress.toFixed(2)}/{totalTopics} topics</span>
           </div>
         </div>
         <div className="expand-icon">
@@ -308,10 +308,10 @@ function TopicItem({ topic, unitId, progress, topicData }: TopicItemProps) {
 
   // Phase 1: Calculate fractional completion for this topic
   const userProgress = {
-    lesson_id: topic.id,
     videos_watched: progress.videosWatched,
     quizzes_completed: progress.quizzesCompleted,
-    lesson_completed: progress.isCompleted
+    blooket_completed: false, // TODO: Hook into blooket completion tracking
+    origami_completed: false  // TODO: Hook into origami completion tracking
   };
   const topicFraction = calculateTopicFraction(topicData, userProgress);
   const completionPercentage = Math.round(topicFraction * 100);
@@ -330,7 +330,7 @@ function TopicItem({ topic, unitId, progress, topicData }: TopicItemProps) {
                 <span className="completed-checkmark">✅ 100%</span>
               ) : (
                 <span className={`completion-percentage ${completionPercentage > 0 ? 'in-progress' : ''}`}>
-                  {completionPercentage}%
+                  {completionPercentage.toFixed(2)}%
                 </span>
               )}
             </div>

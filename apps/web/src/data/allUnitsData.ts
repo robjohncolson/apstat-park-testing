@@ -146,38 +146,49 @@ initializeIndexes();
  */
 export function calculateTopicFraction(
   topic: Topic, 
-  userProgress?: { videos_watched?: number[], quizzes_completed?: number[], lesson_completed?: boolean }
+  userProgress?: { videos_watched?: number[], quizzes_completed?: number[], blooket_completed?: boolean, origami_completed?: boolean }
 ): number {
   if (!userProgress) return 0.0;
-  if (userProgress.lesson_completed) return 1.0;
+  
+  // Weights scaled to sum to 1.0, per user decision
+  const weights = {
+    video: 0.36,
+    quiz: 0.45,   // Quiz / Grok AI
+    blooket: 0.14,
+    origami: 0.05
+  };
+  
+  // Validation: ensure weights sum to 1.0 (with small tolerance for floating point)
+  const weightSum = weights.video + weights.quiz + weights.blooket + weights.origami;
+  if (Math.abs(weightSum - 1.0) > 0.001) {
+    throw new Error(`Topic fraction weights must sum to 1.0, but sum to ${weightSum}`);
+  }
   
   let fraction = 0.0;
   
-  // Videos: 0.4 total weight
-  const videoWeight = 0.4;
+  // Videos
   const videosWatched = userProgress.videos_watched?.length || 0;
   const totalVideos = topic.videos?.length || 0;
   if (totalVideos > 0) {
-    fraction += (videosWatched / totalVideos) * videoWeight;
+    fraction += (videosWatched / totalVideos) * weights.video;
   }
   
-  // Quizzes: 0.4 total weight
-  const quizWeight = 0.4;
+  // Quizzes
   const quizzesCompleted = userProgress.quizzes_completed?.length || 0;
   const totalQuizzes = topic.quizzes?.length || 0;
   if (totalQuizzes > 0) {
-    fraction += (quizzesCompleted / totalQuizzes) * quizWeight;
+    fraction += (quizzesCompleted / totalQuizzes) * weights.quiz;
   }
   
-  // Blooket: 0.1 weight (binary - either done or not)
-  const blooketWeight = 0.1;
-  // TODO Phase 3: Hook into blooket completion tracking
-  // For now, assume not completed
+  // Blooket (binary)
+  if (userProgress.blooket_completed) {
+    fraction += weights.blooket;
+  }
   
-  // Origami: 0.1 weight (binary - either done or not)  
-  const origamiWeight = 0.1;
-  // TODO Phase 3: Hook into origami completion tracking
-  // For now, assume not completed
+  // Origami (binary)
+  if (userProgress.origami_completed) {
+    fraction += weights.origami;
+  }
   
   // Cap at 1.0 and ensure non-negative
   return Math.min(1.0, Math.max(0.0, fraction));
@@ -194,7 +205,17 @@ export function calculateTotalFractionalLessons(
   userProgressArray: Array<{ lesson_id: string, videos_watched?: number[], quizzes_completed?: number[], lesson_completed?: boolean }>
 ): number {
   return allTopics.reduce((total, topic) => {
-    const userProgress = userProgressArray.find(p => p.lesson_id === topic.id);
+    const userProgressData = userProgressArray.find(p => p.lesson_id === topic.id);
+    if (!userProgressData) return total;
+    
+    // Convert old format to new format
+    const userProgress = {
+      videos_watched: userProgressData.videos_watched,
+      quizzes_completed: userProgressData.quizzes_completed,
+      blooket_completed: false, // TODO: Hook into blooket completion tracking
+      origami_completed: false  // TODO: Hook into origami completion tracking
+    };
+    
     const fraction = calculateTopicFraction(topic, userProgress);
     return total + fraction;
   }, 0.0);
