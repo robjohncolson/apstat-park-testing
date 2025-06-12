@@ -10,6 +10,8 @@ interface UserProgress {
   lesson_id: string;
   videos_watched?: number[];
   quizzes_completed?: number[];
+  blooket_completed?: boolean;
+  origami_completed?: boolean;
   lesson_completed: boolean;
   completion_date?: string;
 }
@@ -114,6 +116,8 @@ export function DashboardPage() {
     return {
       videosWatched: topicProgress?.videos_watched || [],
       quizzesCompleted: topicProgress?.quizzes_completed || [],
+      blooketCompleted: topicProgress?.blooket_completed || false,
+      origamiCompleted: topicProgress?.origami_completed || false,
       isCompleted: topicProgress?.lesson_completed || false
     };
   };
@@ -218,6 +222,8 @@ interface UnitAccordionProps {
   getTopicProgress: (topicId: string) => {
     videosWatched: number[];
     quizzesCompleted: number[];
+    blooketCompleted: boolean;
+    origamiCompleted: boolean;
     isCompleted: boolean;
   };
 }
@@ -231,8 +237,8 @@ function UnitAccordion({ unit, isLessonCompleted, getTopicProgress }: UnitAccord
     const userProgress = {
       videos_watched: topicProgress.videosWatched,
       quizzes_completed: topicProgress.quizzesCompleted,
-      blooket_completed: false, // TODO: Hook into blooket completion tracking
-      origami_completed: false  // TODO: Hook into origami completion tracking
+      blooket_completed: topicProgress.blooketCompleted,
+      origami_completed: topicProgress.origamiCompleted
     };
     return total + calculateTopicFraction(topic, userProgress);
   }, 0);
@@ -295,6 +301,8 @@ interface TopicItemProps {
   progress: {
     videosWatched: number[];
     quizzesCompleted: number[];
+    blooketCompleted: boolean;
+    origamiCompleted: boolean;
     isCompleted: boolean;
   };
   topicData: Topic;
@@ -310,8 +318,8 @@ function TopicItem({ topic, unitId, progress, topicData }: TopicItemProps) {
   const userProgress = {
     videos_watched: progress.videosWatched,
     quizzes_completed: progress.quizzesCompleted,
-    blooket_completed: false, // TODO: Hook into blooket completion tracking
-    origami_completed: false  // TODO: Hook into origami completion tracking
+    blooket_completed: progress.blooketCompleted,
+    origami_completed: progress.origamiCompleted
   };
   const topicFraction = calculateTopicFraction(topicData, userProgress);
   const completionPercentage = Math.round(topicFraction * 100);
@@ -339,16 +347,24 @@ function TopicItem({ topic, unitId, progress, topicData }: TopicItemProps) {
           <div className="topic-meta">
             {videosCount > 0 && (
               <span className="content-count">
-                📺 {videosWatchedCount}/{videosCount} video{videosCount !== 1 ? 's' : ''}
+                📺 {videosWatchedCount}/{videosCount}
               </span>
             )}
             {quizzesCount > 0 && (
               <span className="content-count">
-                📝 {quizzesCompletedCount}/{quizzesCount} quiz{quizzesCount !== 1 ? 'zes' : ''}
+                📝 {quizzesCompletedCount}/{quizzesCount}
               </span>
             )}
-            {topic.origami && <span className="content-count">🎨 Origami</span>}
-            {topic.blooket.url && <span className="content-count">🎮 Blooket</span>}
+            {topic.blooket.url && (
+              <span className="content-count">
+                🎮 {progress.blooketCompleted ? '✓' : '✗'}
+              </span>
+            )}
+            {topic.origami && (
+              <span className="content-count">
+                🎨 {progress.origamiCompleted ? '✓' : '✗'}
+              </span>
+            )}
           </div>
         </div>
         <div className="topic-arrow">→</div>

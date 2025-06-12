@@ -140,6 +140,7 @@ initializeIndexes();
 
 /**
  * Calculate fractional completion for a topic based on completed sub-items
+ * Uses dynamic weight calculation based on content present in the lesson
  * @param topic The topic to calculate completion for
  * @param userProgress User's progress data for this topic
  * @returns Fraction from 0.0 to 1.0
@@ -150,44 +151,60 @@ export function calculateTopicFraction(
 ): number {
   if (!userProgress) return 0.0;
   
-  // Weights scaled to sum to 1.0, per user decision
-  const weights = {
-    video: 0.36,
-    quiz: 0.45,   // Quiz / Grok AI
-    blooket: 0.14,
+  // Baseline fixed weights for Blooket and Origami
+  const baselineWeights = {
+    blooket: 0.15,
     origami: 0.05
   };
   
-  // Validation: ensure weights sum to 1.0 (with small tolerance for floating point)
-  const weightSum = weights.video + weights.quiz + weights.blooket + weights.origami;
-  if (Math.abs(weightSum - 1.0) > 0.001) {
-    throw new Error(`Topic fraction weights must sum to 1.0, but sum to ${weightSum}`);
+  // Calculate dynamic weights based on lesson content
+  const hasVideos = topic.videos?.length > 0;
+  const hasQuizzes = topic.quizzes?.length > 0;
+  const hasBlooket = topic.blooket?.url;
+  const hasOrigami = topic.origami;
+  
+  // Calculate actual weights based on what content is present
+  let blooketWeight = hasBlooket ? baselineWeights.blooket : 0;
+  let origamiWeight = hasOrigami ? baselineWeights.origami : 0;
+  let quizWeight = hasQuizzes ? 0.45 : 0;
+  
+  // Remaining weight goes to videos (distributed among all videos in lesson)
+  let videoWeight = 1.0 - (blooketWeight + origamiWeight + quizWeight);
+  
+  // Validation: ensure all weights are non-negative and sum to 1.0
+  if (videoWeight < 0) {
+    throw new Error(`Dynamic weight calculation error: video weight would be negative (${videoWeight})`);
+  }
+  
+  const totalWeight = videoWeight + quizWeight + blooketWeight + origamiWeight;
+  if (Math.abs(totalWeight - 1.0) > 0.001) {
+    throw new Error(`Dynamic weights must sum to 1.0, but sum to ${totalWeight}`);
   }
   
   let fraction = 0.0;
   
-  // Videos
-  const videosWatched = userProgress.videos_watched?.length || 0;
-  const totalVideos = topic.videos?.length || 0;
-  if (totalVideos > 0) {
-    fraction += (videosWatched / totalVideos) * weights.video;
+  // Videos - distribute video weight evenly among all videos
+  if (hasVideos) {
+    const videosWatched = userProgress.videos_watched?.length || 0;
+    const totalVideos = topic.videos.length;
+    fraction += (videosWatched / totalVideos) * videoWeight;
   }
   
-  // Quizzes
-  const quizzesCompleted = userProgress.quizzes_completed?.length || 0;
-  const totalQuizzes = topic.quizzes?.length || 0;
-  if (totalQuizzes > 0) {
-    fraction += (quizzesCompleted / totalQuizzes) * weights.quiz;
+  // Quizzes - distribute quiz weight evenly among all quizzes
+  if (hasQuizzes) {
+    const quizzesCompleted = userProgress.quizzes_completed?.length || 0;
+    const totalQuizzes = topic.quizzes.length;
+    fraction += (quizzesCompleted / totalQuizzes) * quizWeight;
   }
   
-  // Blooket (binary)
-  if (userProgress.blooket_completed) {
-    fraction += weights.blooket;
+  // Blooket (binary - all or nothing)
+  if (hasBlooket && userProgress.blooket_completed) {
+    fraction += blooketWeight;
   }
   
-  // Origami (binary)
-  if (userProgress.origami_completed) {
-    fraction += weights.origami;
+  // Origami (binary - all or nothing)
+  if (hasOrigami && userProgress.origami_completed) {
+    fraction += origamiWeight;
   }
   
   // Cap at 1.0 and ensure non-negative
@@ -202,18 +219,18 @@ export function calculateTopicFraction(
  */
 export function calculateTotalFractionalLessons(
   allTopics: Topic[],
-  userProgressArray: Array<{ lesson_id: string, videos_watched?: number[], quizzes_completed?: number[], lesson_completed?: boolean }>
+  userProgressArray: Array<{ lesson_id: string, videos_watched?: number[], quizzes_completed?: number[], blooket_completed?: boolean, origami_completed?: boolean, lesson_completed?: boolean }>
 ): number {
   return allTopics.reduce((total, topic) => {
     const userProgressData = userProgressArray.find(p => p.lesson_id === topic.id);
     if (!userProgressData) return total;
     
-    // Convert old format to new format
+    // Use the new data structure directly
     const userProgress = {
-      videos_watched: userProgressData.videos_watched,
-      quizzes_completed: userProgressData.quizzes_completed,
-      blooket_completed: false, // TODO: Hook into blooket completion tracking
-      origami_completed: false  // TODO: Hook into origami completion tracking
+      videos_watched: userProgressData.videos_watched || [],
+      quizzes_completed: userProgressData.quizzes_completed || [],
+      blooket_completed: userProgressData.blooket_completed || false,
+      origami_completed: userProgressData.origami_completed || false
     };
     
     const fraction = calculateTopicFraction(topic, userProgress);
