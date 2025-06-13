@@ -32,7 +32,7 @@ export function LeaderboardPage() {
         } else {
           throw new Error(data.error || "An unknown error occurred.");
         }
-      } catch (err: any) {
+      } catch (err) {
         console.warn("API not available - showing offline leaderboard");
         // Offline fallback - show mock data or empty state
         const mockLeaderboard: LeaderboardEntry[] = [

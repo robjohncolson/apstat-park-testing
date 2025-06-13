@@ -39,7 +39,7 @@ export async function fetchLeaderboardData(currentUsername?: string): Promise<{
     } else {
       throw new Error(data.error || "An unknown error occurred.");
     }
-  } catch (err: any) {
+  } catch (err) {
     console.warn("API not available - showing offline leaderboard");
 
     // Offline fallback - show mock data
@@ -105,15 +105,15 @@ export function findUserRank(
 /**
  * Validates leaderboard entry data structure
  */
-export function isValidLeaderboardEntry(entry: any): entry is LeaderboardEntry {
+export function isValidLeaderboardEntry(entry: unknown): entry is LeaderboardEntry {
   return (
     typeof entry === "object" &&
     entry !== null &&
-    typeof entry.rank === "number" &&
-    typeof entry.username === "string" &&
-    typeof entry.completed_videos === "number" &&
-    typeof entry.completed_quizzes === "number" &&
-    typeof entry.total_completed === "number"
+    typeof (entry as Record<string, unknown>).rank === "number" &&
+    typeof (entry as Record<string, unknown>).username === "string" &&
+    typeof (entry as Record<string, unknown>).completed_videos === "number" &&
+    typeof (entry as Record<string, unknown>).completed_quizzes === "number" &&
+    typeof (entry as Record<string, unknown>).total_completed === "number"
   );
 }
 
@@ -121,12 +121,13 @@ export function isValidLeaderboardEntry(entry: any): entry is LeaderboardEntry {
  * Validates entire leaderboard response
  */
 export function validateLeaderboardData(
-  data: any,
+  data: unknown,
 ): data is LeaderboardResponse {
   return (
     typeof data === "object" &&
-    typeof data.success === "boolean" &&
-    Array.isArray(data.leaderboard) &&
-    data.leaderboard.every(isValidLeaderboardEntry)
+    data !== null &&
+    typeof (data as Record<string, unknown>).success === "boolean" &&
+    Array.isArray((data as Record<string, unknown>).leaderboard) &&
+    ((data as Record<string, unknown>).leaderboard as unknown[]).every(isValidLeaderboardEntry)
   );
 }

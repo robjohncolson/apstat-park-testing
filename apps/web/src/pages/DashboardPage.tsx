@@ -216,7 +216,7 @@ export function DashboardPage() {
               <UnitAccordion
                 key={unit.unitId}
                 unit={unit}
-                isLessonCompleted={isLessonCompleted}
+                isLessonCompleted={_isLessonCompleted}
                 getTopicProgress={getTopicProgress}
               />
             ))}
@@ -264,7 +264,7 @@ interface UnitAccordionProps {
 
 function UnitAccordion({
   unit,
-  isLessonCompleted,
+  isLessonCompleted: _isLessonCompleted,
   getTopicProgress,
 }: UnitAccordionProps) {
   const [isExpanded, setIsExpanded] = useState(false);

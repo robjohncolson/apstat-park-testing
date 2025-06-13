@@ -20,6 +20,15 @@ interface LessonProgress {
   // lesson_completed removed - now calculated from fractional progress
 }
 
+// Interface for API progress data
+interface ProgressData {
+  lesson_id: string;
+  videos_watched?: number[];
+  quizzes_completed?: number[];
+  blooket_completed?: boolean;
+  origami_completed?: boolean;
+}
+
 export function LessonPage() {
   const { unitId, lessonId } = useParams<{
     unitId: string;
@@ -57,8 +66,8 @@ export function LessonPage() {
         );
         if (response.ok) {
           const progressData = await response.json();
-          const lessonProgress = progressData.find(
-            (p: any) => p.lesson_id === lessonId,
+          const lessonProgress = (progressData as ProgressData[]).find(
+            (p) => p.lesson_id === lessonId,
           );
           if (lessonProgress) {
             setProgress({
@@ -82,9 +91,9 @@ export function LessonPage() {
           // Offline mode - check localStorage
           const offlineProgress = localStorage.getItem(`progress_${user.id}`);
           if (offlineProgress) {
-            const progressData = JSON.parse(offlineProgress);
+            const progressData = JSON.parse(offlineProgress) as ProgressData[];
             const lessonProgress = progressData.find(
-              (p: any) => p.lesson_id === lessonId,
+              (p) => p.lesson_id === lessonId,
             );
             if (lessonProgress) {
               setProgress({
@@ -110,9 +119,9 @@ export function LessonPage() {
         // Offline mode - check localStorage
         const offlineProgress = localStorage.getItem(`progress_${user.id}`);
         if (offlineProgress) {
-          const progressData = JSON.parse(offlineProgress);
+          const progressData = JSON.parse(offlineProgress) as ProgressData[];
           const lessonProgress = progressData.find(
-            (p: any) => p.lesson_id === lessonId,
+            (p) => p.lesson_id === lessonId,
           );
           if (lessonProgress) {
             setProgress({
@@ -239,13 +248,13 @@ export function LessonPage() {
 
       // Fallback to localStorage with self-cleaning
       const offlineProgress = localStorage.getItem(`progress_${user.id}`);
-      const progressData = offlineProgress ? JSON.parse(offlineProgress) : [];
+      const progressData: ProgressData[] = offlineProgress ? JSON.parse(offlineProgress) : [];
 
       // Self-cleaning: remove lesson_completed from loaded data
-      progressData.forEach((p: any) => delete p.lesson_completed);
+      progressData.forEach((p) => delete (p as unknown as Record<string, unknown>).lesson_completed);
 
       const existingIndex = progressData.findIndex(
-        (p: any) => p.lesson_id === lessonId,
+        (p) => p.lesson_id === lessonId,
       );
       if (existingIndex >= 0) {
         Object.assign(progressData[existingIndex], {

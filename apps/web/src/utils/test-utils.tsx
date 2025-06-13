@@ -42,7 +42,7 @@ export const setupMocks = () => {
 
   // Reset fetch mock
   mockFetch.mockClear();
-  global.fetch = mockFetch as any;
+  global.fetch = mockFetch as unknown as typeof fetch;
 };
 
 // Custom render function that includes providers
@@ -140,7 +140,7 @@ export const createMockBookmark = (overrides = {}) => ({
 });
 
 // Helper to mock successful API responses
-export const mockApiSuccess = (data: any) => {
+export const mockApiSuccess = (data: unknown) => {
   mockFetch.mockResolvedValueOnce({
     ok: true,
     json: () => Promise.resolve(data),
