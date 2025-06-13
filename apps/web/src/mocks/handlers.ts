@@ -96,4 +96,37 @@ export const handlers = [
       ],
     });
   }),
+
+  // --- Bookmark endpoints ---
+  http.get(`${API_BASE_URL_3000}/users/:userId/bookmarks`, () => {
+    console.log("MSW: Intercepted GET bookmarks (3000)");
+    return HttpResponse.json({ bookmarks: [] });
+  }),
+
+  http.post(`${API_BASE_URL_3000}/users/:userId/bookmarks`, async ({ request }) => {
+    console.log("MSW: Intercepted POST bookmarks (3000)");
+    const newBookmark = await request.json();
+    return HttpResponse.json(newBookmark, { status: 201 });
+  }),
+
+  http.post(`${API_BASE_URL_3000}/users/:userId/bookmarks/sync`, async ({ request }) => {
+    console.log("MSW: Intercepted POST bookmarks/sync (3000)");
+    await request.json();
+    return HttpResponse.json({ success: true }, { status: 200 });
+  }),
+
+  http.delete(`${API_BASE_URL_3000}/users/:userId/bookmarks/:bookmarkId`, () => {
+    console.log("MSW: Intercepted DELETE bookmark (3000)");
+    return HttpResponse.json({ success: true }, { status: 200 });
+  }),
+
+  // --- Progress endpoint ---
+  http.get(`${API_BASE_URL_3000}/users/:userId/progress`, () => {
+    console.log("MSW: Intercepted GET progress (3000)");
+    const mockProgress = [
+      { lesson_id: "1-1", videos_watched: [1], quizzes_completed: [1] },
+      { lesson_id: "1-2", videos_watched: [1], quizzes_completed: [] },
+    ];
+    return HttpResponse.json(mockProgress);
+  }),
 ];
