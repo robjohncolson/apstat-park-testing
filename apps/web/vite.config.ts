@@ -7,10 +7,19 @@ export default defineConfig({
   define: {
     global: "globalThis",
   },
+  resolve: {
+    dedupe: ['react', 'react-dom'],
+  },
   test: {
     globals: true,
     environment: "jsdom",
-    setupFiles: "./src/setupTests.ts",
+    setupFiles: ["./src/setupTests.ts"],
+    exclude: ["**/e2e/**", "**/node_modules/**", "**/dist/**"],
+    environmentOptions: {
+      jsdom: {
+        resources: "usable",
+      },
+    },
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html"],

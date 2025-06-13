@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
+import { renderWithProviders as render } from "../utils/test-utils";
 import { PaceTracker } from "./PaceTracker";
 import type { PaceMetrics } from "../utils/timeTracking";
 
@@ -17,6 +18,9 @@ vi.mock("../utils/timeTracking", () => {
     paceStatus: "on-track" as const,
     targetLessonsPerDay: 0.75,
     targetHoursPerDay: 1.125,
+    nextDeadline: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours from now
+    bufferHours: 2,
+    aheadLessons: 1.3,
   };
 
   // Store the metrics in a shared variable so tests can mutate if needed
@@ -40,12 +44,11 @@ import {
   formatPaceStatus,
   formatTimeRemaining,
   getEncouragementMessage,
-      // @ts-expect-error – import helper for tests
-    __setMockMetrics,
+  // @ts-expect-error – import helper for tests
+  __setMockMetrics,
 } from "../utils/timeTracking";
 
 // Cast helper correctly
-// @ts-expect-error – we know the helper exists via vi.mock above
 const setMockMetrics = __setMockMetrics as (m: Partial<PaceMetrics>) => void;
 
 const mockedCalculatePaceMetrics = vi.mocked(calculatePaceMetrics);
@@ -66,6 +69,9 @@ const BASE_METRICS: PaceMetrics = {
   paceStatus: "on-track",
   targetLessonsPerDay: 0.75,
   targetHoursPerDay: 1.125,
+  nextDeadline: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours from now
+  bufferHours: 2,
+  aheadLessons: 1.3,
 };
 
 // Reset mocks and default metrics before each test
@@ -154,7 +160,7 @@ describe("PaceTracker Component", () => {
   describe("Different Progress States", () => {
     it("should handle zero completed lessons", () => {
       // Mock return values for zero progress
-      mockedCalculatePaceMetrics.mockReturnValue({
+      const zeroProgressMetrics: PaceMetrics = {
         daysUntilExam: 30,
         hoursUntilExam: 720,
         lessonsRemaining: 50,
@@ -166,8 +172,12 @@ describe("PaceTracker Component", () => {
         paceStatus: "behind",
         targetLessonsPerDay: 1.67,
         targetHoursPerDay: 2.5,
-      });
+        nextDeadline: new Date(Date.now() + 36 * 60 * 60 * 1000), // 36 hours from now
+        bufferHours: -12,
+        aheadLessons: -8,
+      };
 
+      mockedCalculatePaceMetrics.mockReturnValue(zeroProgressMetrics);
       mockedFormatPaceStatus.mockReturnValue(
         "⚠️ Need to catch up! 1.7 lessons/day needed",
       );
@@ -189,7 +199,7 @@ describe("PaceTracker Component", () => {
 
     it("should handle nearly complete progress", () => {
       // Mock return values for nearly complete
-      mockedCalculatePaceMetrics.mockReturnValue({
+      const nearlyCompleteMetrics: PaceMetrics = {
         daysUntilExam: 5,
         hoursUntilExam: 120,
         lessonsRemaining: 2,
@@ -201,12 +211,13 @@ describe("PaceTracker Component", () => {
         paceStatus: "ahead",
         targetLessonsPerDay: 0.4,
         targetHoursPerDay: 0.6,
-      });
+        nextDeadline: new Date(Date.now() + 3 * 60 * 60 * 1000), // 3 hours from now
+        bufferHours: 60,
+        aheadLessons: 2.5,
+      };
 
-      mockedFormatPaceStatus.mockReturnValue(
-        "🎯 Ahead of schedule! 0.4 lessons/day needed",
-      );
-      mockedFormatTimeRemaining.mockReturnValue("🔥 5 days until exam!");
+      mockedCalculatePaceMetrics.mockReturnValue(nearlyCompleteMetrics);
+      mockedFormatPaceStatus.mockReturnValue("🎯 2.5 lessons ahead!");
       mockedGetEncouragementMessage.mockReturnValue(
         "🌟 Almost there! You've got this!",
       );
@@ -215,60 +226,66 @@ describe("PaceTracker Component", () => {
 
       expect(screen.getByText("2")).toBeInTheDocument(); // lessons remaining
       expect(screen.getByText("0.4 per day")).toBeInTheDocument(); // target pace
-      expect(screen.getByText("🔥 5 days until exam!")).toBeInTheDocument();
-      expect(
-        screen.getByText("🎯 Ahead of schedule! 0.4 lessons/day needed"),
-      ).toBeInTheDocument();
+      expect(screen.getByText("🎯 2.5 lessons ahead!")).toBeInTheDocument();
       expect(
         screen.getByText("🌟 Almost there! You've got this!"),
       ).toBeInTheDocument();
     });
 
     it("should handle complete progress", () => {
-      // Mock return values for complete
-      mockedCalculatePaceMetrics.mockReturnValue({
+      // Mock return values for complete progress
+      const completeMetrics: PaceMetrics = {
         daysUntilExam: 10,
         hoursUntilExam: 240,
         lessonsRemaining: 0,
         totalLessons: 50,
         completedLessons: 50,
         lessonsPerDay: 0,
-        hoursPerLesson: 1.5,
+        hoursPerLesson: 0,
         isOnTrack: true,
         paceStatus: "ahead",
         targetLessonsPerDay: 0,
         targetHoursPerDay: 0,
-      });
+        nextDeadline: new Date(Date.now() + 240 * 60 * 60 * 1000), // 10 days from now
+        bufferHours: 240,
+        aheadLessons: 10,
+      };
 
-      mockedFormatPaceStatus.mockReturnValue(
-        "🎯 Ahead of schedule! 0.0 lessons/day needed",
-      );
+      mockedCalculatePaceMetrics.mockReturnValue(completeMetrics);
+      mockedFormatPaceStatus.mockReturnValue("🎯 10.0 lessons ahead!");
       mockedGetEncouragementMessage.mockReturnValue(
-        "🌟 Almost there! You've got this!",
+        "🎉 All lessons complete! Amazing work!",
       );
 
       render(<PaceTracker completedLessons={50} totalLessons={50} />);
 
       expect(screen.getByText("0")).toBeInTheDocument(); // lessons remaining
       expect(screen.getByText("0.0 per day")).toBeInTheDocument(); // target pace
+      expect(screen.getByText("🎯 10.0 lessons ahead!")).toBeInTheDocument();
+      expect(
+        screen.getByText("🎉 All lessons complete! Amazing work!"),
+      ).toBeInTheDocument();
     });
   });
 
   describe("Function Call Integration", () => {
     it("should call all utility functions with correct parameters", () => {
       // Set up specific mock return for this test
-      const testMetrics = {
+      const testMetrics: PaceMetrics = {
         daysUntilExam: 10,
         hoursUntilExam: 240,
         lessonsRemaining: 0,
         totalLessons: 50,
         completedLessons: 50,
         lessonsPerDay: 0,
-        hoursPerLesson: 1.5,
+        hoursPerLesson: 0,
         isOnTrack: true,
-        paceStatus: "ahead" as const,
+        paceStatus: "ahead",
         targetLessonsPerDay: 0,
         targetHoursPerDay: 0,
+        nextDeadline: new Date(Date.now() + 240 * 60 * 60 * 1000), // 10 days from now
+        bufferHours: 240,
+        aheadLessons: 10,
       };
 
       mockedCalculatePaceMetrics.mockReturnValue(testMetrics);

@@ -1,12 +1,18 @@
 // Here we define all our mock API request handlers
 import { http, HttpResponse } from "msw";
 
-const API_BASE_URL = "http://localhost:3000/api";
+const API_BASE_URL_3000 = "http://localhost:3000/api";
+const API_BASE_URL_3001 = "http://localhost:3001/api";
 
 export const handlers = [
-  // Mock for generating a username - try both absolute and relative URLs
-  http.get(`${API_BASE_URL}/generate-username`, () => {
-    console.log("MSW: Intercepted generate-username request (absolute URL)");
+  // Mock for generating a username - try both ports and relative URLs
+  http.get(`${API_BASE_URL_3000}/generate-username`, () => {
+    console.log("MSW: Intercepted generate-username request (3000)");
+    return HttpResponse.json({ username: "mocked-user-123" });
+  }),
+
+  http.get(`${API_BASE_URL_3001}/generate-username`, () => {
+    console.log("MSW: Intercepted generate-username request (3001)");
     return HttpResponse.json({ username: "mocked-user-123" });
   }),
 
@@ -15,9 +21,24 @@ export const handlers = [
     return HttpResponse.json({ username: "mocked-user-123" });
   }),
 
-  // Mock for getting or creating a user - try both absolute and relative URLs
-  http.post(`${API_BASE_URL}/users/get-or-create`, async ({ request }) => {
-    console.log("MSW: Intercepted users/get-or-create request (absolute URL)");
+  // Mock for getting or creating a user - try both ports and relative URLs
+  http.post(`${API_BASE_URL_3000}/users/get-or-create`, async ({ request }) => {
+    console.log("MSW: Intercepted users/get-or-create request (3000)");
+    const body = (await request.json()) as { username?: string };
+    const username = body.username || "default-mock-user";
+
+    // Return a standard user object
+    const mockUser = {
+      id: Math.floor(Math.random() * 1000),
+      username: username,
+      created_at: new Date().toISOString(),
+      last_sync: new Date().toISOString(),
+    };
+    return HttpResponse.json({ success: true, user: mockUser });
+  }),
+
+  http.post(`${API_BASE_URL_3001}/users/get-or-create`, async ({ request }) => {
+    console.log("MSW: Intercepted users/get-or-create request (3001)");
     const body = (await request.json()) as { username?: string };
     const username = body.username || "default-mock-user";
 
