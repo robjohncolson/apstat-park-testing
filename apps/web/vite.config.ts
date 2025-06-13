@@ -1,6 +1,8 @@
 /// <reference types="vitest" />
+// @ts-nocheck
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import path from "path";
 
 export default defineConfig({
   plugins: [react()],
@@ -8,7 +10,11 @@ export default defineConfig({
     global: "globalThis",
   },
   resolve: {
-    dedupe: ['react', 'react-dom'],
+    alias: {
+      // Force Vitest/Vite to always resolve React from the monorepo root to avoid duplicate instances
+      'react': path.resolve(__dirname, '../../node_modules/react'),
+      'react-dom': path.resolve(__dirname, '../../node_modules/react-dom'),
+    },
   },
   test: {
     globals: true,

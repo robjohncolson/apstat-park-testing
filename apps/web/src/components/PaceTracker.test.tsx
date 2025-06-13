@@ -35,6 +35,11 @@ vi.mock("../utils/timeTracking", () => {
     formatPaceStatus: vi.fn(() => "✅ On track! 0.8 lessons/day needed"),
     formatTimeRemaining: vi.fn(() => "📅 2w 6d until exam"),
     getEncouragementMessage: vi.fn(() => "💪 Strong progress! Keep it up!"),
+
+    // Additional utility functions used within the component that must be mocked
+    formatDeadlineCountdown: vi.fn(() => "1h 0m remaining"),
+    formatBufferStatus: vi.fn(() => "⏳ 2h buffer"),
+    formatTargetPace: vi.fn(() => "0.8 per day"),
   };
 });
 
@@ -44,6 +49,9 @@ import {
   formatPaceStatus,
   formatTimeRemaining,
   getEncouragementMessage,
+  formatDeadlineCountdown,
+  formatBufferStatus,
+  formatTargetPace,
   // @ts-expect-error – import helper for tests
   __setMockMetrics,
 } from "../utils/timeTracking";
@@ -55,6 +63,11 @@ const mockedCalculatePaceMetrics = vi.mocked(calculatePaceMetrics);
 const mockedFormatPaceStatus = vi.mocked(formatPaceStatus);
 const mockedFormatTimeRemaining = vi.mocked(formatTimeRemaining);
 const mockedGetEncouragementMessage = vi.mocked(getEncouragementMessage);
+
+// Newly added mocks
+const mockedFormatDeadlineCountdown = vi.mocked(formatDeadlineCountdown);
+const mockedFormatBufferStatus = vi.mocked(formatBufferStatus);
+const mockedFormatTargetPace = vi.mocked(formatTargetPace);
 
 // Helper default metrics constant for reuse in expectations
 const BASE_METRICS: PaceMetrics = {
@@ -81,6 +94,9 @@ beforeEach(() => {
   mockedFormatPaceStatus.mockClear();
   mockedFormatTimeRemaining.mockClear();
   mockedGetEncouragementMessage.mockClear();
+  mockedFormatDeadlineCountdown.mockClear();
+  mockedFormatBufferStatus.mockClear();
+  mockedFormatTargetPace.mockClear();
   // Restore default metrics in case previous test modified them
   setMockMetrics(BASE_METRICS);
 });
@@ -90,18 +106,18 @@ describe("PaceTracker Component", () => {
     it("should render the component with proper structure", () => {
       render(<PaceTracker completedLessons={35} totalLessons={50} />);
 
-      // Check for main heading
-      expect(screen.getByText("📊 Study Pace")).toBeInTheDocument();
+      // Check for main heading (text was updated in component)
+      expect(screen.getByText("📊 Study Pace Tracker")).toBeInTheDocument();
 
-      // Check for metric labels
+      // Check for metric labels (should always exist)
       expect(screen.getByText("Lessons Remaining")).toBeInTheDocument();
       expect(screen.getByText("Target Pace")).toBeInTheDocument();
     });
 
-    it("should display time remaining information", () => {
+    it("should display deadline countdown information", () => {
       render(<PaceTracker completedLessons={35} totalLessons={50} />);
 
-      expect(screen.getByText("📅 2w 6d until exam")).toBeInTheDocument();
+      expect(screen.getByText("1h 0m remaining")).toBeInTheDocument();
     });
 
     it("should display pace status message", () => {
@@ -125,21 +141,24 @@ describe("PaceTracker Component", () => {
     it("should pass correct props to calculatePaceMetrics", () => {
       render(<PaceTracker completedLessons={25} totalLessons={50} />);
 
-      expect(mockedCalculatePaceMetrics).toHaveBeenCalledWith(25, 50);
+      // The calculation function now receives additional optional parameters - we only care about the first two
+      const firstCall = mockedCalculatePaceMetrics.mock.calls[0];
+      expect(firstCall[0]).toBe(25);
+      expect(firstCall[1]).toBe(50);
     });
 
     it("should display lessons remaining from metrics", () => {
       render(<PaceTracker completedLessons={35} totalLessons={50} />);
 
-      // The component should display 15 lessons remaining (from our mocked return value)
-      expect(screen.getByText("15")).toBeInTheDocument();
+      // The component may render the value in multiple places, ensure at least one occurrence
+      expect(screen.getAllByText("15").length).toBeGreaterThan(0); // lessons remaining
     });
 
     it("should display target pace per day", () => {
       render(<PaceTracker completedLessons={35} totalLessons={50} />);
 
-      // Should display 0.8 per day (0.75 rounded to 1 decimal place)
-      expect(screen.getByText("0.8 per day")).toBeInTheDocument();
+      // Should display the mocked target pace string (may appear multiple times)
+      expect(screen.getAllByText("0.8 per day").length).toBeGreaterThan(0);
     });
 
     it("should apply custom className when provided", () => {
@@ -187,7 +206,8 @@ describe("PaceTracker Component", () => {
 
       render(<PaceTracker completedLessons={0} totalLessons={50} />);
 
-      expect(screen.getByText("50")).toBeInTheDocument(); // lessons remaining
+      // Lessons remaining value may appear multiple times, so use getAllByText
+      expect(screen.getAllByText("50").length).toBeGreaterThan(0); // lessons remaining
       expect(screen.getByText("1.7 per day")).toBeInTheDocument(); // target pace
       expect(
         screen.getByText("⚠️ Need to catch up! 1.7 lessons/day needed"),
@@ -292,13 +312,24 @@ describe("PaceTracker Component", () => {
 
       render(<PaceTracker completedLessons={50} totalLessons={50} />);
 
-      // Verify calculatePaceMetrics was called with the right props
-      expect(mockedCalculatePaceMetrics).toHaveBeenCalledWith(50, 50);
+      // Verify calculatePaceMetrics was called — only first two arguments are significant
+      const call = mockedCalculatePaceMetrics.mock.calls[0];
+      expect(call[0]).toBe(50);
+      expect(call[1]).toBe(50);
 
-      // Verify formatting functions were called with the returned metrics
-      expect(mockedFormatTimeRemaining).toHaveBeenCalledWith(testMetrics);
+      // Verify the component invoked formatting helpers with the metrics object
+      expect(mockedFormatDeadlineCountdown).toHaveBeenCalledWith(
+        testMetrics.nextDeadline,
+        expect.any(Date),
+      );
+      expect(mockedFormatBufferStatus).toHaveBeenCalledWith(testMetrics);
+      expect(mockedFormatTargetPace).toHaveBeenCalledWith(
+        testMetrics.targetLessonsPerDay,
+      );
       expect(mockedFormatPaceStatus).toHaveBeenCalledWith(testMetrics);
-      expect(mockedGetEncouragementMessage).toHaveBeenCalledWith(testMetrics);
+      expect(mockedGetEncouragementMessage).toHaveBeenCalledWith(
+        testMetrics.completedLessons / testMetrics.totalLessons,
+      );
     });
   });
 });

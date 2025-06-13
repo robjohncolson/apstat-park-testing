@@ -16,7 +16,7 @@ afterAll(() => {
 describe("PaceTracker Integration (no mocks)", () => {
   it("renders without crashing and shows labels", () => {
     render(<PaceTracker completedLessons={10} totalLessons={50} />);
-    expect(screen.getByText("📊 Study Pace")).toBeInTheDocument();
+    expect(screen.getByText("📊 Study Pace Tracker")).toBeInTheDocument();
     expect(screen.getByText("Lessons Remaining")).toBeInTheDocument();
     expect(screen.getByText("Target Pace")).toBeInTheDocument();
   });

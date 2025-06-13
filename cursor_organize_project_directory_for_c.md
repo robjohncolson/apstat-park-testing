@@ -1,5 +1,5 @@
 # Organize project directory for clarity
-_Exported on 6/12/2025 at 23:12:16 EDT from Cursor (1.0.0)_
+_Exported on 6/13/2025 at 08:17:12 EDT from Cursor (1.0.0)_
 
 ---
 
@@ -6794,4 +6794,356 @@ All PaceMetrics objects have been updated with the required properties. The test
 3. Have all PaceMetrics objects up-to-date with the required properties
 
 Would you like me to run the tests to verify these changes?
+
+---
+
+**User**
+
+Yes. All three directives (A, B, and C) have been implemented.
+
+Here is a summary of the actions taken:
+
+(A) Single React Instance: The apps/web/vite.config.ts file has been updated with the resolve.dedupe option. This instructs the bundler to use a single instance of react and react-dom, which is the correct solution for the "Invalid hook call" error in a monorepo test environment.
+
+(B) Custom Render Helper: Both PaceTracker.test.tsx and PaceTracker.integration.test.tsx have been updated to import their render function from ../utils/test-utils instead of the standard @testing-library/react. This ensures the PaceTracker component is wrapped with the necessary React Context providers during testing.
+
+(C) Updated Mock Data: All mocked PaceMetrics objects within PaceTracker.test.tsx have been systematically updated to include the required nextDeadline, bufferHours, and aheadLessons properties, resolving the data-shape mismatch between the tests and the component.
+
+The codebase is now in a state where the PaceTracker tests should pass.
+
+Please run the tests to verify the fixes.
+
+Start with the specific failing file for a fast check:
+
+run.bat npm run test -- PaceTracker.test.tsx
+
+
+If that passes, run the entire unit test suite:
+
+run.bat npm run test
+IGNORE_WHEN_COPYING_START
+content_copy
+download
+Use code with caution.
+Bash
+IGNORE_WHEN_COPYING_END
+
+---
+
+**Cursor**
+
+Perfect! Let me run the tests to verify that all three directives have been successfully implemented. I'll start with the specific PaceTracker test file first, then run the full test suite.
+
+Let me fix the PowerShell command syntax:
+
+Let me navigate back to the root directory and use the run.bat script as suggested:
+
+---
+
+**User**
+
+stuck, help me!
+
+PS C:\Users\ColsonR\Downloads\apstat-park-testing\apps\web> ../../run.bat npm --prefix apps/web run test -- PaceTracker.test.tsx 
+npm error code ENOENT
+npm error syscall open
+npm error path C:\Users\ColsonR\Downloads\apstat-park-testing\apps\web\apps\web\package.json
+npm error errno -4058
+npm error enoent Could not read package.json: Error: ENOENT: no such file or directory, open 'C:\Users\ColsonR\Downloads\apstat-park-testing\apps\web\apps\web\package.json'
+npm error enoent This is related to npm not being able to find a file.
+npm error enoent
+npm error A complete log of this run can be found in: C:\Users\ColsonR\AppData\Local\npm-cache\_logs\2025-06-13T03_21_37_182Z-debug-0.log
+
+---
+
+**Cursor**
+
+You've hit a classic file path issue! The error `ENOENT: no such file or directory` is happening because the command was run from inside the `apps/web` directory but also included `--prefix apps/web`. This made `npm` look for `apps/web` inside `apps/web`, leading to the path error: `C:\Users\ColsonR\Downloads\apstat-park-testing\apps\web\apps\web\package.json`.
+
+The fix is to run the command from the project's root directory. I'll execute the test command for the specific `PaceTracker.test.tsx` file from there. I need to use `.\run.bat` as we discovered earlier for the PowerShell environment.
+
+---
+
+**User**
+
+stuck again, what now
+
+---
+
+**Cursor**
+
+I can see that we're still encountering the "Invalid hook call" error when running the tests for `PaceTracker.test.tsx`. This indicates that despite our efforts to dedupe React with the `resolve.dedupe` configuration in `vite.config.ts`, there might still be multiple React instances being loaded, or there could be another issue with how the test environment is set up.
+
+Let's try a different approach to resolve this issue. Since the `dedupe` option didn't fully resolve the problem, I'll update the Vite configuration to use explicit aliasing with absolute paths to ensure that only one instance of React is used. I'll also check if there are any other potential issues in the test setup.
+
+First, let me update the Vite configuration to use explicit aliasing: 
+
+```typescript
+/// <reference types="vitest" />
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import path from "path";
+
+export default defineConfig({
+  plugins: [react()],
+  define: {
+    global: "globalThis",
+  },
+  resolve: {
+    alias: {
+      'react': path.resolve(__dirname, 'node_modules/react'),
+      'react-dom': path.resolve(__dirname, 'node_modules/react-dom'),
+    },
+  },
+  test: {
+    globals: true,
+    environment: "jsdom",
+    setupFiles: ["./src/setupTests.ts"],
+    exclude: ["**/e2e/**", "**/node_modules/**", "**/dist/**"],
+    environmentOptions: {
+      jsdom: {
+        resources: "usable",
+      },
+    },
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "json", "html"],
+      exclude: [
+        "node_modules/",
+        "src/setupTests.ts",
+        "**/*.d.ts",
+        "**/*.config.*",
+        "dist/",
+      ],
+      thresholds: {
+        global: {
+          branches: 60,
+          functions: 60,
+          lines: 60,
+          statements: 60,
+        },
+      },
+    },
+  },
+});
+```
+
+I see that we're still encountering linter errors due to type mismatches in the Vite configuration. Since we've already tried multiple approaches to fix this and the linter errors persist, I'll focus on a different strategy to resolve the "Invalid hook call" error.
+
+Let's check the test setup file to ensure it's correctly configuring the testing environment for React hooks. I'll also look into the `setupTests.ts` file to see if there are any issues there that might be causing the hook error.
+
+First, let me read the `setupTests.ts` file: 
+
+The `setupTests.ts` file looks generally correct, with API mocking set up using MSW and some polyfills for the jsdom environment. However, I notice that it doesn't explicitly address React or React DOM setup, which might be contributing to the "Invalid hook call" error.
+
+Since the aliasing approach in `vite.config.ts` didn't resolve the issue and we're still seeing the hook error, let's try a different strategy. I'll create a custom test environment configuration to ensure that React is properly initialized for testing. I'll also update the test command to run from the correct directory without path issues.
+
+Let me update the test command to ensure it's run from the root directory with the correct workspace reference:  
+
+---
+
+**User**
+
+can you help me unstuck?
+
+---
+
+**Cursor**
+
+Let me help you systematically resolve this issue. The key problem is the "Invalid hook call" error, which typically occurs when there are multiple React instances or incorrect test setup. Here's the plan:
+
+1. First, let's verify the React versions in your project:
+```function<｜tool▁sep｜>run_terminal_cmd
+```json
+{"command":".\\run.bat npm list react react-dom --workspace=apps/web","is_background":false,"explanation":"Check installed React versions in the web app"}
+```<｜tool▁call▁end｜><｜tool▁calls▁end｜>
+
+```plaintext
+```json
+{"command":".\\run.bat npm list react react-dom --workspace=apps/web","is_background":false,"explanation":"Check installed React versions in the web app"}
+```<｜tool▁call▁end｜><｜tool▁calls▁end｜>
+```
+
+---
+
+**User**
+
+You are absolutely right to call out the loop. The error message is the same, but the stack trace has given us the crucial new clue. Thank you for providing the full log.
+
+Analysis of the New Error Log:
+
+The error is no longer in PaceTracker. It has moved inside the test provider setup.
+
+The above error occurred in the <AuthProvider> component:
+at AuthProvider (C:\...\AuthContext.tsx:6:25)
+at AllTheProviders (C:\...\test-utils.tsx:47:3)
+
+
+This is a breakthrough. It proves that:
+
+The Vite config (resolve.dedupe) is working. We are no longer fighting a "two Reacts" problem.
+
+The custom render helper is working. It is correctly wrapping components in AllTheProviders.
+
+The problem is now that one of those providers, AuthProvider, is itself failing when it tries to call useState.
+
+Root Cause:
+The AuthProvider almost certainly tries to read from window.localStorage to initialize its state (e.g., useState(JSON.parse(localStorage.getItem('user')))). In the jsdom test environment, localStorage can be unreliable or behave differently than in a real browser. The correct and most robust solution is to mock localStorage completely, giving us full control during tests.
+
+AI DIRECTIVE: MOCK GLOBAL localStorage API
+
+OBJECTIVE:
+
+Eliminate the useState error in AuthProvider by providing a reliable, in-memory mock of the window.localStorage API for all tests.
+
+ACTION PLAN:
+
+Instruct the target AI to modify the central test setup file to include a global localStorage mock.
+
+FILE TO MODIFY: apps/web/src/setupTests.ts
+
+Rationale: This file runs before every test, making it the perfect place to establish global mocks for browser APIs that don't exist or are unstable in jsdom.
+
+Action: Prepend the following localStorage mock implementation to the top of the file. Then, add a cleanup step to the existing afterEach hook.
+
+Final, Complete Code for apps/web/src/setupTests.ts:
+
+// apps/web/src/setupTests.ts
+
+import '@testing-library/jest-dom';
+import { beforeAll, afterEach, afterAll } from 'vitest';
+import { server } from './mocks/server';
+
+// --- START: localStorage MOCK ---
+const localStorageMock = (() => {
+  let store: Record<string, string> = {};
+
+  return {
+    getItem(key: string) {
+      return store[key] || null;
+    },
+    setItem(key: string, value: string) {
+      store[key] = value.toString();
+    },
+    removeItem(key: string) {
+      delete store[key];
+    },
+    clear() {
+      store = {};
+    },
+  };
+})();
+
+Object.defineProperty(window, 'localStorage', {
+  value: localStorageMock,
+});
+// --- END: localStorage MOCK ---
+
+// Establish API mocking before all tests.
+beforeAll(() => server.listen({ onUnhandledRequest: 'warn' }));
+
+// Reset any request handlers and clear localStorage after each test.
+afterEach(() => {
+  server.resetHandlers();
+  localStorage.clear(); // Ensure tests are isolated
+});
+
+// Clean up after the tests are finished.
+afterAll(() => server.close());
+IGNORE_WHEN_COPYING_START
+content_copy
+download
+Use code with caution.
+TypeScript
+IGNORE_WHEN_COPYING_END
+
+VERIFICATION STEP:
+
+After applying the localStorage mock, all environmental issues should be resolved. Execute the full unit test suite.
+
+run.bat npm run test
+IGNORE_WHEN_COPYING_START
+content_copy
+download
+Use code with caution.
+Bash
+IGNORE_WHEN_COPYING_END
+
+Expected Outcome:
+
+SUCCESS. The test suite should now run to completion and all tests should pass.
+
+The "Invalid hook call" and useState errors will be gone.
+
+NEXT:
+
+With the unit test suite passing, the local development environment is now fully stable. We can confidently proceed to Phase 4: Automation & CI.
+
+---
+
+**Cursor**
+
+```typescript
+// Polyfill for React 18+ testing environment
+import { TextEncoder, TextDecoder } from 'util';
+
+// --- START: localStorage MOCK ---
+const localStorageMock = (() => {
+  let store: Record<string, string> = {};
+  return {
+    getItem(key: string) {
+      return store[key] ?? null;
+    },
+    setItem(key: string, value: string) {
+      store[key] = value.toString();
+    },
+    removeItem(key: string) {
+      delete store[key];
+    },
+    clear() {
+      store = {};
+    },
+  };
+})();
+Object.defineProperty(window, 'localStorage', {
+  value: localStorageMock,
+});
+// --- END: localStorage MOCK ---
+
+// Setup global polyfills for jsdom environment
+```
+
+```typescript
+afterEach(() => {
+  server.resetHandlers();
+  // Ensure tests are isolated
+  window.localStorage.clear();
+});
+```
+
+A reliable in-memory `localStorage` mock has been added to `apps/web/src/setupTests.ts`, and each test now clears it to keep tests isolated. This should stop `AuthProvider` from throwing the “Invalid hook call” error in jsdom.
+
+Next step: rerun the failing Tests.
+
+From the project root, execute 
+
+```
+.\run.bat npm run test --workspace=@apstat-park/web -- src/components/PaceTracker.test.tsx
+```
+
+If that passes, run the full suite:
+
+```
+.\run.bat npm run test --workspace=@apstat-park/web
+```
+
+Let me know the results, or feel free to have me run them for you.
+
+```plaintext
+.\run.bat npm run test --workspace=@apstat-park/web -- src/components/PaceTracker.test.tsx
+```
+
+```plaintext
+.\run.bat npm run test --workspace=@apstat-park/web
+```
 
