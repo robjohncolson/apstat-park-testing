@@ -24,4 +24,4 @@ export const down = `
   DROP INDEX IF EXISTS idx_progress_lesson_completed;
   DROP INDEX IF EXISTS idx_progress_user_lesson;
   DROP TABLE IF EXISTS progress;
-`; 
+`;

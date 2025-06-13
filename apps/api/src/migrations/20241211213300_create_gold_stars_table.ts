@@ -28,4 +28,4 @@ export const down = `
   DROP INDEX IF EXISTS idx_gold_stars_leaderboard;
   DROP INDEX IF EXISTS idx_gold_stars_user;
   DROP TABLE IF EXISTS gold_stars;
-`; 
+`;

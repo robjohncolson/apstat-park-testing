@@ -1,23 +1,23 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 export function LoginPage() {
   const { login, generateUsername, isLoading } = useAuth();
   const navigate = useNavigate();
-  const [suggestedUsername, setSuggestedUsername] = useState<string>('');
-  const [customUsername, setCustomUsername] = useState<string>('');
-  const [error, setError] = useState<string>('');
+  const [suggestedUsername, setSuggestedUsername] = useState<string>("");
+  const [customUsername, setCustomUsername] = useState<string>("");
+  const [error, setError] = useState<string>("");
   const [isGenerating, setIsGenerating] = useState(false);
 
   const handleGenerateUsername = async () => {
     setIsGenerating(true);
-    setError('');
+    setError("");
     try {
       const username = await generateUsername();
       setSuggestedUsername(username);
     } catch (error) {
-      setError('Failed to generate username. Please try again.');
+      setError("Failed to generate username. Please try again.");
     } finally {
       setIsGenerating(false);
     }
@@ -25,21 +25,21 @@ export function LoginPage() {
 
   const handleLogin = async (username: string) => {
     if (!username.trim()) {
-      setError('Please enter a username or generate one.');
+      setError("Please enter a username or generate one.");
       return;
     }
 
-    setError('');
+    setError("");
     try {
-      console.log('About to call login...');
+      console.log("About to call login...");
       await login(username.trim());
-      console.log('Login successful, about to navigate...');
+      console.log("Login successful, about to navigate...");
       // Now navigate using React Router since AuthContext will update the App component
-      navigate('/dashboard', { replace: true });
-      console.log('Navigate called');
+      navigate("/dashboard", { replace: true });
+      console.log("Navigate called");
     } catch (error) {
-      console.error('Login error:', error);
-      setError('Failed to log in. Please try again.');
+      console.error("Login error:", error);
+      setError("Failed to log in. Please try again.");
     }
   };
 
@@ -58,35 +58,35 @@ export function LoginPage() {
 
         <div className="login-form">
           <h2>Choose Your Adventure Name</h2>
-          
-          {error && (
-            <div className="error-message">
-              {error}
-            </div>
-          )}
+
+          {error && <div className="error-message">{error}</div>}
 
           <div className="username-section">
             <h3>Suggested Username</h3>
             <div className="suggested-username">
               <div className="username-display">
-                {isGenerating ? 'Generating...' : suggestedUsername || 'No username generated'}
+                {isGenerating
+                  ? "Generating..."
+                  : suggestedUsername || "No username generated"}
               </div>
-              <button 
+              <button
                 onClick={handleGenerateUsername}
                 disabled={isGenerating}
                 className="generate-btn"
               >
-                {isGenerating ? 'Generating...' : 'Generate New'}
+                {isGenerating ? "Generating..." : "Generate New"}
               </button>
             </div>
-            
+
             {suggestedUsername && (
               <button
                 onClick={() => handleLogin(suggestedUsername)}
                 disabled={isLoading}
                 className="login-btn primary"
               >
-                {isLoading ? 'Logging in...' : `Continue as ${suggestedUsername}`}
+                {isLoading
+                  ? "Logging in..."
+                  : `Continue as ${suggestedUsername}`}
               </button>
             )}
           </div>
@@ -110,18 +110,19 @@ export function LoginPage() {
               disabled={isLoading || !customUsername.trim()}
               className="login-btn secondary"
             >
-              {isLoading ? 'Logging in...' : 'Continue with Custom Name'}
+              {isLoading ? "Logging in..." : "Continue with Custom Name"}
             </button>
           </div>
 
           <div className="login-info">
             <p>
-              <strong>Note:</strong> Your username will be saved locally in your browser. 
-              You can use the same name across different devices to sync your progress!
+              <strong>Note:</strong> Your username will be saved locally in your
+              browser. You can use the same name across different devices to
+              sync your progress!
             </p>
           </div>
         </div>
       </div>
     </div>
   );
-} 
+}

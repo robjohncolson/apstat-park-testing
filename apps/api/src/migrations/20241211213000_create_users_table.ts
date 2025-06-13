@@ -15,4 +15,4 @@ export const up = `
 export const down = `
   DROP INDEX IF EXISTS idx_users_username;
   DROP TABLE IF EXISTS users;
-`; 
+`;

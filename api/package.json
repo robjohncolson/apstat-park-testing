@@ -7,7 +7,12 @@
     "start": "node server.js",
     "dev": "nodemon server.js"
   },
-  "keywords": ["education", "api", "postgres", "neon"],
+  "keywords": [
+    "education",
+    "api",
+    "postgres",
+    "neon"
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
@@ -19,4 +24,4 @@
   "devDependencies": {
     "nodemon": "^3.0.1"
   }
-} 
+}

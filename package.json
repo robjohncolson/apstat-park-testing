@@ -14,6 +14,7 @@
     "test:e2e": "npm run test:e2e --workspace=apps/web --if-present",
     "test:e2e:ui": "npm run test:e2e:ui --workspace=apps/web --if-present",
     "lint": "npm run lint --workspaces --if-present",
+    "format": "prettier \"**/*.{ts,tsx,js,jsx,css,md,json}\" --write",
     "clean": "rm -rf node_modules apps/*/node_modules apps/*/dist"
   },
   "keywords": [

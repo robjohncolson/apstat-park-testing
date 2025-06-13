@@ -1,4 +1,5 @@
 # Fixing broken links in web app
+
 _Exported on 6/12/2025 at 18:29:25 EDT from Cursor (1.0.0)_
 
 ---
@@ -8,14 +9,13 @@ _Exported on 6/12/2025 at 18:29:25 EDT from Cursor (1.0.0)_
 This web app lives at@index.html ..
 
 Works alright, but I noticed that when I click on a quiz link.. it is broken, there is no pdf at the other end.. nothing to download!
-Please take a look at my project structure and help me find how to fix all the broken links?  The links themselves arent broken in @allUnitsData.js which has most of the curriculum material.
+Please take a look at my project structure and help me find how to fix all the broken links? The links themselves arent broken in @allUnitsData.js which has most of the curriculum material.
 
 Somehow it's getting twisted by the time it is being served in the website.
 
 Don't code anything I just want your ability to look through my project for context, to make a multiphase plan of action to fix all this.
 
 Just a word of note, if you nee dto run node, PATH hasn't been set properly so use@run.bat beforehand.
-
 
 ---
 
@@ -26,44 +26,46 @@ It assumes you will run all front-end work from the `apps/web` package (React + 
 
 ────────────────────────────────────────
 PHASE 0 Quick test to prove the bug
+
 1. Start the dev server:
-   > `cd apps/web && npm run dev`  (or use `run.bat npm run dev`)
+   > `cd apps/web && npm run dev` (or use `run.bat npm run dev`)
 2. Browse to a lesson page that contains a quiz.
 3. Inspect the network tab when you click “📄 Questions” or “📄 Answers”.
    • You will see 404s hitting URLs like  
-     `/unit/unit1/lesson/1-2/pdfs/unit1/...`  
+    `/unit/unit1/lesson/1-2/pdfs/unit1/...`
 
-   This shows the link is treated as *relative* to the current route, not the site root, and Vite is not serving anything called `/pdfs`.
+   This shows the link is treated as _relative_ to the current route, not the site root, and Vite is not serving anything called `/pdfs`.
 
 ────────────────────────────────────────
-PHASE 1 Determine the two root causes  
+PHASE 1 Determine the two root causes
 
 A. URL construction
-   • In `LessonPage.tsx` the anchor `href={quiz.questionPdf}` receives whatever string is stored in the data file.  
-   • In `js/allUnitsData.js` every `questionPdf` / `answersPdf` is written as `"pdfs/unitX/..."` (no leading slash).  
-   • When React Router renders `/unit/.../lesson/...`, a browser treats that as a *relative* path and prepends the current directory → wrong URL.
+• In `LessonPage.tsx` the anchor `href={quiz.questionPdf}` receives whatever string is stored in the data file.  
+ • In `js/allUnitsData.js` every `questionPdf` / `answersPdf` is written as `"pdfs/unitX/..."` (no leading slash).  
+ • When React Router renders `/unit/.../lesson/...`, a browser treats that as a _relative_ path and prepends the current directory → wrong URL.
 
 B. Asset serving
-   • Even if you add the leading “/”, Vite only serves static files that live in `apps/web/public` (or are imported/hashed through the bundle).  
-   • Your actual `pdfs/` directory sits at repo-root, outside of `apps/web`. So `/pdfs/...` 404s in dev & prod.
+• Even if you add the leading “/”, Vite only serves static files that live in `apps/web/public` (or are imported/hashed through the bundle).  
+ • Your actual `pdfs/` directory sits at repo-root, outside of `apps/web`. So `/pdfs/...` 404s in dev & prod.
 
 ────────────────────────────────────────
-PHASE 2 Choose the fix strategy  
+PHASE 2 Choose the fix strategy
 
 Option 1 (quick & clear)  
-   • Keep the paths exactly as they are in the data file (no huge search-and-replace).  
-   • At render time, force every link to be absolute:  
-     `href={'/' + quiz.questionPdf.replace(/^\/?/, '')}`  
+ • Keep the paths exactly as they are in the data file (no huge search-and-replace).  
+ • At render time, force every link to be absolute:  
+ `href={'/' + quiz.questionPdf.replace(/^\/?/, '')}`
 
 Option 2 (data-centric)  
-   • Mass-update every PDF path in `js/allUnitsData.js` by prefixing “/”.  
-   • No runtime logic needed after that.
+ • Mass-update every PDF path in `js/allUnitsData.js` by prefixing “/”.  
+ • No runtime logic needed after that.
 
 Either way you must ALSO make the files reachable:
 
-Asset-serve choices  
-1. Copy / symlink the whole `pdfs/` tree into `apps/web/public` (easiest, works with Vite & static hosting).  
-2. Or extend Vite config with `server.fs.allow` / custom middleware to expose the repo-root `pdfs` directory.  
+Asset-serve choices
+
+1. Copy / symlink the whole `pdfs/` tree into `apps/web/public` (easiest, works with Vite & static hosting).
+2. Or extend Vite config with `server.fs.allow` / custom middleware to expose the repo-root `pdfs` directory.
 3. Or serve PDFs through an API (e.g. `express.static`) if you already run a back-end; then transform the links to point at that endpoint.
 
 Most teams pick #1: public folder copy.
@@ -72,18 +74,18 @@ Most teams pick #1: public folder copy.
 PHASE 3 Implement & verify
 
 Step 3-A Asset availability  
-   • Add a post-install or build-time script:  
-     `cp -r ../../pdfs ./public/` inside `apps/web`.  
-   • Commit (or ignore) the copied folder per your hosting plan.
+ • Add a post-install or build-time script:  
+ `cp -r ../../pdfs ./public/` inside `apps/web`.  
+ • Commit (or ignore) the copied folder per your hosting plan.
 
 Step 3-B Absolute URLs  
-   Option 1: small helper in `LessonPage.tsx` (one-liner as above).  
-   Option 2: one-time script to rewrite all PDF paths in `allUnitsData.js` (regex).
+ Option 1: small helper in `LessonPage.tsx` (one-liner as above).  
+ Option 2: one-time script to rewrite all PDF paths in `allUnitsData.js` (regex).
 
 Step 3-C Manual QA  
-   • Run `vite dev`, click several quiz links from nested routes → PDF opens.  
-   • Build & preview production bundle (`npm run build && npm run preview`).  
-   • Deploy a preview to Vercel/Netlify and spot-check again.
+ • Run `vite dev`, click several quiz links from nested routes → PDF opens.  
+ • Build & preview production bundle (`npm run build && npm run preview`).  
+ • Deploy a preview to Vercel/Netlify and spot-check again.
 
 ────────────────────────────────────────
 PHASE 4 Automated safety nets
@@ -100,12 +102,12 @@ PHASE 4 Automated safety nets
 PHASE 5 House-keeping & documentation
 
 • Add a paragraph in `apps/web/README.md` explaining where static curriculum assets live and how they’re copied.  
-• Consider moving *all* static, version-controlled assets (PDFs, example datasets, etc.) into a single mono-repo directory (`/assets`) and symlink/public-copy from there.  
+• Consider moving _all_ static, version-controlled assets (PDFs, example datasets, etc.) into a single mono-repo directory (`/assets`) and symlink/public-copy from there.  
 • If file size is a concern, you can host PDFs on an external object store (S3/GCS) and store only HTTPS URLs in `allUnitsData.js`; then you skip public folder issues entirely.
 
 ────────────────────────────────────────
 Recap
-Broken links stem from (1) relative URL building and (2) PDFs not inside Vite’s `public`. Fix either by making links absolute *and* ensuring the pdfs folder is copied/served inside `apps/web/public`. Once those two pipes are correctly connected, the curriculum links will download as expected.
+Broken links stem from (1) relative URL building and (2) PDFs not inside Vite’s `public`. Fix either by making links absolute _and_ ensuring the pdfs folder is copied/served inside `apps/web/public`. Once those two pipes are correctly connected, the curriculum links will download as expected.
 
 ---
 
@@ -126,7 +128,6 @@ Start the Dev Server:
 Using your run.bat to set the environment, start the Vite development server:
 
 run.bat npm --prefix apps/web run dev
-
 
 Reproduce the Bug & Inspect:
 
@@ -197,11 +198,11 @@ In apps/web/package.json, add a postinstall or prebuild script. A postinstall sc
 
 // inside apps/web/package.json
 "scripts": {
-  "dev": "vite",
-  "build": "tsc && vite build",
-  "postinstall": "cp -r ../../pdfs ./public/", // For Mac/Linux
-  // For Windows, you might use: "postinstall": "xcopy ..\\..\\pdfs .\\public\\pdfs /E /I /Y",
-  "...": "..."
+"dev": "vite",
+"build": "tsc && vite build",
+"postinstall": "cp -r ../../pdfs ./public/", // For Mac/Linux
+// For Windows, you might use: "postinstall": "xcopy ..\\..\\pdfs .\\public\\pdfs /E /I /Y",
+"...": "..."
 }
 IGNORE_WHEN_COPYING_START
 content_copy
@@ -269,51 +270,60 @@ Your roadmap nails the two-part root cause (relative URLs + assets outside Vite�
 
 1. Copy‐step portability  
    • Windows `xcopy` flags occasionally differ by PowerShell vs. CMD.  
-     In PowerShell you can also use  
-     ```
-     Copy-Item -Recurse -Force "..\..\pdfs" "public\pdfs"
-     ```  
-     Wrapping that in `powershell -Command` keeps npm scripts cross-shell.  
+    In PowerShell you can also use
+
+   ```
+   Copy-Item -Recurse -Force "..\..\pdfs" "public\pdfs"
+   ```
+
+   Wrapping that in `powershell -Command` keeps npm scripts cross-shell.  
    • If the copy runs in CI, add `--verbose` (or equivalent) so logs show what actually copied—helps when debugging path typos.
 
 2. Alternative to the copy script  
    `vite-plugin-static-copy` lets you express the same thing declaratively in `vite.config.ts`:
+
    ```ts
-   import { viteStaticCopy } from 'vite-plugin-static-copy';
+   import { viteStaticCopy } from "vite-plugin-static-copy";
 
    export default defineConfig({
      plugins: [
        react(),
        viteStaticCopy({
-         targets: [{ src: '../../pdfs/**/*', dest: 'pdfs' }],
+         targets: [{ src: "../../pdfs/**/*", dest: "pdfs" }],
        }),
      ],
    });
    ```
+
    No extra npm script and it works for dev, build, preview.
 
 3. Path prefix helper (if you choose runtime fix)  
    Put the small prefix function in `src/utils/assetUrl.ts` so any component that ever needs to serve a curriculum file (future images, data sets, etc.) can reuse it:
+
    ```ts
-   export const assetUrl = (p: string) => '/' + p.replace(/^\/?/, '');
+   export const assetUrl = (p: string) => "/" + p.replace(/^\/?/, "");
    ```
+
    Then `href={assetUrl(quiz.questionPdf)}`.  
    Future maintainers see instantly what’s happening.
 
 4. Test tips  
-   • Unit test can be pure JS—no Jest/Vitest setup overhead:  
-     ```
-     node -e "const d=require('../js/allUnitsData'); console.assert(!d.ALL_UNITS_DATA.flatMap(u=>u.topics).flatMap(t=>t.quizzes).some(q=>q.answersPdf&&!q.answersPdf.startsWith('/')), 'Some paths lack leading slash');"
-     ```  
-     Wrap that in an npm script so CI fails on any bad data commit.  
-   • Playwright download assertion:  
-     ```
-     const [ download ] = await Promise.all([
-       page.waitForEvent('download'),
-       page.click('text=Questions')
-     ]);
-     expect(await download.failure()).toBeNull();
-     ```
+   • Unit test can be pure JS—no Jest/Vitest setup overhead:
+
+   ```
+   node -e "const d=require('../js/allUnitsData'); console.assert(!d.ALL_UNITS_DATA.flatMap(u=>u.topics).flatMap(t=>t.quizzes).some(q=>q.answersPdf&&!q.answersPdf.startsWith('/')), 'Some paths lack leading slash');"
+   ```
+
+   Wrap that in an npm script so CI fails on any bad data commit.  
+   • Playwright download assertion:
+
+   ```
+   const [ download ] = await Promise.all([
+     page.waitForEvent('download'),
+     page.click('text=Questions')
+   ]);
+   expect(await download.failure()).toBeNull();
+   ```
 
 5. Future static hosting quirks  
    If you deploy behind a framework that rewrites 404s to `/index.html` (common in SPA platforms), be sure to add an ignore rule for `/pdfs/*` so the platform serves them as static files instead of handing them to the SPA router.
@@ -325,20 +335,20 @@ Everything else in your plan—diagnostic steps, phased execution, and documenta
 ```
 
 ```typescript
-   import { viteStaticCopy } from 'vite-plugin-static-copy';
+import { viteStaticCopy } from "vite-plugin-static-copy";
 
-   export default defineConfig({
-     plugins: [
-       react(),
-       viteStaticCopy({
-         targets: [{ src: '../../pdfs/**/*', dest: 'pdfs' }],
-       }),
-     ],
-   });
+export default defineConfig({
+  plugins: [
+    react(),
+    viteStaticCopy({
+      targets: [{ src: "../../pdfs/**/*", dest: "pdfs" }],
+    }),
+  ],
+});
 ```
 
 ```typescript
-   export const assetUrl = (p: string) => '/' + p.replace(/^\/?/, '');
+export const assetUrl = (p: string) => "/" + p.replace(/^\/?/, "");
 ```
 
 ```plaintext
@@ -375,7 +385,6 @@ Install the Plugin: Open a terminal in the apps/web directory and run:
 
 npm install --save-dev vite-plugin-static-copy
 
-
 Configure Vite: Open apps/web/vite.config.ts and add the plugin.
 
 // apps/web/vite.config.ts
@@ -384,18 +393,18 @@ import react from '@vitejs/plugin-react';
 import { viteStaticCopy } from 'vite-plugin-static-copy'; // 1. Import the plugin
 
 export default defineConfig({
-  plugins: [
-    react(),
-    // 2. Add the plugin to the plugins array
-    viteStaticCopy({
-      targets: [
-        {
-          src: '../../pdfs', // Path to the source from the project root
-          dest: '.',         // Destination is the root of the output dir (e.g., /dist)
-        },
-      ],
-    }),
-  ],
+plugins: [
+react(),
+// 2. Add the plugin to the plugins array
+viteStaticCopy({
+targets: [
+{
+src: '../../pdfs', // Path to the source from the project root
+dest: '.', // Destination is the root of the output dir (e.g., /dist)
+},
+],
+}),
+],
 });
 IGNORE_WHEN_COPYING_START
 content_copy
@@ -441,8 +450,8 @@ To prevent this from breaking in the future, we can add the suggested one-line t
 
 // inside apps/web/package.json
 "scripts": {
-  "test:links": "node -e \"const data = require('../../js/allUnitsData'); const allQuizzes = data.ALL_UNITS_DATA.flatMap(u => u.topics).flatMap(t => t.quizzes); const badPath = allQuizzes.find(q => (q.questionPdf && !q.questionPdf.startsWith('/')) || (q.answersPdf && !q.answersPdf.startsWith('/'))); if (badPath) { console.error('Found bad PDF path:', badPath); process.exit(1); } console.log('All PDF links are correctly formatted.');\"",
-  "...": "..."
+"test:links": "node -e \"const data = require('../../js/allUnitsData'); const allQuizzes = data.ALL_UNITS_DATA.flatMap(u => u.topics).flatMap(t => t.quizzes); const badPath = allQuizzes.find(q => (q.questionPdf && !q.questionPdf.startsWith('/')) || (q.answersPdf && !q.answersPdf.startsWith('/'))); if (badPath) { console.error('Found bad PDF path:', badPath); process.exit(1); } console.log('All PDF links are correctly formatted.');\"",
+"...": "..."
 }
 IGNORE_WHEN_COPYING_START
 content_copy
@@ -491,7 +500,7 @@ Hmm, it seems the plugin didn't get added to package.json. Let me check if there
 
 **User**
 
-seems like we're running into a dead end here.. the npm isn't workign right. The fix for the pdf URLS shouldn't.. be difficult, right?  I just don't want to victim of tunnel vision.   Big picture.. how do I get the web app to point to correct PDF's?
+seems like we're running into a dead end here.. the npm isn't workign right. The fix for the pdf URLS shouldn't.. be difficult, right? I just don't want to victim of tunnel vision. Big picture.. how do I get the web app to point to correct PDF's?
 
 ---
 
@@ -502,21 +511,22 @@ Think of the problem as two pipes that must join up:
 PIPE A  The browser asks for the right URL  
 PIPE B  The server actually serves a file at that URL
 
-Nothing else matters.  If either pipe is wrong the PDF won’t appear.
+Nothing else matters. If either pipe is wrong the PDF won’t appear.
 
 ─────────────────
-PIPE A  –  Build the correct URL
+PIPE A – Build the correct URL
 ─────────────────
 Today each quiz link is rendered exactly as it appears in `allUnitsData.js`:
 
 “pdfs/unit1/ unit1_section1.2_quiz.pdf”
 
-Because there is no leading “/”, the browser treats it as *relative to the page you’re on*  
+Because there is no leading “/”, the browser treats it as _relative to the page you’re on_  
 (`/unit/unit1/lesson/1-2/…`) → 404.
 
 Fastest cures:
 
 1. One-liner in the React component (no data file edits):
+
 ```tsx
 const absolute = (p:string)=>'/' + p.replace(/^\/?/,'');
 // ...
@@ -530,26 +540,28 @@ href={absolute(quiz.answersPdf)}
 Either choice permanently fixes PIPE A; pick whichever feels less error-prone to you.
 
 ─────────────────
-PIPE B  –  Make the server expose “/pdfs/…”
+PIPE B – Make the server expose “/pdfs/…”
 ─────────────────
 Vite (and any static host like Vercel) only auto-serves files that sit inside
-`apps/web/public`.  Your **pdfs** folder lives two levels higher, so the server returns 404 even when the URL is `/pdfs/unit1/...`.
+`apps/web/public`. Your **pdfs** folder lives two levels higher, so the server returns 404 even when the URL is `/pdfs/unit1/...`.
 
 Simplest cures (no plugin required):
 
 • **Move or copy** the whole `pdfs` folder into `apps/web/public`  
-  (Most teams just commit it there.  Size is the only downside.)
+ (Most teams just commit it there. Size is the only downside.)
 
 OR
 
 • Add a tiny post-install script to copy it each time you build:
 
 Windows (PowerShell):
+
 ```
 "postinstall": "Copy-Item -Recurse -Force ..\\..\\pdfs apps\\web\\public\\pdfs"
 ```
 
 macOS/Linux:
+
 ```
 "postinstall": "cp -R ../../pdfs apps/web/public/"
 ```
@@ -559,6 +571,7 @@ That’s it—PIPE B complete.
 ─────────────────
 Big-picture recipe you can do in minutes
 ─────────────────
+
 1. Copy or move `pdfs/` into `apps/web/public/`.
 
 2. Add the leading slash either:
@@ -603,11 +616,12 @@ You have two equally valid ways to finish:
 ───────────────────────────
 OPTION 1 Tiny React helper (1-line fix, no data edit)
 ───────────────────────────
-1. Open the file where the quiz links are rendered (`apps/web/src/pages/LessonPage.tsx`).  
+
+1. Open the file where the quiz links are rendered (`apps/web/src/pages/LessonPage.tsx`).
 2. Add a helper at the top of the component (or import one later):
 
 ```tsx
-const asset = (p: string) => '/' + p.replace(/^\/?/, '');
+const asset = (p: string) => "/" + p.replace(/^\/?/, "");
 ```
 
 3. Wrap every PDF `href`:
@@ -629,10 +643,11 @@ Cons
 ───────────────────────────
 OPTION 2 One-time search-and-replace in the data file
 ───────────────────────────
-1. Open `js/allUnitsData.js` (or the TypeScript copy if you use that).  
+
+1. Open `js/allUnitsData.js` (or the TypeScript copy if you use that).
 2. Find-and-replace (regex):  
-   • Find  `"pdfs/`  
-   • Replace with  `"/pdfs/`  
+   • Find `"pdfs/`  
+   • Replace with `"/pdfs/`  
    that’s both `questionPdf:` and `answersPdf:` properties.
 
 3. Save & commit.
@@ -694,11 +709,11 @@ export const ALL_UNITS_DATA: Unit[] = LEGACY_UNITS_DATA as unknown as Unit[];
 ALL_UNITS_DATA.forEach((unit) => {
   unit.topics.forEach((topic) => {
     topic.quizzes.forEach((quiz) => {
-      if (quiz.questionPdf && !quiz.questionPdf.startsWith('/')) {
-        quiz.questionPdf = '/' + quiz.questionPdf.replace(/^\/+/, '');
+      if (quiz.questionPdf && !quiz.questionPdf.startsWith("/")) {
+        quiz.questionPdf = "/" + quiz.questionPdf.replace(/^\/+/, "");
       }
-      if (quiz.answersPdf && !quiz.answersPdf.startsWith('/')) {
-        quiz.answersPdf = '/' + quiz.answersPdf.replace(/^\/+/, '');
+      if (quiz.answersPdf && !quiz.answersPdf.startsWith("/")) {
+        quiz.answersPdf = "/" + quiz.answersPdf.replace(/^\/+/, "");
       }
     });
   });
@@ -711,7 +726,9 @@ When the data module loads it now loops through every quiz and, if a path doesn�
 ```
 pdfs/unit1/…
 ```
+
 to
+
 ```
 /pdfs/unit1/…
 ```
@@ -725,7 +742,8 @@ Because the `pdfs/` directory is already inside `apps/web/public/`, both pipes a
 
 Next steps for you:
 
-1. Restart the dev server  
+1. Restart the dev server
+
    ```
    .\run.bat npm --prefix apps/web run dev
    ```
@@ -746,4 +764,3 @@ pdfs/unit1/…
 ```plaintext
    .\run.bat npm --prefix apps/web run dev
 ```
-

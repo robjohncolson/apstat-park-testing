@@ -16,4 +16,4 @@ export const down = `
   ALTER TABLE progress 
   DROP COLUMN IF EXISTS origami_completed,
   DROP COLUMN IF EXISTS blooket_completed;
-`; 
+`;

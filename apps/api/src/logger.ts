@@ -1,4 +1,4 @@
-import winston from 'winston';
+import winston from "winston";
 
 // Define log levels
 const levels = {
@@ -11,69 +11,71 @@ const levels = {
 
 // Define colors for each level
 const colors = {
-  error: 'red',
-  warn: 'yellow',
-  info: 'green',
-  http: 'magenta',
-  debug: 'blue',
+  error: "red",
+  warn: "yellow",
+  info: "green",
+  http: "magenta",
+  debug: "blue",
 };
 
 winston.addColors(colors);
 
 // Create the logger format
 const format = winston.format.combine(
-  winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss:ms' }),
+  winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss:ms" }),
   winston.format.colorize({ all: true }),
   winston.format.printf((info) => {
     let message = `${info.timestamp} [${info.level}]: ${info.message}`;
-    
+
     // Add context if available
-    if (info.context && typeof info.context === 'object') {
+    if (info.context && typeof info.context === "object") {
       message += ` ${JSON.stringify(info.context)}`;
     } else if (info.context) {
       message += ` ${info.context}`;
     }
-    
+
     // Add error stack if available
-    if (info.error && typeof info.error === 'object' && 'stack' in info.error && typeof info.error.stack === 'string') {
+    if (
+      info.error &&
+      typeof info.error === "object" &&
+      "stack" in info.error &&
+      typeof info.error.stack === "string"
+    ) {
       message += `\n${info.error.stack}`;
     }
-    
+
     return message;
-  })
+  }),
 );
 
 // Create the logger instance
 const logger = winston.createLogger({
-  level: process.env.LOG_LEVEL || 'info',
+  level: process.env.LOG_LEVEL || "info",
   levels,
   format,
   transports: [
     // Console transport for development
     new winston.transports.Console({
-      format: winston.format.combine(
-        winston.format.colorize(),
-        format
-      )
+      format: winston.format.combine(winston.format.colorize(), format),
     }),
-    
+
     // File transport for all logs
     new winston.transports.File({
-      filename: 'logs/error.log',
-      level: 'error',
+      filename: "logs/error.log",
+      level: "error",
       format: winston.format.combine(
         winston.format.uncolorize(),
-        winston.format.json()
-      )
+        winston.format.json(),
+      ),
     }),
-    
+
     // File transport for all logs
     new winston.transports.File({
-      filename: 'logs/combined.log',
+      filename: "logs/combined.log",
       format: winston.format.combine(
         winston.format.uncolorize(),
-        winston.format.json()
-      )
+        winston.format.json(),
+      ),
     }),
   ],
 });
@@ -98,9 +100,9 @@ function createChildLogger(parentContext: any = {}): Logger {
       logger.warn(message, { context: { ...parentContext, ...context } });
     },
     error: (message: string, context?: any, error?: Error) => {
-      logger.error(message, { 
+      logger.error(message, {
         context: { ...parentContext, ...context },
-        error: error || (context instanceof Error ? context : undefined)
+        error: error || (context instanceof Error ? context : undefined),
       });
     },
     debug: (message: string, context?: any) => {
@@ -109,7 +111,8 @@ function createChildLogger(parentContext: any = {}): Logger {
     http: (message: string, context?: any) => {
       logger.http(message, { context: { ...parentContext, ...context } });
     },
-    child: (context: any) => createChildLogger({ ...parentContext, ...context })
+    child: (context: any) =>
+      createChildLogger({ ...parentContext, ...context }),
   };
 }
 
@@ -120,40 +123,40 @@ export const appLogger: Logger = createChildLogger();
 export const requestLogger = (req: any, res: any, next: any) => {
   const requestId = Math.random().toString(36).substring(2, 15);
   const startTime = Date.now();
-  
+
   req.requestId = requestId;
-  res.setHeader('X-Request-ID', requestId);
-  
+  res.setHeader("X-Request-ID", requestId);
+
   // Create child logger with request context
-  req.logger = appLogger.child({ 
+  req.logger = appLogger.child({
     requestId,
     method: req.method,
     path: req.path,
-    userAgent: req.get('User-Agent'),
-    ip: req.ip || req.connection.remoteAddress
+    userAgent: req.get("User-Agent"),
+    ip: req.ip || req.connection.remoteAddress,
   });
-  
+
   // Log the incoming request
   req.logger.http(`${req.method} ${req.path}`, {
     headers: req.headers,
     query: req.query,
-    body: req.method !== 'GET' ? req.body : undefined
+    body: req.method !== "GET" ? req.body : undefined,
   });
-  
+
   // Log the response when it completes
-  res.on('finish', () => {
+  res.on("finish", () => {
     const duration = Date.now() - startTime;
     req.logger.http(`${req.method} ${req.path} - ${res.statusCode}`, {
       statusCode: res.statusCode,
       duration: `${duration}ms`,
-      contentLength: res.get('content-length')
+      contentLength: res.get("content-length"),
     });
   });
-  
+
   next();
 };
 
 // Export utility functions
 export const createLogger = (context?: any) => appLogger.child(context || {});
 
-export default appLogger; 
+export default appLogger;

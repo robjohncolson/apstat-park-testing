@@ -22,51 +22,71 @@ export async function fetchLeaderboardData(currentUsername?: string): Promise<{
   error: string | null;
 }> {
   try {
-    const response = await fetch('/api/leaderboard');
-    
+    const response = await fetch("/api/leaderboard");
+
     if (!response.ok) {
-      throw new Error('Failed to fetch leaderboard data.');
+      throw new Error("Failed to fetch leaderboard data.");
     }
-    
+
     const data: LeaderboardResponse = await response.json();
-    
+
     if (data.success) {
       return {
         leaderboard: data.leaderboard,
         isOffline: false,
-        error: null
+        error: null,
       };
     } else {
-      throw new Error(data.error || 'An unknown error occurred.');
+      throw new Error(data.error || "An unknown error occurred.");
     }
   } catch (err: any) {
-    console.warn('API not available - showing offline leaderboard');
-    
+    console.warn("API not available - showing offline leaderboard");
+
     // Offline fallback - show mock data
     const mockLeaderboard: LeaderboardEntry[] = [
-      { rank: 1, username: 'StudyBot', completed_videos: 7, completed_quizzes: 5, total_completed: 12 },
-      { rank: 2, username: 'MathWhiz', completed_videos: 6, completed_quizzes: 4, total_completed: 10 },
-      { rank: 3, username: 'StatGuru', completed_videos: 5, completed_quizzes: 3, total_completed: 8 },
+      {
+        rank: 1,
+        username: "StudyBot",
+        completed_videos: 7,
+        completed_quizzes: 5,
+        total_completed: 12,
+      },
+      {
+        rank: 2,
+        username: "MathWhiz",
+        completed_videos: 6,
+        completed_quizzes: 4,
+        total_completed: 10,
+      },
+      {
+        rank: 3,
+        username: "StatGuru",
+        completed_videos: 5,
+        completed_quizzes: 3,
+        total_completed: 8,
+      },
     ];
-    
+
     // If current user exists, add them to the mock leaderboard
     if (currentUsername) {
-      const userInList = mockLeaderboard.find(entry => entry.username === currentUsername);
+      const userInList = mockLeaderboard.find(
+        (entry) => entry.username === currentUsername,
+      );
       if (!userInList) {
         mockLeaderboard.push({
           rank: mockLeaderboard.length + 1,
           username: currentUsername,
           completed_videos: 2,
           completed_quizzes: 1,
-          total_completed: 3
+          total_completed: 3,
         });
       }
     }
-    
+
     return {
       leaderboard: mockLeaderboard,
       isOffline: true,
-      error: 'API unavailable - showing sample data'
+      error: "API unavailable - showing sample data",
     };
   }
 }
@@ -74,9 +94,12 @@ export async function fetchLeaderboardData(currentUsername?: string): Promise<{
 /**
  * Finds the current user's rank in the leaderboard
  */
-export function findUserRank(leaderboard: LeaderboardEntry[], username?: string): LeaderboardEntry | undefined {
+export function findUserRank(
+  leaderboard: LeaderboardEntry[],
+  username?: string,
+): LeaderboardEntry | undefined {
   if (!username) return undefined;
-  return leaderboard.find(entry => entry.username === username);
+  return leaderboard.find((entry) => entry.username === username);
 }
 
 /**
@@ -84,24 +107,26 @@ export function findUserRank(leaderboard: LeaderboardEntry[], username?: string)
  */
 export function isValidLeaderboardEntry(entry: any): entry is LeaderboardEntry {
   return (
-    typeof entry === 'object' &&
+    typeof entry === "object" &&
     entry !== null &&
-    typeof entry.rank === 'number' &&
-    typeof entry.username === 'string' &&
-    typeof entry.completed_videos === 'number' &&
-    typeof entry.completed_quizzes === 'number' &&
-    typeof entry.total_completed === 'number'
+    typeof entry.rank === "number" &&
+    typeof entry.username === "string" &&
+    typeof entry.completed_videos === "number" &&
+    typeof entry.completed_quizzes === "number" &&
+    typeof entry.total_completed === "number"
   );
 }
 
 /**
  * Validates entire leaderboard response
  */
-export function validateLeaderboardData(data: any): data is LeaderboardResponse {
+export function validateLeaderboardData(
+  data: any,
+): data is LeaderboardResponse {
   return (
-    typeof data === 'object' &&
-    typeof data.success === 'boolean' &&
+    typeof data === "object" &&
+    typeof data.success === "boolean" &&
     Array.isArray(data.leaderboard) &&
     data.leaderboard.every(isValidLeaderboardEntry)
   );
-} 
+}

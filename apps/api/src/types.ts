@@ -26,10 +26,10 @@ export interface Progress {
 export interface Bookmark {
   id: number;
   user_id: number;
-  bookmark_type: 'lesson' | 'item';
+  bookmark_type: "lesson" | "item";
   lesson_id: string;
   item_index?: number;
-  item_type?: 'video' | 'quiz';
+  item_type?: "video" | "quiz";
   item_title?: string;
   created_at: Date;
 }
@@ -83,10 +83,10 @@ export interface SyncProgressRequest {
 
 export interface SyncBookmarksRequest {
   bookmarks: Array<{
-    bookmark_type: 'lesson' | 'item';
+    bookmark_type: "lesson" | "item";
     lesson_id: string;
     item_index?: number;
-    item_type?: 'video' | 'quiz';
+    item_type?: "video" | "quiz";
     item_title?: string;
   }>;
 }
@@ -141,4 +141,4 @@ export interface GoldStarResponse {
   nextTargetHours: number;
   remainingLessons: number;
   daysUntilExam: number;
-} 
+}

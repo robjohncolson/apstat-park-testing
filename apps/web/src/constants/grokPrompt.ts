@@ -26,4 +26,4 @@ Throughout the Session:
 - Track Performance: Monitor my performance to provide personalized guidance.
 - Session Summary: At the end, summarize key concepts and suggest areas for additional practice.
 
-Thank you for helping me prepare for my AP Statistics exam!`; 
+Thank you for helping me prepare for my AP Statistics exam!`;

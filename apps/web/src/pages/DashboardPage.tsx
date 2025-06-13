@@ -1,10 +1,15 @@
-import { useAuth } from '../context/AuthContext';
-import { useNavigate, Link } from 'react-router-dom';
-import { useState, useEffect } from 'react';
-import { ALL_UNITS_DATA, getTotalItemCounts, calculateTotalFractionalLessons, calculateTopicFraction } from '../data/allUnitsData';
-import { PaceTracker } from '../components/PaceTracker';
-import type { Unit, Topic } from '../data/allUnitsData';
-import './DashboardPage.css';
+import { useAuth } from "../context/AuthContext";
+import { useNavigate, Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import {
+  ALL_UNITS_DATA,
+  getTotalItemCounts,
+  calculateTotalFractionalLessons,
+  calculateTopicFraction,
+} from "../data/allUnitsData";
+import { PaceTracker } from "../components/PaceTracker";
+import type { Unit, Topic } from "../data/allUnitsData";
+import "./DashboardPage.css";
 
 // Interface for user progress data
 interface UserProgress {
@@ -28,7 +33,7 @@ export function DashboardPage() {
   const handleLogout = () => {
     logout();
     // Now navigate using React Router since AuthContext will update the App component
-    navigate('/', { replace: true });
+    navigate("/", { replace: true });
   };
 
   // Fetch user progress on component mount
@@ -38,14 +43,16 @@ export function DashboardPage() {
         setIsLoadingProgress(false);
         return;
       }
-      
+
       try {
-        const response = await fetch(`http://localhost:3000/api/users/${user.id}/progress`);
+        const response = await fetch(
+          `http://localhost:3000/api/users/${user.id}/progress`,
+        );
         if (response.ok) {
           const progressData = await response.json();
           setProgress(progressData);
         } else {
-          console.warn('Failed to fetch progress - running in offline mode');
+          console.warn("Failed to fetch progress - running in offline mode");
           setIsOfflineMode(true);
           // In offline mode, use localStorage for demo purposes
           const offlineProgress = localStorage.getItem(`progress_${user.id}`);
@@ -59,21 +66,21 @@ export function DashboardPage() {
                 videos_watched: [0, 1, 2],
                 quizzes_completed: [0, 1],
                 lesson_completed: true,
-                completion_date: new Date().toISOString()
+                completion_date: new Date().toISOString(),
               },
               {
                 lesson_id: "categorical-vs-quantitative",
                 videos_watched: [0, 1],
                 quizzes_completed: [0],
                 lesson_completed: true,
-                completion_date: new Date().toISOString()
-              }
+                completion_date: new Date().toISOString(),
+              },
             ];
             setProgress(testProgress);
           }
         }
       } catch (error) {
-        console.warn('API not available - running in offline mode');
+        console.warn("API not available - running in offline mode");
         setIsOfflineMode(true);
         // In offline mode, use localStorage for demo purposes
         const offlineProgress = localStorage.getItem(`progress_${user.id}`);
@@ -87,15 +94,15 @@ export function DashboardPage() {
               videos_watched: [0, 1, 2],
               quizzes_completed: [0, 1],
               lesson_completed: true,
-              completion_date: new Date().toISOString()
+              completion_date: new Date().toISOString(),
             },
             {
               lesson_id: "categorical-vs-quantitative",
               videos_watched: [0, 1],
               quizzes_completed: [0],
               lesson_completed: true,
-              completion_date: new Date().toISOString()
-            }
+              completion_date: new Date().toISOString(),
+            },
           ];
           setProgress(testProgress);
         }
@@ -109,25 +116,27 @@ export function DashboardPage() {
 
   // Check if a lesson is completed using fractional calculation
   const isLessonCompleted = (topicId: string): boolean => {
-    const topicProgress = progress.find(p => p.lesson_id === topicId);
+    const topicProgress = progress.find((p) => p.lesson_id === topicId);
     if (!topicProgress) return false;
-    
-    const topic = ALL_UNITS_DATA.flatMap(unit => unit.topics).find(t => t.id === topicId);
+
+    const topic = ALL_UNITS_DATA.flatMap((unit) => unit.topics).find(
+      (t) => t.id === topicId,
+    );
     if (!topic) return false;
-    
+
     const userProgress = {
       videos_watched: topicProgress.videos_watched || [],
       quizzes_completed: topicProgress.quizzes_completed || [],
       blooket_completed: topicProgress.blooket_completed || false,
-      origami_completed: topicProgress.origami_completed || false
+      origami_completed: topicProgress.origami_completed || false,
     };
-    
+
     return calculateTopicFraction(topic, userProgress) === 1.0;
   };
 
   // Helper function to get granular progress for a topic
   const getTopicProgress = (topicId: string) => {
-    const topicProgress = progress.find(p => p.lesson_id === topicId);
+    const topicProgress = progress.find((p) => p.lesson_id === topicId);
     return {
       videosWatched: topicProgress?.videos_watched || [],
       quizzesCompleted: topicProgress?.quizzes_completed || [],
@@ -139,19 +148,28 @@ export function DashboardPage() {
   // Calculate overall progress statistics
   const calculateStats = () => {
     const { totalVideos, totalQuizzes } = getTotalItemCounts(ALL_UNITS_DATA);
-    
+
     // Phase 1: Use fractional lesson calculation
-    const allTopics = ALL_UNITS_DATA.flatMap(unit => unit.topics);
-    const completedLessons = calculateTotalFractionalLessons(allTopics, progress);
-    
-    const totalLessons = ALL_UNITS_DATA.reduce((acc, unit) => acc + unit.topics.length, 0);
-    
+    const allTopics = ALL_UNITS_DATA.flatMap((unit) => unit.topics);
+    const completedLessons = calculateTotalFractionalLessons(
+      allTopics,
+      progress,
+    );
+
+    const totalLessons = ALL_UNITS_DATA.reduce(
+      (acc, unit) => acc + unit.topics.length,
+      0,
+    );
+
     return {
       completedLessons,
       totalLessons,
       totalVideos,
       totalQuizzes,
-      completionPercentage: totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0
+      completionPercentage:
+        totalLessons > 0
+          ? Math.round((completedLessons / totalLessons) * 100)
+          : 0,
     };
   };
 
@@ -161,42 +179,49 @@ export function DashboardPage() {
     <div className="dashboard-container">
       <header className="dashboard-header">
         <div className="user-info">
-          <h1>Welcome, {user?.username || 'Explorer'}!</h1>
+          <h1>Welcome, {user?.username || "Explorer"}!</h1>
           <p>Your journey to mastering AP Statistics starts here.</p>
         </div>
         <div className="header-actions">
-          <Link to="/leaderboard" className="leaderboard-link">🏆 Leaderboard</Link>
-          <button onClick={handleLogout} className="logout-button">Logout</button>
+          <Link to="/leaderboard" className="leaderboard-link">
+            🏆 Leaderboard
+          </Link>
+          <button onClick={handleLogout} className="logout-button">
+            Logout
+          </button>
         </div>
       </header>
 
       <main>
         <section className="dashboard-overview">
           <h2>Your Learning Journey</h2>
-          
+
           {/* Pace Tracker */}
-          <PaceTracker 
+          <PaceTracker
             completedLessons={stats.completedLessons}
             totalLessons={stats.totalLessons}
           />
-          
+
           {/* Progress Overview */}
           <div className="progress-overview">
             <div className="progress-bar">
-              <div 
-                className="progress-fill" 
+              <div
+                className="progress-fill"
                 style={{ width: `${stats.completionPercentage}%` }}
               ></div>
             </div>
-            <p>{stats.completedLessons.toFixed(2)} of {stats.totalLessons} lessons completed ({stats.completionPercentage.toFixed(2)}%)</p>
+            <p>
+              {stats.completedLessons.toFixed(2)} of {stats.totalLessons}{" "}
+              lessons completed ({stats.completionPercentage.toFixed(2)}%)
+            </p>
           </div>
 
           {/* Units and Lessons */}
           <div className="units-container">
             {ALL_UNITS_DATA.map((unit: Unit) => (
-              <UnitAccordion 
-                key={unit.unitId} 
-                unit={unit} 
+              <UnitAccordion
+                key={unit.unitId}
+                unit={unit}
                 isLessonCompleted={isLessonCompleted}
                 getTopicProgress={getTopicProgress}
               />
@@ -208,7 +233,9 @@ export function DashboardPage() {
           <div className="stat-card">
             <h3>Progress</h3>
             <p>{stats.completionPercentage.toFixed(2)}% Complete</p>
-            <small>{stats.completedLessons.toFixed(2)}/{stats.totalLessons} lessons</small>
+            <small>
+              {stats.completedLessons.toFixed(2)}/{stats.totalLessons} lessons
+            </small>
           </div>
           <div className="stat-card">
             <h3>Content</h3>
@@ -218,8 +245,8 @@ export function DashboardPage() {
           <div className="stat-card">
             <h3>Next Lesson</h3>
             <p>
-              {stats.completedLessons < stats.totalLessons 
-                ? "Ready to continue!" 
+              {stats.completedLessons < stats.totalLessons
+                ? "Ready to continue!"
                 : "All done! 🎉"}
             </p>
           </div>
@@ -241,9 +268,13 @@ interface UnitAccordionProps {
   };
 }
 
-function UnitAccordion({ unit, isLessonCompleted, getTopicProgress }: UnitAccordionProps) {
+function UnitAccordion({
+  unit,
+  isLessonCompleted,
+  getTopicProgress,
+}: UnitAccordionProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  
+
   // Phase 1: Use fractional progress calculation for more accurate unit progress
   const unitFractionalProgress = unit.topics.reduce((total, topic) => {
     const topicProgress = getTopicProgress(topic.id);
@@ -251,23 +282,26 @@ function UnitAccordion({ unit, isLessonCompleted, getTopicProgress }: UnitAccord
       videos_watched: topicProgress.videosWatched,
       quizzes_completed: topicProgress.quizzesCompleted,
       blooket_completed: topicProgress.blooketCompleted,
-      origami_completed: topicProgress.origamiCompleted
+      origami_completed: topicProgress.origamiCompleted,
     };
     return total + calculateTopicFraction(topic, userProgress);
   }, 0);
-  
+
   const totalTopics = unit.topics.length;
-  const unitProgress = totalTopics > 0 ? Math.round((unitFractionalProgress / totalTopics) * 100) : 0;
+  const unitProgress =
+    totalTopics > 0
+      ? Math.round((unitFractionalProgress / totalTopics) * 100)
+      : 0;
 
   return (
     <div className="unit-accordion">
-      <div 
-        className="unit-header" 
+      <div
+        className="unit-header"
         onClick={() => setIsExpanded(!isExpanded)}
         role="button"
         tabIndex={0}
         onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
+          if (e.key === "Enter" || e.key === " ") {
             setIsExpanded(!isExpanded);
           }
         }}
@@ -277,23 +311,23 @@ function UnitAccordion({ unit, isLessonCompleted, getTopicProgress }: UnitAccord
           <p className="unit-weight">Exam Weight: {unit.examWeight}</p>
           <div className="unit-progress">
             <div className="progress-bar small">
-              <div 
-                className="progress-fill" 
+              <div
+                className="progress-fill"
                 style={{ width: `${unitProgress}%` }}
               ></div>
             </div>
-            <span>{unitFractionalProgress.toFixed(2)}/{totalTopics} topics</span>
+            <span>
+              {unitFractionalProgress.toFixed(2)}/{totalTopics} topics
+            </span>
           </div>
         </div>
-        <div className="expand-icon">
-          {isExpanded ? '−' : '+'}
-        </div>
+        <div className="expand-icon">{isExpanded ? "−" : "+"}</div>
       </div>
-      
+
       {isExpanded && (
         <div className="topics-list">
           {unit.topics.map((topic: Topic) => (
-            <TopicItem 
+            <TopicItem
               key={topic.id}
               topic={topic}
               unitId={unit.unitId}
@@ -331,18 +365,15 @@ function TopicItem({ topic, unitId, progress, topicData }: TopicItemProps) {
     videos_watched: progress.videosWatched,
     quizzes_completed: progress.quizzesCompleted,
     blooket_completed: progress.blooketCompleted,
-    origami_completed: progress.origamiCompleted
+    origami_completed: progress.origamiCompleted,
   };
   const topicFraction = calculateTopicFraction(topicData, userProgress);
   const completionPercentage = Math.round(topicFraction * 100);
   const isCompleted = topicFraction === 1.0;
 
   return (
-    <div className={`topic-item ${isCompleted ? 'completed' : ''}`}>
-      <Link 
-        to={`/unit/${unitId}/lesson/${topic.id}`}
-        className="topic-link"
-      >
+    <div className={`topic-item ${isCompleted ? "completed" : ""}`}>
+      <Link to={`/unit/${unitId}/lesson/${topic.id}`} className="topic-link">
         <div className="topic-content">
           <div className="topic-header">
             <h4>{topic.name}</h4>
@@ -350,7 +381,9 @@ function TopicItem({ topic, unitId, progress, topicData }: TopicItemProps) {
               {isCompleted ? (
                 <span className="completed-checkmark">✅ 100%</span>
               ) : (
-                <span className={`completion-percentage ${completionPercentage > 0 ? 'in-progress' : ''}`}>
+                <span
+                  className={`completion-percentage ${completionPercentage > 0 ? "in-progress" : ""}`}
+                >
                   {completionPercentage}%
                 </span>
               )}
@@ -370,12 +403,12 @@ function TopicItem({ topic, unitId, progress, topicData }: TopicItemProps) {
             )}
             {topic.blooket.url && (
               <span className="content-count">
-                🎮 {progress.blooketCompleted ? '✓' : '✗'}
+                🎮 {progress.blooketCompleted ? "✓" : "✗"}
               </span>
             )}
             {topic.origami && (
               <span className="content-count">
-                🎨 {progress.origamiCompleted ? '✓' : '✗'}
+                🎨 {progress.origamiCompleted ? "✓" : "✗"}
               </span>
             )}
           </div>
@@ -384,4 +417,4 @@ function TopicItem({ topic, unitId, progress, topicData }: TopicItemProps) {
       </Link>
     </div>
   );
-} 
+}

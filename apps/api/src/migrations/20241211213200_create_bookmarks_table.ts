@@ -25,4 +25,4 @@ export const down = `
   DROP INDEX IF EXISTS idx_bookmarks_lesson;
   DROP INDEX IF EXISTS idx_bookmarks_user;
   DROP TABLE IF EXISTS bookmarks;
-`; 
+`;

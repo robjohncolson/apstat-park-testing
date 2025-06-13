@@ -1,9 +1,9 @@
-import React from 'react';
-import { render, type RenderOptions } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
-import { vi, beforeEach } from 'vitest';
-import { AuthProvider } from '../context/AuthContext';
-import { BookmarkProvider } from '../context/BookmarkContext';
+import React from "react";
+import { render, type RenderOptions } from "@testing-library/react";
+import { BrowserRouter } from "react-router-dom";
+import { vi, beforeEach } from "vitest";
+import { AuthProvider } from "../context/AuthContext";
+import { BookmarkProvider } from "../context/BookmarkContext";
 
 // Mock localStorage for tests
 const mockLocalStorage = (() => {
@@ -28,14 +28,14 @@ const mockFetch = vi.fn(() =>
   Promise.resolve({
     ok: false,
     json: () => Promise.resolve({}),
-  })
+  }),
 );
 
 // Setup function to be called manually in tests that need it
 export const setupMocks = () => {
   // Reset localStorage mock
   mockLocalStorage.clear();
-  Object.defineProperty(window, 'localStorage', {
+  Object.defineProperty(window, "localStorage", {
     value: mockLocalStorage,
     writable: true,
   });
@@ -46,7 +46,7 @@ export const setupMocks = () => {
 };
 
 // Custom render function that includes providers
-interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
+interface CustomRenderOptions extends Omit<RenderOptions, "wrapper"> {
   // Allow tests to provide initial route
   initialRoute?: string;
   // Allow tests to skip certain providers if needed
@@ -55,12 +55,12 @@ interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
   skipRouter?: boolean;
 }
 
-function AllTheProviders({ 
-  children, 
-  skipAuth = false, 
-  skipBookmarks = false, 
-  skipRouter = false 
-}: { 
+function AllTheProviders({
+  children,
+  skipAuth = false,
+  skipBookmarks = false,
+  skipRouter = false,
+}: {
   children: React.ReactNode;
   skipAuth?: boolean;
   skipBookmarks?: boolean;
@@ -89,23 +89,23 @@ function AllTheProviders({
 export function renderWithProviders(
   ui: React.ReactElement,
   {
-    initialRoute = '/',
+    initialRoute = "/",
     skipAuth = false,
     skipBookmarks = false,
     skipRouter = false,
     ...renderOptions
-  }: CustomRenderOptions = {}
+  }: CustomRenderOptions = {},
 ) {
   // Set initial route if router is not skipped
-  if (!skipRouter && initialRoute !== '/') {
-    window.history.pushState({}, 'Test page', initialRoute);
+  if (!skipRouter && initialRoute !== "/") {
+    window.history.pushState({}, "Test page", initialRoute);
   }
 
   return render(ui, {
     wrapper: ({ children }) => (
-      <AllTheProviders 
-        skipAuth={skipAuth} 
-        skipBookmarks={skipBookmarks} 
+      <AllTheProviders
+        skipAuth={skipAuth}
+        skipBookmarks={skipBookmarks}
         skipRouter={skipRouter}
       >
         {children}
@@ -116,7 +116,7 @@ export function renderWithProviders(
 }
 
 // Re-export everything from testing-library
-export * from '@testing-library/react';
+export * from "@testing-library/react";
 
 // Export our custom render as the default render
 export { renderWithProviders as render };
@@ -124,18 +124,18 @@ export { renderWithProviders as render };
 // Utility functions for common test scenarios
 export const createMockUser = (overrides = {}) => ({
   id: 1,
-  username: 'testuser',
-  created_at: '2024-01-01T00:00:00.000Z',
-  last_sync: '2024-01-01T00:00:00.000Z',
+  username: "testuser",
+  created_at: "2024-01-01T00:00:00.000Z",
+  last_sync: "2024-01-01T00:00:00.000Z",
   ...overrides,
 });
 
 export const createMockBookmark = (overrides = {}) => ({
-  lesson_id: 'lesson-1',
-  lesson_title: 'Test Lesson',
-  unit_id: 'unit-1',
-  bookmark_type: 'lesson' as const,
-  created_at: '2024-01-01T00:00:00.000Z',
+  lesson_id: "lesson-1",
+  lesson_title: "Test Lesson",
+  unit_id: "unit-1",
+  bookmark_type: "lesson" as const,
+  created_at: "2024-01-01T00:00:00.000Z",
   ...overrides,
 });
 
@@ -152,6 +152,6 @@ export const mockApiFailure = (status = 500) => {
   mockFetch.mockResolvedValueOnce({
     ok: false,
     status,
-    json: () => Promise.resolve({ error: 'API Error' }),
+    json: () => Promise.resolve({ error: "API Error" }),
   } as Response);
-}; 
+};

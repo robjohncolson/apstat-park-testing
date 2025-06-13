@@ -5,8 +5,9 @@ This document explains how to use the APStat Park database migration system for 
 ## 📋 Overview
 
 The migration system provides:
+
 - **Version Control**: Track database schema changes over time
-- **Reproducible Deployments**: Consistent schema across environments  
+- **Reproducible Deployments**: Consistent schema across environments
 - **Rollback Capability**: Safely undo schema changes
 - **Team Collaboration**: Share schema changes through code
 
@@ -34,11 +35,13 @@ npm run migrate:reset
 ### Basic Workflow
 
 1. **Create a Migration**:
+
    ```bash
    npm run migrate:create add_email_to_users
    ```
 
 2. **Edit the Migration File**:
+
    ```typescript
    export const up = `
      ALTER TABLE users ADD COLUMN email VARCHAR(255) UNIQUE;
@@ -87,20 +90,24 @@ export const down = `
 The initial migrations create these tables:
 
 ### 1. `users` (20241211213000)
+
 - User accounts and authentication
 - Indexes: `username`
 
-### 2. `progress` (20241211213100) 
+### 2. `progress` (20241211213100)
+
 - Student lesson progress tracking
 - Foreign key: `user_id → users.id`
 - Indexes: `user_id + lesson_id`, `lesson_completed`, `updated_at`
 
 ### 3. `bookmarks` (20241211213200)
+
 - Student bookmarked content
-- Foreign key: `user_id → users.id`  
+- Foreign key: `user_id → users.id`
 - Indexes: `user_id`, `lesson_id`, `bookmark_type`, `created_at`
 
 ### 4. `gold_stars` (20241211213300)
+
 - Achievement and streak tracking
 - Foreign key: `user_id → users.id` (unique)
 - Indexes: `user_id`, leaderboard optimized, `updated_at`
@@ -111,18 +118,21 @@ The initial migrations create these tables:
 ### Writing Migrations
 
 1. **Always write both up and down**:
+
    ```typescript
    export const up = `-- Forward migration`;
    export const down = `-- Rollback migration`;
    ```
 
 2. **Use IF EXISTS/IF NOT EXISTS**:
+
    ```sql
    CREATE TABLE IF NOT EXISTS my_table (...);
    DROP INDEX IF EXISTS idx_my_index;
    ```
 
 3. **Order matters for dependencies**:
+
    ```sql
    -- Drop indexes before dropping tables
    DROP INDEX IF EXISTS idx_users_email;
@@ -166,6 +176,7 @@ export const up = `
 ### Environment Variables
 
 Configure database connection:
+
 ```bash
 DATABASE_URL=postgresql://user:pass@localhost:5432/apstat_park
 NODE_ENV=development  # affects SSL settings
@@ -174,6 +185,7 @@ NODE_ENV=development  # affects SSL settings
 ### Integration with Application
 
 Migrations run automatically on application startup:
+
 ```typescript
 // In src/index.ts
 await initializeDatabase(); // Runs pending migrations
@@ -182,17 +194,20 @@ await initializeDatabase(); // Runs pending migrations
 ## 🚨 Troubleshooting
 
 ### Migration Fails
+
 1. Check database connectivity
 2. Verify SQL syntax in migration
 3. Check for naming conflicts
 4. Review application logs
 
 ### Rollback Issues
+
 1. Ensure down migration is correct
 2. Check for data dependencies
 3. Verify foreign key constraints
 
 ### Schema Drift
+
 1. Always use migrations for schema changes
 2. Never modify database directly in production
 3. Keep migrations in version control
@@ -218,4 +233,4 @@ INFO: Database migrations completed successfully
 
 ---
 
-**🔒 Security Note**: Never include sensitive data in migration files. Use environment variables for credentials and connection strings. 
+**🔒 Security Note**: Never include sensitive data in migration files. Use environment variables for credentials and connection strings.
