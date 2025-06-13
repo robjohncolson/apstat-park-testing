@@ -19,6 +19,8 @@ export interface Quiz {
   completionDate: string | null;
   /** Unique index within its lesson */
   index?: number;
+  /** Optional AI prompt for this specific quiz - falls back to DEFAULT_GROK_PROMPT if not provided */
+  aiPrompt?: string;
 }
 
 export interface Blooket {
@@ -66,6 +68,22 @@ import { ALL_UNITS_DATA as LEGACY_UNITS_DATA } from '../../../web-legacy/js/allU
 // Re-export the full legacy data so the rest of the application can keep the same import path.
 // Cast to Unit[] to satisfy TypeScript, since the legacy file is plain JS.
 export const ALL_UNITS_DATA: Unit[] = LEGACY_UNITS_DATA as unknown as Unit[];
+
+// -------------------------------
+// Normalization: ensure every quiz PDF path is absolute (starts with "/")
+// -------------------------------
+ALL_UNITS_DATA.forEach((unit) => {
+  unit.topics.forEach((topic) => {
+    topic.quizzes.forEach((quiz) => {
+      if (quiz.questionPdf && !quiz.questionPdf.startsWith('/')) {
+        quiz.questionPdf = '/' + quiz.questionPdf.replace(/^\/+/, '');
+      }
+      if (quiz.answersPdf && !quiz.answersPdf.startsWith('/')) {
+        quiz.answersPdf = '/' + quiz.answersPdf.replace(/^\/+/, '');
+      }
+    });
+  });
+});
 
 // Helper function to calculate totals (utility function from original file)
 export function getTotalItemCounts(allUnitsDataArray: Unit[] = ALL_UNITS_DATA): { totalVideos: number; totalQuizzes: number } {

@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useBookmark } from '../context/BookmarkContext';
 import { findTopicById, findUnitById, calculateTopicFraction } from '../data/allUnitsData';
 import type { Topic, Unit } from '../data/allUnitsData';
+import { DEFAULT_GROK_PROMPT } from '../constants/grokPrompt';
 
 // Interface for granular progress tracking
 interface LessonProgress {
@@ -24,6 +25,7 @@ export function LessonPage() {
   const [progress, setProgress] = useState<LessonProgress | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set());
+  const [copiedPrompt, setCopiedPrompt] = useState<string | null>(null);
 
   // Load lesson data and progress
   useEffect(() => {
@@ -272,6 +274,34 @@ export function LessonPage() {
     });
   };
 
+  // AI Grok integration handlers
+  const handleCopyPrompt = async (quizIndex: number) => {
+    const quiz = topic?.quizzes[quizIndex];
+    const promptText = quiz?.aiPrompt ?? DEFAULT_GROK_PROMPT;
+    
+    try {
+      await navigator.clipboard.writeText(promptText);
+      setCopiedPrompt(`quiz-${quizIndex}`);
+      // Clear the feedback after 2 seconds
+      setTimeout(() => setCopiedPrompt(null), 2000);
+    } catch (error) {
+      console.error('Failed to copy prompt to clipboard:', error);
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = promptText;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setCopiedPrompt(`quiz-${quizIndex}`);
+      setTimeout(() => setCopiedPrompt(null), 2000);
+    }
+  };
+
+  const handleOpenGrok = () => {
+    window.open('https://grok.com', '_blank', 'noopener,noreferrer');
+  };
+
   if (isLoading) {
     return (
       <div className="lesson-page">
@@ -471,6 +501,51 @@ export function LessonPage() {
                       >
                         📄 Answers
                       </a>
+                    </div>
+                    <div className="quiz-ai-actions">
+                      <button
+                        className="quiz-ai-btn copy-prompt-btn"
+                        onClick={() => handleCopyPrompt(quizIndex)}
+                        style={{
+                          background: copiedPrompt === `quiz-${quizIndex}` ? '#28a745' : '#6f42c1',
+                          color: 'white',
+                          border: 'none',
+                          padding: '0.5rem 1rem',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '0.85rem',
+                          marginRight: '0.5rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.25rem'
+                        }}
+                        title="Copy AI tutor prompt to clipboard"
+                      >
+                        {copiedPrompt === `quiz-${quizIndex}` ? (
+                          <>✓ Copied!</>
+                        ) : (
+                          <>📋 Copy Grok Prompt</>
+                        )}
+                      </button>
+                      <button
+                        className="quiz-ai-btn open-grok-btn"
+                        onClick={handleOpenGrok}
+                        style={{
+                          background: '#1da1f2',
+                          color: 'white',
+                          border: 'none',
+                          padding: '0.5rem 1rem',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '0.85rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.25rem'
+                        }}
+                        title="Open Grok.com in a new tab"
+                      >
+                        🤖 Open Grok
+                      </button>
                     </div>
                     <div className="item-actions">
                       <button
