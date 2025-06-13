@@ -33,6 +33,9 @@ jobs:
       - name: Run tests
         run: npm test
 
+      - name: Build application
+        run: npm run build
+
       # Temporarily disabled until build errors are resolved
       # - name: Build application
       #   run: npm run build 
