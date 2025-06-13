@@ -62,7 +62,7 @@ export interface Unit {
 
 // Import the full curriculum data from the legacy JavaScript module
 // NOTE: relative path from apps/web/src/data -> ../../../web-legacy/js/allUnitsData.js
-// @ts-ignore - Legacy JS module, will be properly typed in Phase 6
+// @ts-expect-error - Legacy JS module, will be properly typed in Phase 6
 import { ALL_UNITS_DATA as LEGACY_UNITS_DATA } from "../../../web-legacy/js/allUnitsData.js";
 
 // Re-export the full legacy data so the rest of the application can keep the same import path.

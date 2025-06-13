@@ -1,7 +1,6 @@
 import {
   calculatePaceMetrics,
   formatPaceStatus,
-  formatTimeRemaining,
   getEncouragementMessage,
   formatDeadlineCountdown,
   formatBufferStatus,
@@ -96,18 +95,7 @@ export function PaceTracker({
     marginBottom: "1rem",
   };
 
-  const paceHeaderStyle: React.CSSProperties = {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: "0.75rem",
-  };
 
-  const timeRemainingStyle: React.CSSProperties = {
-    fontWeight: 600,
-    color: "#007bff",
-    fontSize: "0.9rem",
-  };
 
   const metricRowStyle: React.CSSProperties = {
     display: "grid",

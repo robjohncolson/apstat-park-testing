@@ -27,8 +27,7 @@ export function DashboardPage() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [progress, setProgress] = useState<UserProgress[]>([]);
-  const [isLoadingProgress, setIsLoadingProgress] = useState(true);
-  const [isOfflineMode, setIsOfflineMode] = useState(false);
+
 
   const handleLogout = () => {
     logout();
@@ -40,7 +39,6 @@ export function DashboardPage() {
   useEffect(() => {
     const fetchProgress = async () => {
       if (!user?.id) {
-        setIsLoadingProgress(false);
         return;
       }
 
@@ -53,7 +51,6 @@ export function DashboardPage() {
           setProgress(progressData);
         } else {
           console.warn("Failed to fetch progress - running in offline mode");
-          setIsOfflineMode(true);
           // In offline mode, use localStorage for demo purposes
           const offlineProgress = localStorage.getItem(`progress_${user.id}`);
           if (offlineProgress) {
@@ -81,7 +78,6 @@ export function DashboardPage() {
         }
       } catch (error) {
         console.warn("API not available - running in offline mode");
-        setIsOfflineMode(true);
         // In offline mode, use localStorage for demo purposes
         const offlineProgress = localStorage.getItem(`progress_${user.id}`);
         if (offlineProgress) {
@@ -106,8 +102,6 @@ export function DashboardPage() {
           ];
           setProgress(testProgress);
         }
-      } finally {
-        setIsLoadingProgress(false);
       }
     };
 
@@ -115,7 +109,7 @@ export function DashboardPage() {
   }, [user?.id]);
 
   // Check if a lesson is completed using fractional calculation
-  const isLessonCompleted = (topicId: string): boolean => {
+  const _isLessonCompleted = (topicId: string): boolean => {
     const topicProgress = progress.find((p) => p.lesson_id === topicId);
     if (!topicProgress) return false;
 

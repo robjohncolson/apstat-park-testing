@@ -40,12 +40,12 @@ import {
   formatPaceStatus,
   formatTimeRemaining,
   getEncouragementMessage,
-  // @ts-ignore – import helper for tests
-  __setMockMetrics,
+      // @ts-expect-error – import helper for tests
+    __setMockMetrics,
 } from "../utils/timeTracking";
 
 // Cast helper correctly
-// @ts-ignore – we know the helper exists via vi.mock above
+// @ts-expect-error – we know the helper exists via vi.mock above
 const setMockMetrics = __setMockMetrics as (m: Partial<PaceMetrics>) => void;
 
 const mockedCalculatePaceMetrics = vi.mocked(calculatePaceMetrics);

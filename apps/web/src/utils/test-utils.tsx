@@ -1,7 +1,7 @@
 import React from "react";
 import { render, type RenderOptions } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
-import { vi, beforeEach } from "vitest";
+import { vi } from "vitest";
 import { AuthProvider } from "../context/AuthContext";
 import { BookmarkProvider } from "../context/BookmarkContext";
 

@@ -30,6 +30,17 @@
         "plugin:@typescript-eslint/recommended",
         "prettier"
       ]
+    },
+    {
+      "files": [
+        "**/*.test.ts",
+        "**/*.test.tsx",
+        "e2e/**/*.ts"
+      ],
+      "rules": {
+        "@typescript-eslint/no-explicit-any": "off",
+        "@typescript-eslint/no-unused-vars": "off"
+      }
     }
   ],
   "rules": {
