@@ -44,4 +44,23 @@ test-results/
 # Database
 *.sqlite
 *.sqlite3
-*.db 
+*.db
+
+# Vite / React
+dist/
+coverage/
+playwright-report/
+.vite/
+*.log
+
+# LaTeX artifacts
+*.aux
+*.out
+*.toc
+*.synctex.gz
+*.fdb_latexmk
+*.fls
+
+# Editor & OS detritus
+.idea/
+.history/
