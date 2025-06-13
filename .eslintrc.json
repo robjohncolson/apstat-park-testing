@@ -44,7 +44,9 @@
     }
   ],
   "ignorePatterns": [
-    "apps/web-legacy/**"
+    "apps/web-legacy/**",
+    "archive/**",
+    "dist/**"
   ],
   "rules": {
     "@typescript-eslint/no-unused-vars": [
