@@ -66,3 +66,6 @@ playwright-report/
 .history/
 result
 result@result
+result.log
+report.log
+cursor_convo.md

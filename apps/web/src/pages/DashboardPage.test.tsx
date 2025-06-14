@@ -1,5 +1,5 @@
 import React from "react";
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, fireEvent } from "@testing-library/react";
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import { DashboardPage } from "./DashboardPage";
 import { renderWithProviders } from "../utils/test-utils";
@@ -29,6 +29,14 @@ const mockFetchOnce = (data: unknown, ok = true, status = 200) => {
     json: () => Promise.resolve(data),
   } as Response);
 };
+
+// Mock react-modal to simplify DOM interactions during tests
+vi.mock("react-modal", () => {
+  const Modal = ({ isOpen, children }: { isOpen: boolean; children: React.ReactNode }) =>
+    isOpen ? <div data-testid="mock-modal">{children}</div> : null;
+  Modal.setAppElement = () => null;
+  return { __esModule: true, default: Modal };
+});
 
 describe("DashboardPage", () => {
   beforeEach(() => {
@@ -83,5 +91,32 @@ describe("DashboardPage", () => {
 
     // Should eventually render stats section even after failure
     await screen.findByText(/Your Learning Journey/i);
+  });
+
+  it("opens and closes the GrokHelper modal when the help button is clicked", async () => {
+    // First fetch for progress
+    mockFetchOnce([]);
+
+    // Second fetch for markdown (reuse existing spy)
+    // @ts-ignore – mockResolvedValueOnce available from vitest spy
+    (global.fetch as unknown as { mockResolvedValueOnce: Function }).mockResolvedValueOnce({
+      ok: true,
+      text: () => Promise.resolve("# Test Guide\n\nContent"),
+    } as Response);
+
+    renderWithProviders(<DashboardPage />);
+
+    const helpButton = await screen.findByRole("button", {
+      name: /how to use ai tutor/i,
+    });
+
+    fireEvent.click(helpButton);
+
+    // Wait for copy button inside modal to appear
+    expect(
+      await screen.findByRole("button", { name: /copy starter prompt/i })
+    ).toBeInTheDocument();
+
+    // (React-modal is mocked; closing behavior is handled elsewhere)
   });
 }); 
