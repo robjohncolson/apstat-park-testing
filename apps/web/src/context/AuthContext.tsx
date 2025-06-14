@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, {
   createContext,
   useContext,
@@ -114,7 +115,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         } else {
           throw new Error("API call failed");
         }
-      } catch (apiError) {
+      } catch {
         // Fallback to offline mode
         console.log("API unavailable, using offline mode");
         user = {

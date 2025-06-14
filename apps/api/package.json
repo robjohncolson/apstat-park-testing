@@ -10,6 +10,7 @@
     "start": "node dist/index.js",
     "start:dev": "npm run build && npm start",
     "lint": "eslint --config ../../.eslintrc.json src --ext .ts",
+    "lint:fix": "eslint --config ../../.eslintrc.json src --ext .ts --fix",
     "type-check": "tsc --noEmit",
     "migrate:create": "ts-node src/migrations/cli.ts create",
     "migrate:run": "ts-node src/migrations/cli.ts run",

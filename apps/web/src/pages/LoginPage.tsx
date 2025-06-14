@@ -16,7 +16,7 @@ export function LoginPage() {
     try {
       const username = await generateUsername();
       setSuggestedUsername(username);
-    } catch (error) {
+    } catch {
       setError("Failed to generate username. Please try again.");
     } finally {
       setIsGenerating(false);
@@ -44,9 +44,10 @@ export function LoginPage() {
   };
 
   // Generate a username on mount
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     handleGenerateUsername();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="login-page">

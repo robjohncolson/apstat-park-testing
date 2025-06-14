@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useEffect } from "react";
 import type { ReactNode } from "react";
 import { useAuth } from "./AuthContext";
@@ -53,7 +54,7 @@ export function BookmarkProvider({ children }: BookmarkProviderProps) {
     } else {
       setActiveBookmark(null);
     }
-  }, [user?.id]);
+  }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Load bookmark from API
   const loadBookmark = async () => {
@@ -86,7 +87,7 @@ export function BookmarkProvider({ children }: BookmarkProviderProps) {
         console.warn("Failed to load bookmarks - checking localStorage");
         loadBookmarkFromStorage();
       }
-    } catch (error) {
+    } catch {
       console.warn("API not available - checking localStorage");
       loadBookmarkFromStorage();
     } finally {
@@ -103,8 +104,8 @@ export function BookmarkProvider({ children }: BookmarkProviderProps) {
       try {
         const bookmark = JSON.parse(stored);
         setActiveBookmark(bookmark);
-      } catch (error) {
-        console.error("Failed to parse stored bookmark:", error);
+      } catch {
+        console.error("Failed to parse stored bookmark:");
       }
     }
   };
@@ -148,7 +149,7 @@ export function BookmarkProvider({ children }: BookmarkProviderProps) {
       }
 
       console.log("Bookmark synced successfully");
-    } catch (error) {
+    } catch {
       console.warn("API not available - saving bookmark locally");
       localStorage.setItem(`bookmark_${user.id}`, JSON.stringify(newBookmark));
     }
@@ -180,7 +181,7 @@ export function BookmarkProvider({ children }: BookmarkProviderProps) {
       }
 
       console.log("Bookmark cleared successfully");
-    } catch (error) {
+    } catch {
       console.warn("API not available - clearing bookmark locally");
       localStorage.removeItem(`bookmark_${user.id}`);
     }

@@ -1,6 +1,6 @@
 import React from "react";
-import { screen, waitFor, fireEvent } from "@testing-library/react";
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 
 import { LoginPage } from "./LoginPage";
@@ -29,12 +29,13 @@ afterEach(() => {
 
 describe("LoginPage", () => {
   it("renders initial suggested username and buttons", async () => {
-    const fetchMock = vi
+    const _fetchMock = vi
       .spyOn(global, "fetch")
       .mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve({ username: "coolfox1" }),
       } as Response);
+    void _fetchMock;
 
     renderLogin();
 
@@ -52,11 +53,11 @@ describe("LoginPage", () => {
     expect(customBtn).toBeDisabled();
 
     // Only one fetch for initial generation
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(_fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it("generates a new username when 'Generate New' is clicked", async () => {
-    const fetchMock = vi
+    const _fetchMock = vi
       .spyOn(global, "fetch")
       // Initial username
       .mockResolvedValueOnce({
@@ -68,6 +69,7 @@ describe("LoginPage", () => {
         ok: true,
         json: () => Promise.resolve({ username: "swiftowl3" }),
       } as Response);
+    void _fetchMock;
 
     renderLogin();
 
@@ -85,11 +87,11 @@ describe("LoginPage", () => {
       screen.getByRole("button", { name: /continue as swiftowl3/i })
     ).toBeInTheDocument();
 
-    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(_fetchMock).toHaveBeenCalledTimes(2);
   });
 
   it("logs in with suggested username and navigates to dashboard", async () => {
-    const fetchMock = vi
+    const _fetchMock = vi
       .spyOn(global, "fetch")
       // initial generate-username
       .mockResolvedValueOnce({
@@ -101,6 +103,7 @@ describe("LoginPage", () => {
         ok: true,
         json: () => Promise.resolve({ user: { id: 1, username: "brightpanda5" } }),
       } as Response);
+    void _fetchMock;
 
     renderLogin();
 
