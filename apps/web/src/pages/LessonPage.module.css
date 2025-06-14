@@ -5,11 +5,7 @@
 }
 
 .loadingSpinner {
-  text-align: center;
-  padding: 2rem;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  composes: loading-spinner from global;
 }
 
 .lessonHeader {
@@ -25,51 +21,23 @@
 }
 
 .backLink {
-  color: var(--color-primary);
-  text-decoration: none;
-  font-weight: 600;
-}
-.backLink:hover {
-  text-decoration: underline;
+  composes: back-link from global;
 }
 
 .lessonInfo {
-  flex: 1;
-}
-.lessonInfo h1 {
-  margin: 0 0 0.5rem 0;
-  color: #374151;
-}
-.lessonInfo p {
-  margin: 0;
-  color: #6b7280;
+  composes: lesson-info from global;
 }
 
 .completionBadge {
-  display: inline-block;
-  background: #f0fdf4;
-  color: #15803d;
-  padding: 0.25rem 0.75rem;
-  border-radius: 12px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  margin-top: 0.5rem;
+  composes: completion-badge from global;
 }
 
 .progressBadge {
-  display: inline-block;
-  background: #eef2ff;
-  color: #4f46e5;
-  padding: 0.25rem 0.75rem;
-  border-radius: 12px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  margin-top: 0.5rem;
+  composes: progress-badge from global;
 }
 
 .lessonActions {
-  display: flex;
-  gap: 1rem;
+  composes: lesson-actions from global;
 }
 
 .lessonMain {
@@ -109,144 +77,52 @@
   font-weight: 600;
 }
 
-.videosGrid,
+.videosGrid {
+  composes: videos-grid from global;
+}
+
 .quizzesGrid {
-  display: grid;
-  gap: 1.5rem;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  composes: quizzes-grid from global;
 }
 
-.videoCard,
-.quizCard,
-.blooketCard,
-.origamiCard {
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 1.5rem;
+.videoCard {
+  composes: video-card from global;
 }
 
-.videoHeader,
-.quizHeader,
-.blooketHeader,
-.origamiHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1rem;
+.videoHeader {
+  composes: video-header from global;
 }
 
-.videoHeaderActions,
-.quizHeaderActions,
-.blooketHeaderActions,
-.origamiHeaderActions {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.videoLinks,
-.quizLinks,
-.blooketLinks,
-.origamiLinks {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.quizLink,
-.blooketLink,
-.origamiLink {
-  display: inline-block;
-  padding: 0.75rem 1rem;
-  text-decoration: none;
-  border-radius: 6px;
-  font-weight: 600;
-  text-align: center;
-  transition: background var(--transition);
-  background: #e5e7eb;
-  color: #374151;
-}
-.quizLink:hover,
-.blooketLink:hover,
-.origamiLink:hover {
-  background: #d1d5db;
+.videoHeaderActions {
+  composes: video-header-actions from global;
 }
 
 .completionIndicator {
-  background: #dcfce7;
-  color: #15803d;
-  padding: 0.25rem 0.5rem;
-  border-radius: 12px;
-  font-size: 0.85rem;
-  font-weight: 600;
+  composes: completion-indicator from global;
 }
 
-.itemActions {
-  margin-top: 1rem;
+.bookmarkBtn {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity var(--transition);
+  margin-left: 0.5rem;
+}
+.bookmarkBtn:hover:not(:disabled) {
+  opacity: 1;
+}
+.bookmarkBtn:disabled {
+  cursor: not-allowed;
+  opacity: 0.3;
 }
 
-.completed {
-  background: #10b981 !important;
-  color: #fff !important;
+.videoLinks {
+  composes: video-links from global;
 }
 
-.quizAiActions {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.origamiDescription {
-  margin-bottom: 1rem;
-}
-
-.reflection {
-  margin-top: 2rem;
-}
-.reflection h5 {
-  margin: 0 0 0.5rem 0;
-  color: #374151;
-}
-.reflection p {
-  margin: 0;
-  color: #6b7280;
-}
-
-@media (max-width: 480px) {
-  .lessonPage {
-    padding: 1rem;
-  }
-  .lessonHeader {
-    padding: 1rem;
-    flex-direction: column;
-    gap: 1rem;
-  }
-  .lessonMain {
-    padding: 1rem;
-  }
-  .videoCard,
-  .quizCard,
-  .blooketCard,
-  .origamiCard {
-    padding: 1rem;
-  }
-  .videoLinkPrimary,
-  .videoLinkSecondary,
-  .quizLink,
-  .blooketLink,
-  .origamiLink {
-    padding: 0.5rem 0.75rem;
-  }
-  .videosGrid,
-  .quizzesGrid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* ---------------------------------------------------------------
-   Phase 3 finale – self-contained module styles (no globals!)
-----------------------------------------------------------------*/
+/* Primary & secondary video link buttons re-implemented using tokens */
 .videoLinkPrimary {
   display: inline-block;
   padding: 0.75rem 1rem;
@@ -271,6 +147,10 @@
   background: #d1d5db;
 }
 
+.itemActions {
+  composes: item-actions from global;
+}
+
 .itemCompleteBtn {
   background: #3b82f6; /* blue */
   color: #fff;
@@ -288,6 +168,35 @@
 .itemCompleteBtn:disabled {
   cursor: not-allowed;
   opacity: 0.6;
+}
+
+.completed {
+  composes: completed from global;
+}
+
+/* Quiz styles mapped to existing globals */
+.quizCard {
+  composes: quiz-card from global;
+}
+
+.quizHeader {
+  composes: quiz-header from global;
+}
+
+.quizHeaderActions {
+  composes: quiz-header-actions from global;
+}
+
+.quizLinks {
+  composes: quiz-links from global;
+}
+
+.quizLink {
+  composes: quiz-link from global;
+}
+
+.quizAiActions {
+  composes: quiz-ai-actions from global;
 }
 
 .quizAiBtnCopyPromptBtn,
@@ -333,42 +242,78 @@
 
 /* Blooket / Origami */
 .blooketCard {
-  /* previously composed from global – styles now defined above */
+  composes: blooket-card from global;
 }
 .blooketHeader {
-  /* legacy reference removed */
+  composes: blooket-header from global;
 }
 .blooketHeaderActions {
-  /* legacy reference removed */
+  composes: blooket-header-actions from global;
 }
 .blooketLinks {
-  /* legacy reference removed */
+  composes: blooket-links from global;
 }
 .blooketLink {
-  /* legacy reference removed */
+  composes: blooket-link from global;
 }
 
 .origamiCard {
-  /* legacy reference removed */
+  composes: origami-card from global;
 }
 .origamiHeader {
-  /* legacy reference removed */
+  composes: origami-header from global;
 }
 .origamiHeaderActions {
-  /* legacy reference removed */
+  composes: origami-header-actions from global;
+}
+.origamiDescription {
+  composes: origami-description from global;
 }
 .origamiLinks {
-  /* legacy reference removed */
+  composes: origami-links from global;
 }
 .origamiLink {
-  /* legacy reference removed */
+  composes: origami-link from global;
 }
 .reflection {
-  /* legacy reference removed */
+  composes: reflection from global;
 }
 
-/* -------- Retire giant :global block -------- */
-/*
+@media (max-width: 480px) {
+  .lessonPage {
+    padding: 1rem;
+  }
+  .lessonHeader {
+    padding: 1rem;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .lessonMain {
+    padding: 1rem;
+  }
+  .videoCard,
+  .quizCard,
+  .blooketCard,
+  .origamiCard {
+    padding: 1rem;
+  }
+  .videoLinkPrimary,
+  .videoLinkSecondary,
+  .quizLink,
+  .blooketLink,
+  .origamiLink {
+    padding: 0.5rem 0.75rem;
+  }
+  .videosGrid,
+  .quizzesGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ------------------------------------------------------------------
+   Legacy Lesson-specific global rules migrated out of App.css
+   (Phase 3 – Sheet consolidation)
+------------------------------------------------------------------- */
 :global {
   .lesson-page {
     min-height: 100vh;
@@ -709,4 +654,4 @@
       grid-template-columns: 1fr;
     }
   }
-} */
+} 

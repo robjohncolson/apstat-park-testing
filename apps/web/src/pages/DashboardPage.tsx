@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { useAuth } from "../context/AuthContext";
-import { Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import {
   ALL_UNITS_DATA,
@@ -25,8 +25,15 @@ interface UserProgress {
 }
 
 export function DashboardPage() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [progress, setProgress] = useState<UserProgress[]>([]);
+
+  const handleLogout = () => {
+    logout();
+    // Now navigate using React Router since AuthContext will update the App component
+    navigate("/", { replace: true });
+  };
 
   // Fetch user progress on component mount
   useEffect(() => {
@@ -144,7 +151,21 @@ export function DashboardPage() {
 
   return (
     <div className={styles.dashboardContainer}>
-      {/* Global <AppHeader> now provides the page header/navigation */}
+      <header className={styles.dashboardHeader}>
+        <div className="user-info">
+          <h1>Welcome, {user?.username || "Explorer"}!</h1>
+          <p>Your journey to mastering AP Statistics starts here.</p>
+        </div>
+        <div className={styles.headerActions}>
+          <Link to="/leaderboard" className={styles.leaderboardLink}>
+            🏆 Leaderboard
+          </Link>
+          <button onClick={handleLogout} className={styles.logoutButton}>
+            Logout
+          </button>
+        </div>
+      </header>
+
       <main>
         <section className="dashboard-overview">
           <h2>Your Learning Journey</h2>
