@@ -9,7 +9,7 @@ import {
 } from "../data/allUnitsData";
 import type { Topic, Unit } from "../data/allUnitsData";
 import { DEFAULT_GROK_PROMPT } from "../constants/grokPrompt";
-import Modal from "react-modal";
+import Modal from "../components/Modal/Modal";
 import WorkflowExplainer from "../components/WorkflowExplainer/WorkflowExplainer";
 
 // Interface for granular progress tracking
@@ -816,21 +816,6 @@ export function LessonPage() {
         isOpen={isExplainerOpen}
         onRequestClose={() => setIsExplainerOpen(false)}
         contentLabel="AI Quiz Tutor Workflow Guide"
-        overlayClassName="grok-helper-overlay"
-        className="grok-helper-content"
-        style={{
-          overlay: { backgroundColor: "rgba(0, 0, 0, 0.75)" },
-          content: {
-            top: "50%",
-            left: "50%",
-            right: "auto",
-            bottom: "auto",
-            marginRight: "-50%",
-            transform: "translate(-50%, -50%)",
-            width: "80%",
-            maxWidth: "800px",
-          },
-        }}
       >
         <WorkflowExplainer />
       </Modal>
