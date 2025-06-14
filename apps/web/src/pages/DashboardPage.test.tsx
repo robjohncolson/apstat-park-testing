@@ -112,14 +112,18 @@ describe("DashboardPage", () => {
 
     fireEvent.click(helpButton);
 
-    // Wait for markdown heading to appear inside modal
-    expect(await screen.findByText(/Test Guide/i)).toBeInTheDocument();
+    // Wait for copy button inside modal to appear
+    expect(
+      await screen.findByRole("button", { name: /copy starter prompt/i })
+    ).toBeInTheDocument();
 
     // Close modal via Escape key on document
     fireEvent.keyDown(document, { key: "Escape", code: "Escape", keyCode: 27 });
 
     await waitFor(() => {
-      expect(screen.queryByText(/Test Guide/i)).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /copy starter prompt/i })
+      ).not.toBeInTheDocument();
     });
   });
 }); 
