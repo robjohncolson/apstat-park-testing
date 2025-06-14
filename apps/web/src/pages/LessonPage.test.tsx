@@ -19,7 +19,8 @@ const primeUser = () => {
 };
 
 // Utility to render LessonPage within a matching route so useParams works
-const renderLesson = (initialRoute = "/unit/unit1/lesson/1-1") => {
+const LESSON_ROUTE = "/unit/unit1/lesson/1-2";
+const renderLesson = (initialRoute = LESSON_ROUTE) => {
   return renderWithProviders(
     <Routes>
       <Route path="/unit/:unitId/lesson/:lessonId" element={<LessonPage />} />
@@ -32,6 +33,14 @@ const renderLesson = (initialRoute = "/unit/unit1/lesson/1-1") => {
 afterEach(() => {
   vi.restoreAllMocks();
   window.localStorage.clear();
+});
+
+// Mock react-modal to render children when isOpen is true
+vi.mock("react-modal", () => {
+  const Modal = ({ isOpen, children }: { isOpen: boolean; children: React.ReactNode }) =>
+    isOpen ? <div data-testid="mock-modal">{children}</div> : null;
+  Modal.setAppElement = () => null;
+  return { __esModule: true, default: Modal };
 });
 
 describe("LessonPage", () => {
@@ -49,10 +58,10 @@ describe("LessonPage", () => {
     renderLesson();
 
     // Wait for loading to finish by finding the lesson heading
-    await screen.findByRole("heading", { name: /topic 1\.1/i });
+    await screen.findByRole("heading", { name: /topic 1\.2/i });
 
     // Verify description & activities appear
-    expect(screen.getByText(/introducing statistics/i)).toBeInTheDocument();
+    expect(screen.getByText(/language of variation/i)).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /videos/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /video 1/i })).toBeInTheDocument();
   });
@@ -76,12 +85,12 @@ describe("LessonPage", () => {
     // Sequence: 1) progress GET, 2) bookmarks GET, 3) bookmark sync POST
     const fetchMock = vi
       .fn()
-      // progress
+      // progress GET
       .mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve([]),
       } as Response)
-      // bookmarks (none)
+      // bookmarks GET (empty)
       .mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve({ bookmarks: [] }),
@@ -100,9 +109,8 @@ describe("LessonPage", () => {
     renderLesson();
 
     // Wait until the bookmark button with pin icon appears
-    const bookmarkBtn = await screen.findByRole("button", {
-      name: /📍/i,
-    });
+    const bookmarkBtns = await screen.findAllByTitle(/bookmark this video/i);
+    const bookmarkBtn = bookmarkBtns[0];
 
     expect(bookmarkBtn).toHaveTextContent("📍");
     expect(bookmarkBtn).not.toBeDisabled();
@@ -164,10 +172,43 @@ describe("LessonPage", () => {
     const payload = JSON.parse((updateOptions as RequestInit).body as string);
 
     expect(payload).toEqual({
-      lesson_id: "1-1",
+      lesson_id: "1-2",
       item_type: "video",
       item_index: 0,
       completed: true,
     });
+  });
+
+  it("opens the Workflow Explainer modal when '?' help button is clicked", async () => {
+    // Mock progress fetch followed by bookmarks fetch
+    const fetchMock = vi
+      .fn()
+      // progress GET
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve([]),
+      } as Response)
+      // bookmarks GET (empty)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ bookmarks: [] }),
+      } as Response);
+
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    global.fetch = fetchMock;
+
+    renderLesson();
+
+    // Wait until the quiz-specific buttons load (copy prompt)
+    await screen.findByRole("button", { name: /copy grok prompt/i });
+
+    const helpBtn = await screen.findByRole("button", { name: /how to use the ai quiz tutor/i });
+
+    fireEvent.click(helpBtn);
+
+    // Modal content should appear (mocked react-modal)
+    expect(await screen.findByText(/How to Use the AI Quiz Tutor/i)).toBeInTheDocument();
+    expect(screen.getByText("Step 1: Download Files")).toBeInTheDocument();
   });
 }); 
