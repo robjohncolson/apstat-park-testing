@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+:root{
+  --color-primary:#4CAF50;
+  --color-primary-dark:#2E7D32;
+  --color-accent:#FFD54F;
+  --color-bg-light:#F5FDF5;
+  --color-bg-dark:#1A2B1A;
+}
+.swatch{width:140px;height:90px;margin:8px;border-radius:6px;color:#fff;
+  font:14px/90px sans-serif;text-align:center;}
+</style>
+</head>
+<body style="display:flex;flex-wrap:wrap;background:#fafafa">
+<div class="swatch" style="background:var(--color-primary)">primary</div>
+<div class="swatch" style="background:var(--color-primary-dark)">primary-dark</div>
+<div class="swatch" style="background:var(--color-accent);color:#333">accent</div>
+<div class="swatch" style="background:var(--color-bg-light);color:#333">bg-light</div>
+<div class="swatch" style="background:var(--color-bg-dark)">bg-dark</div>
+</body>
+</html>
