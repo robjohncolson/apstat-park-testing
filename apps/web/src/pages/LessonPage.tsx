@@ -11,6 +11,7 @@ import type { Topic, Unit } from "../data/allUnitsData";
 import { DEFAULT_GROK_PROMPT } from "../constants/grokPrompt";
 import Modal from "../components/Modal/Modal";
 import WorkflowExplainer from "../components/WorkflowExplainer/WorkflowExplainer";
+import styles from "./LessonPage.module.css";
 
 // Interface for granular progress tracking
 interface LessonProgress {
@@ -357,8 +358,8 @@ export function LessonPage() {
 
   if (isLoading) {
     return (
-      <div className="lesson-page">
-        <div className="loading-spinner">
+      <div className={styles.lessonPage}>
+        <div className={styles.loadingSpinner}>
           <p>Loading lesson...</p>
         </div>
       </div>
@@ -367,12 +368,12 @@ export function LessonPage() {
 
   if (!topic || !unit) {
     return (
-      <div className="lesson-page">
-        <header className="lesson-header">
-          <Link to="/dashboard" className="back-link">
+      <div className={styles.lessonPage}>
+        <header className={styles.lessonHeader}>
+          <Link to="/dashboard" className={styles.backLink}>
             ← Back to Dashboard
           </Link>
-          <div className="lesson-info">
+          <div className={styles.lessonInfo}>
             <h1>Lesson Not Found</h1>
             <p>
               Could not find lesson {lessonId} in unit {unitId}
@@ -384,12 +385,12 @@ export function LessonPage() {
   }
 
   return (
-    <div className="lesson-page">
-      <header className="lesson-header">
-        <Link to="/dashboard" className="back-link">
+    <div className={styles.lessonPage}>
+      <header className={styles.lessonHeader}>
+        <Link to="/dashboard" className={styles.backLink}>
           ← Back to Dashboard
         </Link>
-        <div className="lesson-info">
+        <div className={styles.lessonInfo}>
           <h1>{topic.name}</h1>
           <p>{unit.displayName}</p>
           {progress &&
@@ -405,28 +406,28 @@ export function LessonPage() {
               const percentage = Math.round(fraction * 100);
 
               return fraction === 1.0 ? (
-                <span className="completion-badge">✅ 100% Complete</span>
+                <span className={styles.completionBadge}>✅ 100% Complete</span>
               ) : percentage > 0 ? (
-                <span className="progress-badge">{percentage}% Complete</span>
+                <span className={styles.progressBadge}>{percentage}% Complete</span>
               ) : null;
             })()}
         </div>
-        <div className="lesson-actions">
+        <div className={styles.lessonActions}>
           {/* Lesson completion removed - now based purely on fractional progress */}
         </div>
       </header>
 
-      <main className="lesson-main">
-        <div className="lesson-content">
-          <section className="lesson-description">
+      <main className={styles.lessonMain}>
+        <div className={styles.lessonContent}>
+          <section className={styles.lessonDescription}>
             <h2>{topic.description}</h2>
           </section>
 
           {/* Videos Section */}
           {topic.videos.length > 0 && (
-            <section className="content-section">
+            <section className={styles.contentSection}>
               <h3>📺 Videos</h3>
-              <div className="videos-grid">
+              <div className={styles.videosGrid}>
                 {topic.videos.map((video, index) => {
                   const videoIndex = video.index ?? index;
                   const isWatched =
@@ -439,27 +440,19 @@ export function LessonPage() {
                   );
 
                   return (
-                    <div key={index} className="video-card">
-                      <div className="video-header">
+                    <div key={index} className={styles.videoCard}>
+                      <div className={styles.videoHeader}>
                         <h4>Video {index + 1}</h4>
-                        <div className="video-header-actions">
+                        <div className={styles.videoHeaderActions}>
                           {isWatched && (
-                            <span className="completion-indicator">
+                            <span className={styles.completionIndicator}>
                               ✅ Watched
                             </span>
                           )}
                           <button
-                            className="bookmark-btn"
+                            className={styles.bookmarkBtn}
                             onClick={() => handleBookmarkVideo(videoIndex)}
                             disabled={isBookmarked}
-                            style={{
-                              background: "none",
-                              border: "none",
-                              fontSize: "1.2rem",
-                              cursor: isBookmarked ? "not-allowed" : "pointer",
-                              opacity: isBookmarked ? 0.5 : 1,
-                              marginLeft: "0.5rem",
-                            }}
                             title={
                               isBookmarked
                                 ? "Already bookmarked"
@@ -470,12 +463,12 @@ export function LessonPage() {
                           </button>
                         </div>
                       </div>
-                      <div className="video-links">
+                      <div className={styles.videoLinks}>
                         <a
                           href={video.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="video-link primary"
+                          className={styles.videoLinkPrimary}
                         >
                           Watch on AP Classroom
                         </a>
@@ -484,31 +477,17 @@ export function LessonPage() {
                             href={video.altUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="video-link secondary"
+                            className={styles.videoLinkSecondary}
                           >
                             Alternative Link
                           </a>
                         )}
                       </div>
-                      <div className="item-actions">
+                      <div className={styles.itemActions}>
                         <button
-                          className={`item-complete-btn ${isWatched ? "completed" : ""}`}
+                          className={`${styles.itemCompleteBtn} ${isWatched ? styles.completed : ""}`}
                           onClick={() => handleVideoWatched(videoIndex)}
                           disabled={isWatched || isUpdating}
-                          style={{
-                            background: isWatched ? "#28a745" : "#007bff",
-                            color: "white",
-                            border: "none",
-                            padding: "0.5rem 1rem",
-                            borderRadius: "4px",
-                            cursor:
-                              isWatched || isUpdating
-                                ? "not-allowed"
-                                : "pointer",
-                            fontSize: "0.9rem",
-                            marginTop: "0.5rem",
-                            width: "100%",
-                          }}
                         >
                           {isUpdating
                             ? "Saving..."
@@ -526,9 +505,9 @@ export function LessonPage() {
 
           {/* Quizzes Section */}
           {topic.quizzes.length > 0 && (
-            <section className="content-section">
+            <section className={styles.contentSection}>
               <h3>📝 Quizzes</h3>
-              <div className="quizzes-grid">
+              <div className={styles.quizzesGrid}>
                 {topic.quizzes.map((quiz, index) => {
                   const quizIndex = quiz.index ?? index;
                   const isCompleted =
@@ -541,27 +520,19 @@ export function LessonPage() {
                   );
 
                   return (
-                    <div key={quiz.quizId} className="quiz-card">
-                      <div className="quiz-header">
+                    <div key={quiz.quizId} className={styles.quizCard}>
+                      <div className={styles.quizHeader}>
                         <h4>Quiz {index + 1}</h4>
-                        <div className="quiz-header-actions">
+                        <div className={styles.quizHeaderActions}>
                           {isCompleted && (
-                            <span className="completion-indicator">
+                            <span className={styles.completionIndicator}>
                               ✅ Complete
                             </span>
                           )}
                           <button
-                            className="bookmark-btn"
+                            className={styles.bookmarkBtn}
                             onClick={() => handleBookmarkQuiz(quizIndex)}
                             disabled={isBookmarked}
-                            style={{
-                              background: "none",
-                              border: "none",
-                              fontSize: "1.2rem",
-                              cursor: isBookmarked ? "not-allowed" : "pointer",
-                              opacity: isBookmarked ? 0.5 : 1,
-                              marginLeft: "0.5rem",
-                            }}
                             title={
                               isBookmarked
                                 ? "Already bookmarked"
@@ -572,13 +543,13 @@ export function LessonPage() {
                           </button>
                         </div>
                       </div>
-                      <div className="quiz-links">
+                      <div className={styles.quizLinks}>
                         {quiz.questionPdf && (
                           <a
                             href={quiz.questionPdf}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="quiz-link"
+                            className={styles.quizLink}
                           >
                             📄 Questions
                           </a>
@@ -587,31 +558,15 @@ export function LessonPage() {
                           href={quiz.answersPdf}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="quiz-link"
+                          className={styles.quizLink}
                         >
                           📄 Answers
                         </a>
                       </div>
-                      <div className="quiz-ai-actions">
+                      <div className={styles.quizAiActions}>
                         <button
-                          className="quiz-ai-btn copy-prompt-btn"
+                          className={`${styles.quizAiBtnCopyPromptBtn} ${copiedPrompt === `quiz-${quizIndex}` ? styles.copied : ""}`}
                           onClick={() => handleCopyPrompt(quizIndex)}
-                          style={{
-                            background:
-                              copiedPrompt === `quiz-${quizIndex}`
-                                ? "#28a745"
-                                : "#6f42c1",
-                            color: "white",
-                            border: "none",
-                            padding: "0.5rem 1rem",
-                            borderRadius: "4px",
-                            cursor: "pointer",
-                            fontSize: "0.85rem",
-                            marginRight: "0.5rem",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "0.25rem",
-                          }}
                           title="Copy AI tutor prompt to clipboard"
                         >
                           {copiedPrompt === `quiz-${quizIndex}` ? (
@@ -621,20 +576,8 @@ export function LessonPage() {
                           )}
                         </button>
                         <button
-                          className="quiz-ai-btn open-grok-btn"
+                          className={styles.quizAiBtnOpenGrokBtn}
                           onClick={handleOpenGrok}
-                          style={{
-                            background: "#1da1f2",
-                            color: "white",
-                            border: "none",
-                            padding: "0.5rem 1rem",
-                            borderRadius: "4px",
-                            cursor: "pointer",
-                            fontSize: "0.85rem",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "0.25rem",
-                          }}
                           title="Open Grok.com in a new tab"
                         >
                           🤖 Open Grok
@@ -643,39 +586,16 @@ export function LessonPage() {
                           aria-label="How to use the AI Quiz Tutor"
                           onClick={() => setIsExplainerOpen(true)}
                           title="How to use the AI Quiz Tutor"
-                          style={{
-                            background: "transparent",
-                            border: "1px solid #6f42c1",
-                            color: "#6f42c1",
-                            padding: "0.5rem 0.75rem",
-                            borderRadius: "50%",
-                            cursor: "pointer",
-                            fontSize: "0.85rem",
-                            lineHeight: 1,
-                          }}
+                          className={styles.quizAiHelpBtn}
                         >
                           ?
                         </button>
                       </div>
-                      <div className="item-actions">
+                      <div className={styles.itemActions}>
                         <button
-                          className={`item-complete-btn ${isCompleted ? "completed" : ""}`}
+                          className={`${styles.itemCompleteBtn} ${isCompleted ? styles.completed : ""}`}
                           onClick={() => handleQuizCompleted(quizIndex)}
                           disabled={isCompleted || isUpdating}
-                          style={{
-                            background: isCompleted ? "#28a745" : "#007bff",
-                            color: "white",
-                            border: "none",
-                            padding: "0.5rem 1rem",
-                            borderRadius: "4px",
-                            cursor:
-                              isCompleted || isUpdating
-                                ? "not-allowed"
-                                : "pointer",
-                            fontSize: "0.9rem",
-                            marginTop: "0.5rem",
-                            width: "100%",
-                          }}
                         >
                           {isUpdating
                             ? "Saving..."
@@ -693,48 +613,33 @@ export function LessonPage() {
 
           {/* Blooket Section */}
           {topic.blooket.url && (
-            <section className="content-section">
+            <section className={styles.contentSection}>
               <h3>🎮 Blooket Game</h3>
-              <div className="blooket-card">
-                <div className="blooket-header">
+              <div className={styles.blooketCard}>
+                <div className={styles.blooketHeader}>
                   <h4>Interactive Review Game</h4>
-                  <div className="blooket-header-actions">
+                  <div className={styles.blooketHeaderActions}>
                     {progress?.blooket_completed && (
-                      <span className="completion-indicator">✅ Complete</span>
+                      <span className={styles.completionIndicator}>✅ Complete</span>
                     )}
                   </div>
                 </div>
                 <p>Test your knowledge with this interactive game!</p>
-                <div className="blooket-links">
+                <div className={styles.blooketLinks}>
                   <a
                     href={topic.blooket.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="blooket-link"
+                    className={styles.blooketLink}
                   >
                     Play Blooket Game
                   </a>
                 </div>
-                <div className="item-actions">
+                <div className={styles.itemActions}>
                   <button
-                    className={`item-complete-btn ${progress?.blooket_completed ? "completed" : ""}`}
+                    className={`${styles.itemCompleteBtn} ${progress?.blooket_completed ? styles.completed : ""}`}
                     onClick={handleBlooketCompleted}
                     disabled={updatingItems.has("blooket")}
-                    style={{
-                      background: progress?.blooket_completed
-                        ? "#28a745"
-                        : "#007bff",
-                      color: "white",
-                      border: "none",
-                      padding: "0.5rem 1rem",
-                      borderRadius: "4px",
-                      cursor: updatingItems.has("blooket")
-                        ? "not-allowed"
-                        : "pointer",
-                      fontSize: "0.9rem",
-                      marginTop: "0.5rem",
-                      width: "100%",
-                    }}
                   >
                     {updatingItems.has("blooket")
                       ? "Saving..."
@@ -749,54 +654,39 @@ export function LessonPage() {
 
           {/* Origami Section */}
           {topic.origami && (
-            <section className="content-section">
+            <section className={styles.contentSection}>
               <h3>🎨 Origami Activity</h3>
-              <div className="origami-card">
-                <div className="origami-header">
+              <div className={styles.origamiCard}>
+                <div className={styles.origamiHeader}>
                   <h4>{topic.origami.name}</h4>
-                  <div className="origami-header-actions">
+                  <div className={styles.origamiHeaderActions}>
                     {progress?.origami_completed && (
-                      <span className="completion-indicator">✅ Complete</span>
+                      <span className={styles.completionIndicator}>✅ Complete</span>
                     )}
                   </div>
                 </div>
-                <p className="origami-description">
+                <p className={styles.origamiDescription}>
                   {topic.origami.description}
                 </p>
-                <div className="origami-links">
+                <div className={styles.origamiLinks}>
                   <a
                     href={topic.origami.videoUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="origami-link"
+                    className={styles.origamiLink}
                   >
                     Watch Origami Tutorial
                   </a>
                 </div>
-                <div className="reflection">
+                <div className={styles.reflection}>
                   <h5>💭 Reflection</h5>
                   <p>{topic.origami.reflection}</p>
                 </div>
-                <div className="item-actions">
+                <div className={styles.itemActions}>
                   <button
-                    className={`item-complete-btn ${progress?.origami_completed ? "completed" : ""}`}
+                    className={`${styles.itemCompleteBtn} ${progress?.origami_completed ? styles.completed : ""}`}
                     onClick={handleOrigamiCompleted}
                     disabled={updatingItems.has("origami")}
-                    style={{
-                      background: progress?.origami_completed
-                        ? "#28a745"
-                        : "#007bff",
-                      color: "white",
-                      border: "none",
-                      padding: "0.5rem 1rem",
-                      borderRadius: "4px",
-                      cursor: updatingItems.has("origami")
-                        ? "not-allowed"
-                        : "pointer",
-                      fontSize: "0.9rem",
-                      marginTop: "0.5rem",
-                      width: "100%",
-                    }}
                   >
                     {updatingItems.has("origami")
                       ? "Saving..."

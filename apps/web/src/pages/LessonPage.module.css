@@ -1,0 +1,280 @@
+.lessonPage {
+  composes: lesson-page from global;
+}
+
+.loadingSpinner {
+  composes: loading-spinner from global;
+}
+
+.lessonHeader {
+  composes: lesson-header from global;
+}
+
+.backLink {
+  composes: back-link from global;
+}
+
+.lessonInfo {
+  composes: lesson-info from global;
+}
+
+.completionBadge {
+  composes: completion-badge from global;
+}
+
+.progressBadge {
+  composes: progress-badge from global;
+}
+
+.lessonActions {
+  composes: lesson-actions from global;
+}
+
+.lessonMain {
+  composes: lesson-main from global;
+}
+
+.lessonContent {
+  composes: lesson-content from global;
+}
+
+.lessonDescription {
+  composes: lesson-description from global;
+}
+
+.contentSection {
+  composes: content-section from global;
+}
+
+.videosGrid {
+  composes: videos-grid from global;
+}
+
+.quizzesGrid {
+  composes: quizzes-grid from global;
+}
+
+.videoCard {
+  composes: video-card from global;
+}
+
+.videoHeader {
+  composes: video-header from global;
+}
+
+.videoHeaderActions {
+  composes: video-header-actions from global;
+}
+
+.completionIndicator {
+  composes: completion-indicator from global;
+}
+
+.bookmarkBtn {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity var(--transition);
+  margin-left: 0.5rem;
+}
+.bookmarkBtn:hover:not(:disabled) {
+  opacity: 1;
+}
+.bookmarkBtn:disabled {
+  cursor: not-allowed;
+  opacity: 0.3;
+}
+
+.videoLinks {
+  composes: video-links from global;
+}
+
+/* Primary & secondary video link buttons re-implemented using tokens */
+.videoLinkPrimary {
+  display: inline-block;
+  padding: 0.75rem 1rem;
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: 600;
+  text-align: center;
+  transition: background var(--transition);
+  background: var(--color-primary);
+  color: #fff;
+}
+.videoLinkPrimary:hover {
+  background: var(--color-primary-dark);
+}
+
+.videoLinkSecondary {
+  composes: videoLinkPrimary;
+  background: #e5e7eb;
+  color: var(--color-text-base);
+}
+.videoLinkSecondary:hover {
+  background: #d1d5db;
+}
+
+.itemActions {
+  composes: item-actions from global;
+}
+
+.itemCompleteBtn {
+  background: #3b82f6; /* blue */
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+  width: 100%;
+  transition: background var(--transition);
+}
+.itemCompleteBtn.completed {
+  background: #10b981; /* green */
+}
+.itemCompleteBtn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.completed {
+  composes: completed from global;
+}
+
+/* Quiz styles mapped to existing globals */
+.quizCard {
+  composes: quiz-card from global;
+}
+
+.quizHeader {
+  composes: quiz-header from global;
+}
+
+.quizHeaderActions {
+  composes: quiz-header-actions from global;
+}
+
+.quizLinks {
+  composes: quiz-links from global;
+}
+
+.quizLink {
+  composes: quiz-link from global;
+}
+
+.quizAiActions {
+  composes: quiz-ai-actions from global;
+}
+
+.quizAiBtnCopyPromptBtn,
+.quizAiBtnOpenGrokBtn {
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+
+.quizAiBtnCopyPromptBtn {
+  background: var(--color-accent); /* purple */
+}
+.quizAiBtnCopyPromptBtn.copied {
+  background: #10b981; /* success green */
+}
+
+.quizAiBtnOpenGrokBtn {
+  background: #1da1f2; /* twitter blue */
+}
+
+.quizAiHelpBtn {
+  background: transparent;
+  border: 1px solid var(--color-accent);
+  color: var(--color-accent);
+  padding: 0.5rem 0.75rem;
+  border-radius: 50%;
+  font-size: 0.85rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.quizAiHelpBtn:hover {
+  background: var(--color-accent);
+  color: #fff;
+}
+
+/* Blooket / Origami */
+.blooketCard {
+  composes: blooket-card from global;
+}
+.blooketHeader {
+  composes: blooket-header from global;
+}
+.blooketHeaderActions {
+  composes: blooket-header-actions from global;
+}
+.blooketLinks {
+  composes: blooket-links from global;
+}
+.blooketLink {
+  composes: blooket-link from global;
+}
+
+.origamiCard {
+  composes: origami-card from global;
+}
+.origamiHeader {
+  composes: origami-header from global;
+}
+.origamiHeaderActions {
+  composes: origami-header-actions from global;
+}
+.origamiDescription {
+  composes: origami-description from global;
+}
+.origamiLinks {
+  composes: origami-links from global;
+}
+.origamiLink {
+  composes: origami-link from global;
+}
+.reflection {
+  composes: reflection from global;
+}
+
+@media (max-width: 480px) {
+  .lessonPage {
+    padding: 1rem;
+  }
+  .lessonHeader {
+    padding: 1rem;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .lessonMain {
+    padding: 1rem;
+  }
+  .videoCard,
+  .quizCard,
+  .blooketCard,
+  .origamiCard {
+    padding: 1rem;
+  }
+  .videoLinkPrimary,
+  .videoLinkSecondary,
+  .quizLink,
+  .blooketLink,
+  .origamiLink {
+    padding: 0.5rem 0.75rem;
+  }
+  .videosGrid,
+  .quizzesGrid {
+    grid-template-columns: 1fr;
+  }
+} 

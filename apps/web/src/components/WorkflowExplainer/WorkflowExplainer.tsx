@@ -19,7 +19,7 @@ const WorkflowExplainer: React.FC = () => {
         }}
       >
         <iframe
-          src="https://www.youtube.com/embed/xtIUnLh1dK8"
+          src="https://www.youtube.com/embed/CnJyUYjnwJk"
           title="AI Quiz Tutor Workflow Walk-through"
           style={{
             position: "absolute",

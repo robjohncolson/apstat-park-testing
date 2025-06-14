@@ -10,7 +10,7 @@ import {
 } from "../data/allUnitsData";
 import { PaceTracker } from "../components/PaceTracker";
 import type { Unit, Topic } from "../data/allUnitsData";
-import "./DashboardPage.css";
+import styles from "./DashboardPage.module.css";
 
 // Interface for user progress data
 interface UserProgress {
@@ -150,17 +150,17 @@ export function DashboardPage() {
   const stats = calculateStats();
 
   return (
-    <div className="dashboard-container">
-      <header className="dashboard-header">
+    <div className={styles.dashboardContainer}>
+      <header className={styles.dashboardHeader}>
         <div className="user-info">
           <h1>Welcome, {user?.username || "Explorer"}!</h1>
           <p>Your journey to mastering AP Statistics starts here.</p>
         </div>
-        <div className="header-actions" style={{ display: "flex", gap: 8 }}>
-          <Link to="/leaderboard" className="leaderboard-link">
+        <div className={styles.headerActions}>
+          <Link to="/leaderboard" className={styles.leaderboardLink}>
             🏆 Leaderboard
           </Link>
-          <button onClick={handleLogout} className="logout-button">
+          <button onClick={handleLogout} className={styles.logoutButton}>
             Logout
           </button>
         </div>
