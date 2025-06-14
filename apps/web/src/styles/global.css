@@ -11,6 +11,9 @@
 html,
 body {
   min-height: 100%;
+  /* Prevent accidental horizontal scroll on narrow devices */
+  max-width: 100vw;
+  overflow-x: hidden;
 }
 
 body {

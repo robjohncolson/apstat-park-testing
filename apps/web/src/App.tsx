@@ -10,6 +10,7 @@ import { LoginPage } from "./pages/LoginPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { LessonPage } from "./pages/LessonPage";
 import { LeaderboardPage } from "./pages/LeaderboardPage";
+import { PageShell } from "./components/PageShell/PageShell";
 import "./App.css";
 
 // Global Bookmark Star Component
@@ -99,7 +100,9 @@ function App() {
                 isAuthenticated ? (
                   <Navigate to="/dashboard" replace />
                 ) : (
-                  <LoginPage />
+                  <PageShell fluid>
+                    <LoginPage />
+                  </PageShell>
                 )
               }
             />
@@ -107,7 +110,9 @@ function App() {
               path="/dashboard"
               element={
                 isAuthenticated ? (
-                  <DashboardPage />
+                  <PageShell>
+                    <DashboardPage />
+                  </PageShell>
                 ) : (
                   <Navigate to="/" replace />
                 )
@@ -116,14 +121,22 @@ function App() {
             <Route
               path="/unit/:unitId/lesson/:lessonId"
               element={
-                isAuthenticated ? <LessonPage /> : <Navigate to="/" replace />
+                isAuthenticated ? (
+                  <PageShell fluid>
+                    <LessonPage />
+                  </PageShell>
+                ) : (
+                  <Navigate to="/" replace />
+                )
               }
             />
             <Route
               path="/leaderboard"
               element={
                 isAuthenticated ? (
-                  <LeaderboardPage />
+                  <PageShell fluid>
+                    <LeaderboardPage />
+                  </PageShell>
                 ) : (
                   <Navigate to="/" replace />
                 )
