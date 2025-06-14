@@ -114,7 +114,7 @@ export function LessonPage() {
             }
           }
         }
-      } catch (error) {
+      } catch {
         console.warn("API not available - running in offline mode");
         // Offline mode - check localStorage
         const offlineProgress = localStorage.getItem(`progress_${user.id}`);
@@ -243,7 +243,7 @@ export function LessonPage() {
 
       const result = await response.json();
       console.log("Progress updated successfully:", result);
-    } catch (error) {
+    } catch {
       console.warn("API not available - saving progress locally");
 
       // Fallback to localStorage with self-cleaning
@@ -333,8 +333,8 @@ export function LessonPage() {
       setCopiedPrompt(`quiz-${quizIndex}`);
       // Clear the feedback after 2 seconds
       setTimeout(() => setCopiedPrompt(null), 2000);
-    } catch (error) {
-      console.error("Failed to copy prompt to clipboard:", error);
+    } catch {
+      console.error("Failed to copy prompt to clipboard:");
       // Fallback for older browsers
       const textArea = document.createElement("textarea");
       textArea.value = promptText;

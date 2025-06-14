@@ -3,7 +3,6 @@ import { Pool } from "pg";
 import * as fs from "fs";
 import * as path from "path";
 import MigrationRunner from "./migrationRunner";
-import { appLogger } from "../logger";
 
 // Database connection
 const pool = new Pool({

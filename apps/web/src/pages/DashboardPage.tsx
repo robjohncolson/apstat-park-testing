@@ -76,7 +76,7 @@ export function DashboardPage() {
             setProgress(testProgress);
           }
         }
-      } catch (error) {
+      } catch {
         console.warn("API not available - running in offline mode");
         // In offline mode, use localStorage for demo purposes
         const offlineProgress = localStorage.getItem(`progress_${user.id}`);
@@ -107,26 +107,6 @@ export function DashboardPage() {
 
     fetchProgress();
   }, [user?.id]);
-
-  // Check if a lesson is completed using fractional calculation
-  const _isLessonCompleted = (topicId: string): boolean => {
-    const topicProgress = progress.find((p) => p.lesson_id === topicId);
-    if (!topicProgress) return false;
-
-    const topic = ALL_UNITS_DATA.flatMap((unit) => unit.topics).find(
-      (t) => t.id === topicId,
-    );
-    if (!topic) return false;
-
-    const userProgress = {
-      videos_watched: topicProgress.videos_watched || [],
-      quizzes_completed: topicProgress.quizzes_completed || [],
-      blooket_completed: topicProgress.blooket_completed || false,
-      origami_completed: topicProgress.origami_completed || false,
-    };
-
-    return calculateTopicFraction(topic, userProgress) === 1.0;
-  };
 
   // Helper function to get granular progress for a topic
   const getTopicProgress = (topicId: string) => {
@@ -216,7 +196,6 @@ export function DashboardPage() {
               <UnitAccordion
                 key={unit.unitId}
                 unit={unit}
-                isLessonCompleted={_isLessonCompleted}
                 getTopicProgress={getTopicProgress}
               />
             ))}
@@ -253,7 +232,6 @@ export function DashboardPage() {
 // Unit Accordion Component
 interface UnitAccordionProps {
   unit: Unit;
-  isLessonCompleted: (topicId: string) => boolean;
   getTopicProgress: (topicId: string) => {
     videosWatched: number[];
     quizzesCompleted: number[];
@@ -262,11 +240,7 @@ interface UnitAccordionProps {
   };
 }
 
-function UnitAccordion({
-  unit,
-  isLessonCompleted: _isLessonCompleted,
-  getTopicProgress,
-}: UnitAccordionProps) {
+function UnitAccordion({ unit, getTopicProgress }: UnitAccordionProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Phase 1: Use fractional progress calculation for more accurate unit progress

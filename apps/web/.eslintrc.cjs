@@ -11,10 +11,16 @@ module.exports = {
   plugins: ['react-refresh'],
   rules: {
     // Downgrade all previous errors to warnings
-    '@typescript-eslint/no-unused-vars': 'warn',
+    '@typescript-eslint/no-unused-vars': [
+      'error',
+      {
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+      },
+    ],
     '@typescript-eslint/no-explicit-any': 'error',
     '@typescript-eslint/ban-ts-comment': 'warn',
-    'prefer-const': 'warn',
+    'prefer-const': 'error',
 
     // Keep existing rules, but at 'warn' level
     'react-refresh/only-export-components': [

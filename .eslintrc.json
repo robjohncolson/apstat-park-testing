@@ -33,14 +33,14 @@
       },
       "rules": {
         "@typescript-eslint/no-unused-vars": [
-          "warn",
+          "error",
           {
             "argsIgnorePattern": "^_",
             "varsIgnorePattern": "^_"
           }
         ],
         "@typescript-eslint/no-explicit-any": "error",
-        "prefer-const": "warn",
+        "prefer-const": "error",
         "@typescript-eslint/ban-ts-comment": "warn"
       }
     },
@@ -62,14 +62,14 @@
       ],
       "rules": {
         "@typescript-eslint/no-unused-vars": [
-          "warn",
+          "error",
           {
             "argsIgnorePattern": "^_",
             "varsIgnorePattern": "^_"
           }
         ],
         "@typescript-eslint/no-explicit-any": "error",
-        "prefer-const": "warn",
+        "prefer-const": "error",
         "@typescript-eslint/ban-ts-comment": "warn"
       }
     }
@@ -81,7 +81,7 @@
   ],
   "rules": {
     "@typescript-eslint/no-unused-vars": [
-      "warn",
+      "error",
       {
         "argsIgnorePattern": "^_",
         "varsIgnorePattern": "^_"
@@ -89,7 +89,7 @@
     ],
     "@typescript-eslint/explicit-function-return-type": "off",
     "@typescript-eslint/no-explicit-any": "error",
-    "prefer-const": "warn",
+    "prefer-const": "error",
     "@typescript-eslint/ban-ts-comment": "warn"
   }
 }

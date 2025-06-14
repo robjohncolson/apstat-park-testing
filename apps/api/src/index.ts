@@ -1,5 +1,5 @@
-import express, { Request, Response, NextFunction } from "express";
-import { Pool, Client } from "pg";
+import express, { Request, Response } from "express";
+import { Pool } from "pg";
 import cors from "cors";
 import { createServer } from "http";
 import { Server, Socket } from "socket.io";
@@ -7,7 +7,6 @@ import {
   User,
   Progress,
   Bookmark,
-  SyncProgressRequest,
   LeaderboardEntry,
   RealtimeMessage,
 } from "./types";
@@ -23,16 +22,6 @@ import {
 import MigrationRunner from "./migrations/migrationRunner";
 
 // Types
-interface GoldStar {
-  id: number;
-  user_id: number;
-  total_stars: number;
-  current_streak: number;
-  last_lesson_time?: Date;
-  last_target_hours?: number;
-  updated_at: Date;
-}
-
 interface ExtendedRequest extends Request {
   requestId?: string;
   logger?: WinstonLogger;
@@ -467,9 +456,9 @@ app.post(
           [userIdNum, lesson_id],
         );
 
-        let videosWatched: number[] =
+        const videosWatched: number[] =
           selectResult.rows[0]?.videos_watched || [];
-        let quizzesCompleted: number[] =
+        const quizzesCompleted: number[] =
           selectResult.rows[0]?.quizzes_completed || [];
 
         if (
@@ -508,7 +497,7 @@ app.post(
         req.logger?.warn("Database unavailable, syncing progress to memory", {
           userId,
         });
-        let userProgress = inMemoryProgress.get(userIdNum) || [];
+        const userProgress = inMemoryProgress.get(userIdNum) || [];
 
         const existing = userProgress.find((p) => p.lesson_id === lesson_id);
 
@@ -702,7 +691,7 @@ app.post(
         req.logger?.warn("Database unavailable, updating progress in memory", {
           userId,
         });
-        let userProgress = inMemoryProgress.get(userIdNum) || [];
+        const userProgress = inMemoryProgress.get(userIdNum) || [];
 
         const existing = userProgress.find((p) => p.lesson_id === lesson_id);
         const updated = updateProgress(existing);
@@ -907,7 +896,7 @@ app.get("/api/leaderboard", async (req: ExtendedRequest, res: Response) => {
 
       // Step 1: Aggregate scores for each userId from the progress map
       for (const [userId, progresses] of inMemoryProgress.entries()) {
-        let currentScore = userScores.get(userId) || {
+        const currentScore = userScores.get(userId) || {
           username: "",
           videos: 0,
           quizzes: 0,

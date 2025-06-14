@@ -169,7 +169,7 @@ export const errorHandler = (
   error: Error,
   req: Request & { logger?: import("./logger").Logger; requestId?: string },
   res: Response,
-  next: NextFunction,
+  _next: NextFunction,
 ): void => {
   metricsCollector.incrementErrors(error.message, {
     stack: error.stack,

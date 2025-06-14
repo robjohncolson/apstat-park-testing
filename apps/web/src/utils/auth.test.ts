@@ -49,7 +49,7 @@ export const authUtils = {
         return parsed as StoredUser;
       }
       return null;
-    } catch (error) {
+    } catch {
       return null;
     }
   },
