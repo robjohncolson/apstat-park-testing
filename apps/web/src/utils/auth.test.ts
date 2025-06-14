@@ -1,5 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+// Shared user type used by auth utility helpers in this test file
+interface StoredUser {
+  id: number;
+  username: string;
+  created_at: string;
+  last_sync: string;
+}
+
 // Auth utility functions that can be tested independently
 export const authUtils = {
   /**
@@ -26,18 +34,19 @@ export const authUtils = {
   /**
    * Parse user data from localStorage
    */
-  parseStoredUser(storedData: string | null): any | null {
+  parseStoredUser(storedData: string | null): StoredUser | null {
     if (!storedData) return null;
 
     try {
-      const user = JSON.parse(storedData);
-      // Validate required fields
+      const parsed = JSON.parse(storedData) as unknown;
+
+      // Narrow the unknown type through runtime checks
       if (
-        user &&
-        typeof user.id === "number" &&
-        typeof user.username === "string"
+        parsed &&
+        typeof (parsed as { id: unknown }).id === "number" &&
+        typeof (parsed as { username: unknown }).username === "string"
       ) {
-        return user;
+        return parsed as StoredUser;
       }
       return null;
     } catch (error) {
@@ -48,7 +57,7 @@ export const authUtils = {
   /**
    * Create offline user object
    */
-  createOfflineUser(username: string): any {
+  createOfflineUser(username: string): StoredUser {
     return {
       id: Math.floor(Math.random() * 10000),
       username: username,
@@ -69,7 +78,7 @@ export const authUtils = {
   /**
    * Create user via API call
    */
-  async createUserViaAPI(username: string): Promise<any> {
+  async createUserViaAPI(username: string): Promise<StoredUser> {
     const response = await fetch(
       "http://localhost:3001/api/users/get-or-create",
       {
@@ -129,9 +138,9 @@ describe("Auth Utilities", () => {
     it("should reject invalid usernames", () => {
       expect(authUtils.isValidUsername("")).toBe(false);
       expect(authUtils.isValidUsername("   ")).toBe(false); // only whitespace
-      expect(authUtils.isValidUsername(null as any)).toBe(false);
-      expect(authUtils.isValidUsername(undefined as any)).toBe(false);
-      expect(authUtils.isValidUsername(123 as any)).toBe(false);
+      expect(authUtils.isValidUsername(null as unknown as string)).toBe(false);
+      expect(authUtils.isValidUsername(undefined as unknown as string)).toBe(false);
+      expect(authUtils.isValidUsername(123 as unknown as string)).toBe(false);
       expect(authUtils.isValidUsername("a".repeat(31))).toBe(false); // too long
     });
   });

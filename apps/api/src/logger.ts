@@ -1,4 +1,5 @@
 import winston from "winston";
+import { Request, Response, NextFunction } from "express";
 
 // Define log levels
 const levels = {
@@ -82,36 +83,40 @@ const logger = winston.createLogger({
 
 // Create a structured logger interface
 export interface Logger {
-  info: (message: string, context?: any) => void;
-  warn: (message: string, context?: any) => void;
-  error: (message: string, context?: any, error?: Error) => void;
-  debug: (message: string, context?: any) => void;
-  http: (message: string, context?: any) => void;
-  child: (context: any) => Logger;
+  info: (message: string, context?: Record<string, unknown>) => void;
+  warn: (message: string, context?: Record<string, unknown>) => void;
+  error: (message: string, context?: Record<string, unknown>, error?: Error) => void;
+  debug: (message: string, context?: Record<string, unknown>) => void;
+  http: (message: string, context?: Record<string, unknown>) => void;
+  child: (context: Record<string, unknown>) => Logger;
 }
 
 // Create child logger function
-function createChildLogger(parentContext: any = {}): Logger {
+function createChildLogger(parentContext: Record<string, unknown> = {}): Logger {
   return {
-    info: (message: string, context?: any) => {
+    info: (message: string, context: Record<string, unknown> = {}) => {
       logger.info(message, { context: { ...parentContext, ...context } });
     },
-    warn: (message: string, context?: any) => {
+    warn: (message: string, context: Record<string, unknown> = {}) => {
       logger.warn(message, { context: { ...parentContext, ...context } });
     },
-    error: (message: string, context?: any, error?: Error) => {
+    error: (
+      message: string,
+      context: Record<string, unknown> = {},
+      error?: Error,
+    ) => {
       logger.error(message, {
         context: { ...parentContext, ...context },
         error: error || (context instanceof Error ? context : undefined),
       });
     },
-    debug: (message: string, context?: any) => {
+    debug: (message: string, context: Record<string, unknown> = {}) => {
       logger.debug(message, { context: { ...parentContext, ...context } });
     },
-    http: (message: string, context?: any) => {
+    http: (message: string, context: Record<string, unknown> = {}) => {
       logger.http(message, { context: { ...parentContext, ...context } });
     },
-    child: (context: any) =>
+    child: (context: Record<string, unknown>) =>
       createChildLogger({ ...parentContext, ...context }),
   };
 }
@@ -120,7 +125,11 @@ function createChildLogger(parentContext: any = {}): Logger {
 export const appLogger: Logger = createChildLogger();
 
 // Export HTTP request logger middleware
-export const requestLogger = (req: any, res: any, next: any) => {
+export const requestLogger = (
+  req: Request & { logger?: Logger; requestId?: string },
+  res: Response,
+  next: NextFunction,
+) => {
   const requestId = Math.random().toString(36).substring(2, 15);
   const startTime = Date.now();
 
@@ -137,7 +146,7 @@ export const requestLogger = (req: any, res: any, next: any) => {
   });
 
   // Log the incoming request
-  req.logger.http(`${req.method} ${req.path}`, {
+  req.logger!.http(`${req.method} ${req.path}`, {
     headers: req.headers,
     query: req.query,
     body: req.method !== "GET" ? req.body : undefined,
@@ -146,7 +155,7 @@ export const requestLogger = (req: any, res: any, next: any) => {
   // Log the response when it completes
   res.on("finish", () => {
     const duration = Date.now() - startTime;
-    req.logger.http(`${req.method} ${req.path} - ${res.statusCode}`, {
+    req.logger!.http(`${req.method} ${req.path} - ${res.statusCode}`, {
       statusCode: res.statusCode,
       duration: `${duration}ms`,
       contentLength: res.get("content-length"),
@@ -157,6 +166,7 @@ export const requestLogger = (req: any, res: any, next: any) => {
 };
 
 // Export utility functions
-export const createLogger = (context?: any) => appLogger.child(context || {});
+export const createLogger = (context: Record<string, unknown> = {}) =>
+  appLogger.child(context);
 
 export default appLogger;

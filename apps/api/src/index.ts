@@ -9,6 +9,7 @@ import {
   Bookmark,
   SyncProgressRequest,
   LeaderboardEntry,
+  RealtimeMessage,
 } from "./types";
 import { appLogger, requestLogger, Logger as WinstonLogger } from "./logger";
 import {
@@ -107,10 +108,11 @@ async function initializeNotificationListener(): Promise<void> {
           data: data,
         });
       } catch (error) {
+        const errInstance = error instanceof Error ? (error as Error) : undefined;
         appLogger.error(
           "Error processing notification",
-          { error },
-          error instanceof Error ? error : undefined,
+          { error } as Record<string, unknown>,
+          errInstance,
         );
       }
     });
@@ -119,14 +121,14 @@ async function initializeNotificationListener(): Promise<void> {
   } catch (error) {
     appLogger.error(
       "Failed to initialize notification listener",
-      { error },
-      error instanceof Error ? error : undefined,
+      { error } as Record<string, unknown>,
+      error instanceof Error ? (error as Error) : undefined,
     );
   }
 }
 
 // Broadcast message to all of a user's connected devices
-function broadcastToUser(username: string, message: any): void {
+function broadcastToUser(username: string, message: RealtimeMessage): void {
   const userSockets = connectedUsers.get(username);
   if (userSockets && userSockets.size > 0) {
     userSockets.forEach((socketId) => {
@@ -174,7 +176,7 @@ io.on("connection", (socket: CustomSocket) => {
   });
 
   // Handle user activity (opening lessons, etc.)
-  socket.on("user_activity", async (activity: any) => {
+  socket.on("user_activity", async (activity: unknown) => {
     if (!socket.username) return;
 
     try {
@@ -186,14 +188,15 @@ io.on("connection", (socket: CustomSocket) => {
       });
       await pool.query(`NOTIFY user_activity, $1`, [activityPayload]);
     } catch (error) {
+      const errInstance = error instanceof Error ? (error as Error) : undefined;
       appLogger.error(
         "Error notifying user activity",
         {
           username: socket.username,
           activity,
           error,
-        },
-        error instanceof Error ? error : undefined,
+        } as Record<string, unknown>,
+        errInstance,
       );
     }
   });
@@ -377,7 +380,11 @@ app.post(
 
       res.json({ user });
     } catch (error) {
-      req.logger?.error("Error in get-or-create user", error);
+      req.logger?.error(
+        "Error in get-or-create user",
+        { error } as Record<string, unknown>,
+        error instanceof Error ? (error as Error) : undefined,
+      );
       res.status(500).json({ error: "Internal server error" });
     }
   },
@@ -407,10 +414,11 @@ app.get(
 
       res.json(progress); // Return the progress data directly as array
     } catch (error) {
-      req.logger?.error("Error getting progress:", {
-        error,
-        userId: req.params.userId,
-      });
+      req.logger?.error(
+        "Error getting progress:",
+        { error, userId: req.params.userId } as Record<string, unknown>,
+        error instanceof Error ? (error as Error) : undefined,
+      );
       res.status(500).json({ error: "Internal server error" });
     }
   },
@@ -553,10 +561,11 @@ app.post(
 
       res.json({ success: true, progress: latestProgress });
     } catch (error) {
-      req.logger?.error("Error syncing progress:", {
-        error,
-        userId: req.params.userId,
-      });
+      req.logger?.error(
+        "Error syncing progress:",
+        { error, userId: req.params.userId } as Record<string, unknown>,
+        error instanceof Error ? (error as Error) : undefined,
+      );
       res.status(500).json({ error: "Internal server error" });
     }
   },
@@ -596,7 +605,16 @@ app.post(
       const userIdNum = parseInt(userId, 10);
 
       // Helper function to update progress arrays/fields
-      const updateProgress = (current: any) => {
+      interface LessonProgressPartial {
+        videos_watched?: number[];
+        quizzes_completed?: number[];
+        blooket_completed?: boolean;
+        origami_completed?: boolean;
+      }
+
+      const updateProgress = (
+        current: LessonProgressPartial | null | undefined,
+      ) => {
         const updated = {
           videos_watched: current?.videos_watched || [],
           quizzes_completed: current?.quizzes_completed || [],
@@ -714,10 +732,11 @@ app.post(
         });
       }
     } catch (error) {
-      req.logger?.error("Error updating progress:", {
-        error,
-        userId: req.params.userId,
-      });
+      req.logger?.error(
+        "Error updating progress:",
+        { error, userId: req.params.userId } as Record<string, unknown>,
+        error instanceof Error ? (error as Error) : undefined,
+      );
       res.status(500).json({ error: "Internal server error" });
     }
   },
@@ -747,10 +766,11 @@ app.get(
 
       res.json({ bookmarks });
     } catch (error) {
-      req.logger?.error("Error getting bookmarks:", {
-        error,
-        userId: req.params.userId,
-      });
+      req.logger?.error(
+        "Error getting bookmarks:",
+        { error, userId: req.params.userId } as Record<string, unknown>,
+        error instanceof Error ? (error as Error) : undefined,
+      );
       res.status(500).json({ error: "Internal server error" });
     }
   },
@@ -801,10 +821,11 @@ app.post(
         bookmarks: inMemoryBookmarks.get(userIdNum) || [],
       });
     } catch (error) {
-      req.logger?.error("Error syncing bookmarks:", {
-        error,
-        userId: req.params.userId,
-      });
+      req.logger?.error(
+        "Error syncing bookmarks:",
+        { error, userId: req.params.userId } as Record<string, unknown>,
+        error instanceof Error ? (error as Error) : undefined,
+      );
       res.status(500).json({ error: "Internal server error" });
     }
   },
@@ -932,7 +953,11 @@ app.get("/api/leaderboard", async (req: ExtendedRequest, res: Response) => {
 
     res.json({ success: true, leaderboard });
   } catch (error) {
-    req.logger?.error("Error fetching leaderboard:", { error });
+    req.logger?.error(
+      "Error fetching leaderboard:",
+      { error } as Record<string, unknown>,
+      error instanceof Error ? (error as Error) : undefined,
+    );
     res.status(500).json({ error: "Internal server error" });
   }
 });

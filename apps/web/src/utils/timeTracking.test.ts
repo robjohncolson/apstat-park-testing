@@ -8,6 +8,7 @@ import {
   formatPaceStatus,
   formatTimeRemaining,
   getEncouragementMessage,
+  type PaceMetrics,
 } from "./timeTracking";
 
 // Mock dates for deterministic testing
@@ -135,39 +136,39 @@ describe("timeTracking Utilities", () => {
 
   describe("formatTimeRemaining", () => {
     it("should format weeks and days correctly", () => {
-      const metrics = { daysUntilExam: 15 } as any;
+      const metrics = { daysUntilExam: 15 } as unknown as PaceMetrics;
       expect(formatTimeRemaining(metrics)).toBe("2w 1d until exam");
     });
 
     it("should format exact weeks correctly", () => {
-      const metrics = { daysUntilExam: 14 } as any;
+      const metrics = { daysUntilExam: 14 } as unknown as PaceMetrics;
       expect(formatTimeRemaining(metrics)).toBe("2w until exam");
     });
 
     it("should show a special message for the last 7 days", () => {
-      const metrics = { daysUntilExam: 3 } as any;
+      const metrics = { daysUntilExam: 3 } as unknown as PaceMetrics;
       expect(formatTimeRemaining(metrics)).toBe("⚡ Final countdown: 3 days!");
     });
 
     it("should show special message for 1 day remaining", () => {
-      const metrics = { daysUntilExam: 1 } as any;
+      const metrics = { daysUntilExam: 1 } as unknown as PaceMetrics;
       expect(formatTimeRemaining(metrics)).toBe("🔥 EXAM TOMORROW!");
     });
 
     it('should show "Exam day!" when 0 days are left', () => {
-      const metrics = { daysUntilExam: 0 } as any;
+      const metrics = { daysUntilExam: 0 } as unknown as PaceMetrics;
       expect(formatTimeRemaining(metrics)).toBe("📚 EXAM DAY!");
     });
 
     it("should format weeks properly for 15 days (2w 1d)", () => {
-      const metrics = { daysUntilExam: 15 } as any;
+      const metrics = { daysUntilExam: 15 } as unknown as PaceMetrics;
       expect(formatTimeRemaining(metrics)).toBe("2w 1d until exam");
     });
   });
 
   describe("formatPaceStatus (Phase 2 Logic)", () => {
     it("should format ahead status correctly", () => {
-      const metrics = { paceStatus: "ahead", aheadLessons: 2.3 } as any;
+      const metrics = { paceStatus: "ahead", aheadLessons: 2.3 } as unknown as PaceMetrics;
       expect(formatPaceStatus(metrics)).toBe("🎯 2.3 lessons ahead!");
     });
 
@@ -175,19 +176,19 @@ describe("timeTracking Utilities", () => {
       const metrics = {
         paceStatus: "on-track",
         targetLessonsPerDay: 1.5,
-      } as any;
+      } as unknown as PaceMetrics;
       expect(formatPaceStatus(metrics)).toBe(
         "✅ On track! 1.5 lessons/day needed",
       );
     });
 
     it("should format behind status correctly", () => {
-      const metrics = { paceStatus: "behind", aheadLessons: -1.8 } as any;
+      const metrics = { paceStatus: "behind", aheadLessons: -1.8 } as unknown as PaceMetrics;
       expect(formatPaceStatus(metrics)).toBe("⚠️ 1.8 lessons behind!");
     });
 
     it("should format unknown status correctly", () => {
-      const metrics = { paceStatus: "unknown" } as any;
+      const metrics = { paceStatus: "unknown" } as unknown as PaceMetrics;
       expect(formatPaceStatus(metrics)).toBe("📊 Calculating pace...");
     });
   });
@@ -280,17 +281,17 @@ describe("timeTracking Utilities", () => {
 
     describe("formatBufferStatus", () => {
       it("should format positive buffer correctly", () => {
-        const metrics = { aheadLessons: 2.3 } as any;
+        const metrics = { aheadLessons: 2.3 } as unknown as PaceMetrics;
         expect(formatBufferStatus(metrics)).toBe("🟢 2.3 lessons ahead");
       });
 
       it("should format negative buffer correctly", () => {
-        const metrics = { aheadLessons: -1.7 } as any;
+        const metrics = { aheadLessons: -1.7 } as unknown as PaceMetrics;
         expect(formatBufferStatus(metrics)).toBe("🔴 1.7 lessons behind");
       });
 
       it("should format zero buffer correctly", () => {
-        const metrics = { aheadLessons: 0 } as any;
+        const metrics = { aheadLessons: 0 } as unknown as PaceMetrics;
         expect(formatBufferStatus(metrics)).toBe("⚪ On pace");
       });
     });

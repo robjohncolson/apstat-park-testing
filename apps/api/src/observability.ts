@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { appLogger } from "./logger";
 
 // Application metrics tracking
@@ -10,7 +10,7 @@ interface AppMetrics {
   lastError?: {
     message: string;
     timestamp: Date;
-    context?: any;
+    context?: Record<string, unknown>;
   };
 }
 
@@ -30,7 +30,7 @@ class MetricsCollector {
     this.metrics.requestCount++;
   }
 
-  incrementErrors(error: string, context?: any): void {
+  incrementErrors(error: string, context?: Record<string, unknown>): void {
     this.metrics.errorCount++;
     this.metrics.lastError = {
       message: error,
@@ -58,9 +58,9 @@ export const metricsCollector = new MetricsCollector();
 
 // Enhanced request middleware with metrics
 export const observabilityMiddleware = (
-  req: any,
-  res: any,
-  next: any,
+  req: Request & { startTime?: number; logger?: import("./logger").Logger; requestId?: string },
+  res: Response,
+  next: NextFunction,
 ): void => {
   const startTime = Date.now();
 
@@ -167,9 +167,9 @@ export const metricsHandler = (req: Request, res: Response) => {
 // Error handler middleware
 export const errorHandler = (
   error: Error,
-  req: any,
-  res: any,
-  next: any,
+  req: Request & { logger?: import("./logger").Logger; requestId?: string },
+  res: Response,
+  next: NextFunction,
 ): void => {
   metricsCollector.incrementErrors(error.message, {
     stack: error.stack,
@@ -218,15 +218,15 @@ export const setupProcessErrorHandlers = () => {
     }, 1000);
   });
 
-  process.on("unhandledRejection", (reason: any, promise: Promise<any>) => {
+  process.on("unhandledRejection", (reason: unknown, promise: Promise<unknown>) => {
     appLogger.error(
       "Unhandled Promise Rejection",
       {
-        reason: reason?.toString(),
-        stack: reason?.stack,
+        reason: (reason as Error | string | undefined)?.toString(),
+        stack: (reason as Error | undefined)?.stack,
         promise: promise.toString(),
       },
-      reason instanceof Error ? reason : undefined,
+      reason instanceof Error ? (reason as Error) : undefined,
     );
   });
 

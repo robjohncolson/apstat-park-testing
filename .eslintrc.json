@@ -39,7 +39,7 @@
             "varsIgnorePattern": "^_"
           }
         ],
-        "@typescript-eslint/no-explicit-any": "warn",
+        "@typescript-eslint/no-explicit-any": "error",
         "prefer-const": "warn",
         "@typescript-eslint/ban-ts-comment": "warn"
       }
@@ -68,7 +68,7 @@
             "varsIgnorePattern": "^_"
           }
         ],
-        "@typescript-eslint/no-explicit-any": "warn",
+        "@typescript-eslint/no-explicit-any": "error",
         "prefer-const": "warn",
         "@typescript-eslint/ban-ts-comment": "warn"
       }
@@ -88,7 +88,7 @@
       }
     ],
     "@typescript-eslint/explicit-function-return-type": "off",
-    "@typescript-eslint/no-explicit-any": "warn",
+    "@typescript-eslint/no-explicit-any": "error",
     "prefer-const": "warn",
     "@typescript-eslint/ban-ts-comment": "warn"
   }
