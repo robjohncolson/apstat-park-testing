@@ -97,8 +97,9 @@ describe("DashboardPage", () => {
     // First fetch for progress
     mockFetchOnce([]);
 
-    // Second fetch for markdown
-    vi.spyOn(global, "fetch").mockResolvedValueOnce({
+    // Second fetch for markdown (reuse existing spy)
+    // @ts-ignore – mockResolvedValueOnce available from vitest spy
+    (global.fetch as unknown as { mockResolvedValueOnce: Function }).mockResolvedValueOnce({
       ok: true,
       text: () => Promise.resolve("# Test Guide\n\nContent"),
     } as Response);
@@ -112,13 +113,14 @@ describe("DashboardPage", () => {
     fireEvent.click(helpButton);
 
     // Modal should render markdown heading
-    expect(await screen.findByText(/Test Guide/i)).toBeInTheDocument();
+    const modal = await screen.findByTestId("mock-modal");
+    expect(modal).toHaveTextContent(/Test Guide/i);
 
     // Close modal via Escape key on document
     fireEvent.keyDown(document, { key: "Escape", code: "Escape", keyCode: 27 });
 
     await waitFor(() => {
-      expect(screen.queryByText(/Test Guide/i)).not.toBeInTheDocument();
+      expect(screen.queryByTestId("mock-modal")).not.toBeInTheDocument();
     });
   });
 }); 
