@@ -1,140 +1,126 @@
-.leaderboard-page {
+.leaderboardPage {
   max-width: 800px;
   margin: 2rem auto;
   padding: 1rem;
-  font-family:
-    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
-    sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-  color: #333;
+  color: var(--color-text-base);
 }
 
-.leaderboard-header {
+.leaderboardHeader {
   text-align: center;
   margin-bottom: 2rem;
 }
 
-.leaderboard-header h1 {
+.leaderboardHeader h1 {
   font-size: 2.5rem;
   margin-bottom: 0.5rem;
-  color: #2c3e50;
+  color: var(--color-primary-dark);
 }
 
-.leaderboard-header p {
+.leaderboardHeader p {
   font-size: 1.1rem;
   color: #666;
   margin-bottom: 1rem;
 }
 
-.back-to-dashboard {
-  color: #007bff;
+.backToDashboard {
+  color: var(--color-primary);
   text-decoration: none;
   font-weight: 500;
   font-size: 0.9rem;
-  transition: color 0.2s ease-in-out;
+  transition: color var(--transition);
 }
-
-.back-to-dashboard:hover {
-  color: #0056b3;
+.backToDashboard:hover {
+  color: var(--color-primary-dark);
   text-decoration: underline;
 }
 
-.leaderboard-container {
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+.leaderboardContainer {
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  box-shadow: var(--elev-1);
   overflow: hidden;
   border: 1px solid #e9ecef;
 }
 
-.user-rank-highlight {
+.userRankHighlight {
   padding: 1.25rem 1.5rem;
   background: linear-gradient(to right, #eef7ff, #f8f9fa);
   border-bottom: 1px solid #d1eaff;
 }
-
-.user-rank-highlight h3 {
+.userRankHighlight h3 {
   margin: 0 0 0.75rem 0;
   font-size: 0.9rem;
-  color: #0056b3;
+  color: var(--color-primary-dark);
   text-transform: uppercase;
   letter-spacing: 0.8px;
   font-weight: 600;
 }
 
-.leaderboard-item {
+.leaderboardItem {
   display: grid;
   grid-template-columns: 40px 1fr 80px 80px 100px;
   align-items: center;
   padding: 1rem 1.5rem;
   border-bottom: 1px solid #eee;
   gap: 1rem;
-  transition: background-color 0.2s ease-in-out;
+  transition: background-color var(--transition);
 }
-
-.leaderboard-list .leaderboard-item:hover {
+.leaderboardList .leaderboardItem:hover {
   background-color: #f8f9fa;
 }
-
-.leaderboard-list .leaderboard-item:last-child {
+.leaderboardList .leaderboardItem:last-child {
   border-bottom: none;
 }
 
-.leaderboard-item.current-user {
+.currentUser {
   font-weight: bold;
-  color: #0056b3;
+  color: var(--color-primary);
   background-color: #e2f0ff;
 }
-
-.leaderboard-item.current-user-dimmed {
+.currentUserDimmed {
   background-color: #f8f9fa;
   opacity: 0.8;
 }
-
 .rank {
   font-size: 1.2rem;
   font-weight: bold;
   color: #888;
   text-align: center;
 }
-
-.leaderboard-item.current-user .rank {
-  color: #007bff;
+.currentUser .rank {
+  color: var(--color-primary);
 }
-
-.username {
-  font-weight: 500;
-}
-
+.username { font-weight: 500; }
 .stat {
   font-size: 0.9rem;
   color: #555;
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
-
-.total-score {
+.totalScore {
   font-weight: bold;
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
-
-.loading-spinner,
-.error-message {
+.loadingSpinner,
+.errorMessage {
   text-align: center;
   padding: 4rem 2rem;
   font-size: 1.2rem;
   color: #6c757d;
 }
-
-.error-message {
+.errorMessage {
   color: #dc3545;
   background-color: #f8d7da;
   border: 1px solid #f5c6cb;
-  border-radius: 8px;
+  border-radius: var(--radius);
 }
-
-.error-message.offline-notice {
+.offlineNotice {
   color: #856404;
   background-color: #fff3cd;
   border: 1px solid #ffeaa7;
 }
+
+.leaderboardList {
+  /* acts as wrapper for items */
+} 

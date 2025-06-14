@@ -17,8 +17,13 @@ const Modal: React.FC<ModalProps> = ({
   contentLabel,
   ...rest
 }) => {
-  const modalRoot = document.getElementById("modal-root");
-  if (!modalRoot) return null;
+  // Ensure a portal target exists – create one on the fly if not present (e.g. in Jest/Vitest JSDOM)
+  let modalRoot = document.getElementById("modal-root");
+  if (!modalRoot) {
+    modalRoot = document.createElement("div");
+    modalRoot.setAttribute("id", "modal-root");
+    document.body.appendChild(modalRoot);
+  }
 
   // Close on ESC key
   useEffect(() => {
