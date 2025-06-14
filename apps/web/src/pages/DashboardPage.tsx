@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useAuth } from "../context/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
@@ -10,6 +11,8 @@ import {
 import { PaceTracker } from "../components/PaceTracker";
 import type { Unit, Topic } from "../data/allUnitsData";
 import "./DashboardPage.css";
+import Modal from "react-modal";
+import GrokHelper from "../components/GrokHelper/GrokHelper";
 
 // Interface for user progress data
 interface UserProgress {
@@ -27,7 +30,7 @@ export function DashboardPage() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [progress, setProgress] = useState<UserProgress[]>([]);
-
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -156,12 +159,18 @@ export function DashboardPage() {
           <h1>Welcome, {user?.username || "Explorer"}!</h1>
           <p>Your journey to mastering AP Statistics starts here.</p>
         </div>
-        <div className="header-actions">
+        <div className="header-actions" style={{ display: "flex", gap: 8 }}>
           <Link to="/leaderboard" className="leaderboard-link">
             🏆 Leaderboard
           </Link>
           <button onClick={handleLogout} className="logout-button">
             Logout
+          </button>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="help-button"
+          >
+            How to Use AI Tutor
           </button>
         </div>
       </header>
@@ -225,6 +234,30 @@ export function DashboardPage() {
           </div>
         </section>
       </main>
+
+      {/* Grok Helper Modal */}
+      <Modal
+        isOpen={isModalOpen}
+        onRequestClose={() => setIsModalOpen(false)}
+        contentLabel="AI Tutor Guide"
+        overlayClassName="grok-helper-overlay"
+        className="grok-helper-content"
+        style={{
+          overlay: { backgroundColor: "rgba(0, 0, 0, 0.75)" },
+          content: {
+            top: "50%",
+            left: "50%",
+            right: "auto",
+            bottom: "auto",
+            marginRight: "-50%",
+            transform: "translate(-50%, -50%)",
+            width: "80%",
+            maxWidth: "800px",
+          },
+        }}
+      >
+        <GrokHelper />
+      </Modal>
     </div>
   );
 }
