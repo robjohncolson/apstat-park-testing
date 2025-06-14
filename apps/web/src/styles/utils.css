@@ -1,0 +1,19 @@
+.flex { display: flex; }
+.center { display: flex; align-items: center; justify-content: center; }
+.grid { display: grid; }
+
+.text-sm { font-size: 0.875rem; }
+.text-xs { font-size: 0.75rem; }
+
+.mb-1 { margin-bottom: 0.25rem; }
+.mb-2 { margin-bottom: 0.5rem; }
+.mb-4 { margin-bottom: 1rem; }
+.mt-1 { margin-top: 0.25rem; }
+.mt-2 { margin-top: 0.5rem; }
+.mt-4 { margin-top: 1rem; }
+
+.shadow-1 { box-shadow: var(--elev-1); }
+.rounded { border-radius: var(--radius); }
+
+/* Visually hidden but accessible */
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); border: 0; } 

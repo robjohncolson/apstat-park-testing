@@ -1,0 +1,23 @@
+:root {
+  /* Brand & UI colors – light theme */
+  --color-primary: #4caf50;            /* green 500 */
+  --color-primary-dark: #2e7d32;       /* green 800 */
+  --color-accent: #9c27b0;             /* purple 500 */
+  --color-achievement: #ffd54f;        /* amber 300 (gold star) */
+
+  --color-bg-light: #f2fff4;           /* mint-green pastel background */
+  --color-surface: #ffffff;            /* cards / panels */
+  --color-text-base: #1b1b1b;
+
+  /* Shared design tokens */
+  --radius: 8px;
+  --transition: 150ms ease-in-out;
+  --elev-1: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Dark theme overrides */
+[data-theme="dark"] {
+  --color-bg-light: #0f1e0f;          /* very dark green background */
+  --color-surface: #1a2b1a;
+  --color-text-base: #f0f0f0;
+} 

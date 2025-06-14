@@ -2,7 +2,8 @@
 import { StrictMode } from "react";
 import Modal from "react-modal";
 import { createRoot } from "react-dom/client";
-import "./index.css";
+import "./styles/global.css";
+import "./index.css"; // legacy styles, will be phased out
 import App from "./App.tsx";
 import { AuthProvider } from "./context/AuthContext";
 
