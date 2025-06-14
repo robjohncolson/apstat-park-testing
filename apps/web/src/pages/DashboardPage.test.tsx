@@ -112,15 +112,14 @@ describe("DashboardPage", () => {
 
     fireEvent.click(helpButton);
 
-    // Modal should render markdown heading
-    const modal = await screen.findByTestId("mock-modal");
-    expect(modal).toHaveTextContent(/Test Guide/i);
+    // Wait for markdown heading to appear inside modal
+    expect(await screen.findByText(/Test Guide/i)).toBeInTheDocument();
 
     // Close modal via Escape key on document
     fireEvent.keyDown(document, { key: "Escape", code: "Escape", keyCode: 27 });
 
     await waitFor(() => {
-      expect(screen.queryByTestId("mock-modal")).not.toBeInTheDocument();
+      expect(screen.queryByText(/Test Guide/i)).not.toBeInTheDocument();
     });
   });
 }); 
