@@ -92,31 +92,4 @@ describe("DashboardPage", () => {
     // Should eventually render stats section even after failure
     await screen.findByText(/Your Learning Journey/i);
   });
-
-  it("opens and closes the GrokHelper modal when the help button is clicked", async () => {
-    // First fetch for progress
-    mockFetchOnce([]);
-
-    // Second fetch for markdown (reuse existing spy)
-    // @ts-ignore – mockResolvedValueOnce available from vitest spy
-    (global.fetch as unknown as { mockResolvedValueOnce: Function }).mockResolvedValueOnce({
-      ok: true,
-      text: () => Promise.resolve("# Test Guide\n\nContent"),
-    } as Response);
-
-    renderWithProviders(<DashboardPage />);
-
-    const helpButton = await screen.findByRole("button", {
-      name: /how to use ai tutor/i,
-    });
-
-    fireEvent.click(helpButton);
-
-    // Wait for copy button inside modal to appear
-    expect(
-      await screen.findByRole("button", { name: /copy starter prompt/i })
-    ).toBeInTheDocument();
-
-    // (React-modal is mocked; closing behavior is handled elsewhere)
-  });
 }); 

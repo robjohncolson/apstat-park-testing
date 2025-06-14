@@ -9,6 +9,8 @@ import {
 } from "../data/allUnitsData";
 import type { Topic, Unit } from "../data/allUnitsData";
 import { DEFAULT_GROK_PROMPT } from "../constants/grokPrompt";
+import Modal from "react-modal";
+import WorkflowExplainer from "../components/WorkflowExplainer/WorkflowExplainer";
 
 // Interface for granular progress tracking
 interface LessonProgress {
@@ -42,6 +44,8 @@ export function LessonPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set());
   const [copiedPrompt, setCopiedPrompt] = useState<string | null>(null);
+  // Explainer modal state
+  const [isExplainerOpen, setIsExplainerOpen] = useState(false);
 
   // Load lesson data and progress
   useEffect(() => {
@@ -635,6 +639,23 @@ export function LessonPage() {
                         >
                           🤖 Open Grok
                         </button>
+                        <button
+                          aria-label="How to use the AI Quiz Tutor"
+                          onClick={() => setIsExplainerOpen(true)}
+                          title="How to use the AI Quiz Tutor"
+                          style={{
+                            background: "transparent",
+                            border: "1px solid #6f42c1",
+                            color: "#6f42c1",
+                            padding: "0.5rem 0.75rem",
+                            borderRadius: "50%",
+                            cursor: "pointer",
+                            fontSize: "0.85rem",
+                            lineHeight: 1,
+                          }}
+                        >
+                          ?
+                        </button>
                       </div>
                       <div className="item-actions">
                         <button
@@ -789,6 +810,30 @@ export function LessonPage() {
           )}
         </div>
       </main>
+
+      {/* AI Quiz Tutor Workflow Explainer Modal */}
+      <Modal
+        isOpen={isExplainerOpen}
+        onRequestClose={() => setIsExplainerOpen(false)}
+        contentLabel="AI Quiz Tutor Workflow Guide"
+        overlayClassName="grok-helper-overlay"
+        className="grok-helper-content"
+        style={{
+          overlay: { backgroundColor: "rgba(0, 0, 0, 0.75)" },
+          content: {
+            top: "50%",
+            left: "50%",
+            right: "auto",
+            bottom: "auto",
+            marginRight: "-50%",
+            transform: "translate(-50%, -50%)",
+            width: "80%",
+            maxWidth: "800px",
+          },
+        }}
+      >
+        <WorkflowExplainer />
+      </Modal>
     </div>
   );
 }
