@@ -1,5 +1,7 @@
 import React from "react";
 import styles from "./PageShell.module.css";
+import { AppHeader } from "../AppHeader/AppHeader";
+import { AppFooter } from "../AppFooter/AppFooter";
 
 interface PageShellProps {
   /**
@@ -19,5 +21,11 @@ export const PageShell: React.FC<PageShellProps> = ({
   children,
 }) => {
   const containerClass = fluid ? styles.fluid : styles.container;
-  return <main className={`${containerClass} ${className}`}>{children}</main>;
+  return (
+    <>
+      <AppHeader />
+      <main className={`${containerClass} ${className}`}>{children}</main>
+      <AppFooter />
+    </>
+  );
 }; 

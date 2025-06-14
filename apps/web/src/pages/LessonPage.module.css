@@ -1,97 +1,252 @@
 .lessonPage {
-  composes: lesson-page from global;
+  /* formerly `lesson-page` global */
+  min-height: 100vh;
+  padding: 2rem;
 }
 
 .loadingSpinner {
-  composes: loading-spinner from global;
+  text-align: center;
+  padding: 2rem;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .lessonHeader {
-  composes: lesson-header from global;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
 }
 
 .backLink {
-  composes: back-link from global;
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: 600;
+}
+.backLink:hover {
+  text-decoration: underline;
 }
 
 .lessonInfo {
-  composes: lesson-info from global;
+  flex: 1;
+}
+.lessonInfo h1 {
+  margin: 0 0 0.5rem 0;
+  color: #374151;
+}
+.lessonInfo p {
+  margin: 0;
+  color: #6b7280;
 }
 
 .completionBadge {
-  composes: completion-badge from global;
+  display: inline-block;
+  background: #f0fdf4;
+  color: #15803d;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
 }
 
 .progressBadge {
-  composes: progress-badge from global;
+  display: inline-block;
+  background: #eef2ff;
+  color: #4f46e5;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
 }
 
 .lessonActions {
-  composes: lesson-actions from global;
+  display: flex;
+  gap: 1rem;
 }
 
 .lessonMain {
-  composes: lesson-main from global;
+  max-width: 1200px;
+  margin: 0 auto;
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .lessonContent {
-  composes: lesson-content from global;
+  max-width: 800px;
+  margin: 0 auto;
 }
 
-.lessonDescription {
-  composes: lesson-description from global;
+.lessonDescription h2 {
+  color: #374151;
+  margin-bottom: 2rem;
+  font-size: 1.5rem;
+  line-height: 1.4;
 }
 
 .contentSection {
-  composes: content-section from global;
+  margin: 3rem 0;
+  padding: 2rem 0;
+  border-top: 1px solid #e5e7eb;
+}
+.contentSection:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+.contentSection h3 {
+  margin: 0 0 1.5rem 0;
+  color: #374151;
+  font-size: 1.25rem;
+  font-weight: 600;
 }
 
-.videosGrid {
-  composes: videos-grid from global;
-}
-
+.videosGrid,
 .quizzesGrid {
-  composes: quizzes-grid from global;
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
 }
 
-.videoCard {
-  composes: video-card from global;
+.videoCard,
+.quizCard,
+.blooketCard,
+.origamiCard {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1.5rem;
 }
 
-.videoHeader {
-  composes: video-header from global;
+.videoHeader,
+.quizHeader,
+.blooketHeader,
+.origamiHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
 }
 
-.videoHeaderActions {
-  composes: video-header-actions from global;
+.videoHeaderActions,
+.quizHeaderActions,
+.blooketHeaderActions,
+.origamiHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.videoLinks,
+.quizLinks,
+.blooketLinks,
+.origamiLinks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.quizLink,
+.blooketLink,
+.origamiLink {
+  display: inline-block;
+  padding: 0.75rem 1rem;
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: 600;
+  text-align: center;
+  transition: background var(--transition);
+  background: #e5e7eb;
+  color: #374151;
+}
+.quizLink:hover,
+.blooketLink:hover,
+.origamiLink:hover {
+  background: #d1d5db;
 }
 
 .completionIndicator {
-  composes: completion-indicator from global;
+  background: #dcfce7;
+  color: #15803d;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
 }
 
-.bookmarkBtn {
-  background: none;
-  border: none;
-  font-size: 1.2rem;
-  cursor: pointer;
-  opacity: 0.7;
-  transition: opacity var(--transition);
-  margin-left: 0.5rem;
-}
-.bookmarkBtn:hover:not(:disabled) {
-  opacity: 1;
-}
-.bookmarkBtn:disabled {
-  cursor: not-allowed;
-  opacity: 0.3;
+.itemActions {
+  margin-top: 1rem;
 }
 
-.videoLinks {
-  composes: video-links from global;
+.completed {
+  background: #10b981 !important;
+  color: #fff !important;
 }
 
-/* Primary & secondary video link buttons re-implemented using tokens */
+.quizAiActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.origamiDescription {
+  margin-bottom: 1rem;
+}
+
+.reflection {
+  margin-top: 2rem;
+}
+.reflection h5 {
+  margin: 0 0 0.5rem 0;
+  color: #374151;
+}
+.reflection p {
+  margin: 0;
+  color: #6b7280;
+}
+
+@media (max-width: 480px) {
+  .lessonPage {
+    padding: 1rem;
+  }
+  .lessonHeader {
+    padding: 1rem;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .lessonMain {
+    padding: 1rem;
+  }
+  .videoCard,
+  .quizCard,
+  .blooketCard,
+  .origamiCard {
+    padding: 1rem;
+  }
+  .videoLinkPrimary,
+  .videoLinkSecondary,
+  .quizLink,
+  .blooketLink,
+  .origamiLink {
+    padding: 0.5rem 0.75rem;
+  }
+  .videosGrid,
+  .quizzesGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------------------------------------------------------------
+   Phase 3 finale – self-contained module styles (no globals!)
+----------------------------------------------------------------*/
 .videoLinkPrimary {
   display: inline-block;
   padding: 0.75rem 1rem;
@@ -116,10 +271,6 @@
   background: #d1d5db;
 }
 
-.itemActions {
-  composes: item-actions from global;
-}
-
 .itemCompleteBtn {
   background: #3b82f6; /* blue */
   color: #fff;
@@ -137,35 +288,6 @@
 .itemCompleteBtn:disabled {
   cursor: not-allowed;
   opacity: 0.6;
-}
-
-.completed {
-  composes: completed from global;
-}
-
-/* Quiz styles mapped to existing globals */
-.quizCard {
-  composes: quiz-card from global;
-}
-
-.quizHeader {
-  composes: quiz-header from global;
-}
-
-.quizHeaderActions {
-  composes: quiz-header-actions from global;
-}
-
-.quizLinks {
-  composes: quiz-links from global;
-}
-
-.quizLink {
-  composes: quiz-link from global;
-}
-
-.quizAiActions {
-  composes: quiz-ai-actions from global;
 }
 
 .quizAiBtnCopyPromptBtn,
@@ -211,78 +333,42 @@
 
 /* Blooket / Origami */
 .blooketCard {
-  composes: blooket-card from global;
+  /* previously composed from global – styles now defined above */
 }
 .blooketHeader {
-  composes: blooket-header from global;
+  /* legacy reference removed */
 }
 .blooketHeaderActions {
-  composes: blooket-header-actions from global;
+  /* legacy reference removed */
 }
 .blooketLinks {
-  composes: blooket-links from global;
+  /* legacy reference removed */
 }
 .blooketLink {
-  composes: blooket-link from global;
+  /* legacy reference removed */
 }
 
 .origamiCard {
-  composes: origami-card from global;
+  /* legacy reference removed */
 }
 .origamiHeader {
-  composes: origami-header from global;
+  /* legacy reference removed */
 }
 .origamiHeaderActions {
-  composes: origami-header-actions from global;
-}
-.origamiDescription {
-  composes: origami-description from global;
+  /* legacy reference removed */
 }
 .origamiLinks {
-  composes: origami-links from global;
+  /* legacy reference removed */
 }
 .origamiLink {
-  composes: origami-link from global;
+  /* legacy reference removed */
 }
 .reflection {
-  composes: reflection from global;
+  /* legacy reference removed */
 }
 
-@media (max-width: 480px) {
-  .lessonPage {
-    padding: 1rem;
-  }
-  .lessonHeader {
-    padding: 1rem;
-    flex-direction: column;
-    gap: 1rem;
-  }
-  .lessonMain {
-    padding: 1rem;
-  }
-  .videoCard,
-  .quizCard,
-  .blooketCard,
-  .origamiCard {
-    padding: 1rem;
-  }
-  .videoLinkPrimary,
-  .videoLinkSecondary,
-  .quizLink,
-  .blooketLink,
-  .origamiLink {
-    padding: 0.5rem 0.75rem;
-  }
-  .videosGrid,
-  .quizzesGrid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* ------------------------------------------------------------------
-   Legacy Lesson-specific global rules migrated out of App.css
-   (Phase 3 – Sheet consolidation)
-------------------------------------------------------------------- */
+/* -------- Retire giant :global block -------- */
+/*
 :global {
   .lesson-page {
     min-height: 100vh;
@@ -623,4 +709,4 @@
       grid-template-columns: 1fr;
     }
   }
-} 
+} */

@@ -110,7 +110,7 @@ function App() {
               path="/dashboard"
               element={
                 isAuthenticated ? (
-                  <PageShell>
+                  <PageShell fluid>
                     <DashboardPage />
                   </PageShell>
                 ) : (

@@ -1,4 +1,5 @@
 .container {
+  display: block;
   width: 100%;
   max-width: 960px;
   margin-inline: auto;
@@ -7,6 +8,7 @@
 }
 
 .fluid {
+  display: block;
   width: 100%;
   padding-inline: 1rem;
   padding-block: 2rem;
