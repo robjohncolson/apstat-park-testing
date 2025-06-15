@@ -12,6 +12,7 @@ import { DEFAULT_GROK_PROMPT } from "../constants/grokPrompt";
 import Modal from "../components/Modal/Modal";
 import WorkflowExplainer from "../components/WorkflowExplainer/WorkflowExplainer";
 import styles from "./LessonPage.module.css";
+import { Badge } from "../components/ui/Badge";
 
 // Interface for granular progress tracking
 interface LessonProgress {
@@ -406,9 +407,9 @@ export function LessonPage() {
               const percentage = Math.round(fraction * 100);
 
               return fraction === 1.0 ? (
-                <span className={styles.completionBadge}>✅ 100% Complete</span>
+                <Badge variant="success">✅ 100% Complete</Badge>
               ) : percentage > 0 ? (
-                <span className={styles.progressBadge}>{percentage}% Complete</span>
+                <Badge variant="info">{percentage}% Complete</Badge>
               ) : null;
             })()}
         </div>
