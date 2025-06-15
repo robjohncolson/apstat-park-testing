@@ -378,10 +378,10 @@ section h2 {
 }
 
 .dashboard-overview {
-  background: white;
+  background: var(--color-surface);
   padding: 2rem;
   border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--elev-1);
   margin-bottom: 2rem;
 }
 
@@ -408,10 +408,10 @@ section h2 {
 }
 
 .stat-card {
-  background: white;
+  background: var(--color-surface);
   padding: 2rem;
   border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--elev-1);
   text-align: center;
 }
 
@@ -474,17 +474,17 @@ section h2 {
 
 /* Unit Accordion Styles */
 .unit-accordion {
-  background: white;
-  border: 1px solid #e5e7eb;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   margin-bottom: 1rem;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--elev-1);
 }
 
 .unit-header {
   padding: 1.5rem;
-  background: #f9fafb;
+  background: var(--color-btn-secondary-bg);
   cursor: pointer;
   display: flex;
   justify-content: space-between;
@@ -496,7 +496,7 @@ section h2 {
 }
 
 .unit-header:hover {
-  background: #f3f4f6;
+  background: var(--color-btn-secondary-bg-hover);
 }
 
 .unit-header:focus {
@@ -538,16 +538,16 @@ section h2 {
 /* Topics List */
 .topics-list {
   padding: 0;
-  background: white;
+  background: var(--color-surface);
 }
 
 /* Topic Item Styles */
 .topic-item {
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--color-border);
 }
 
 .topic-item.completed {
-  background: #f0fdf4;
+  background: rgba(34,197,94,0.15);
 }
 
 .topic-link {
