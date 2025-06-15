@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import styles from "./AppHeader.module.css";
+import { Button } from "../ui/Button";
 
 export function AppHeader() {
   const { isAuthenticated, logout } = useAuth();
@@ -21,15 +22,16 @@ export function AppHeader() {
           >
             Dashboard
           </Link>
-          <Link
+          <Button
             to="/leaderboard"
+            variant="linkLight"
             className={location.pathname === "/leaderboard" ? styles.active : ""}
           >
             🏆 Leaderboard
-          </Link>
-          <button onClick={handleLogout} className={styles.logoutBtn}>
+          </Button>
+          <Button onClick={handleLogout} variant="danger">
             Logout
-          </button>
+          </Button>
         </nav>
       )}
     </header>

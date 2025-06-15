@@ -1,0 +1,60 @@
+/* Base button style */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  text-decoration: none; /* so <Link> looks like button */
+  transition: background var(--transition), opacity var(--transition);
+}
+
+/* Variants */
+.primary {
+  background: var(--color-primary);
+  color: #fff;
+}
+.primary:hover {
+  background: var(--color-primary-dark);
+}
+
+.secondary {
+  background: #e5e7eb;
+  color: #374151;
+}
+.secondary:hover {
+  background: #d1d5db;
+}
+
+.ghost {
+  background: transparent;
+  color: var(--color-primary);
+}
+.ghost:hover {
+  background: rgba(99, 102, 241, 0.1); /* subtle primary tint */
+}
+
+.danger {
+  background: #dc3545; /* bootstrap red */
+  color: #fff;
+}
+.danger:hover {
+  background: #c82333;
+}
+
+/* Light nav link (white text on dark header) */
+.linkLight {
+  background: transparent;
+  color: #fff;
+  opacity: 0.9;
+}
+.linkLight:hover,
+.linkLight.active {
+  opacity: 1;
+  text-decoration: underline;
+} 
