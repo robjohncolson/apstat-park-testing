@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import styles from "./AppHeader.module.css";
 import { Button } from "../ui/Button";
@@ -16,12 +16,13 @@ export function AppHeader() {
       <div className={styles.brand}>🏞️ APStat&nbsp;Park</div>
       {isAuthenticated && (
         <nav className={styles.nav} aria-label="Primary">
-          <Link
+          <Button
             to="/dashboard"
+            variant="linkLight"
             className={location.pathname === "/dashboard" ? styles.active : ""}
           >
             Dashboard
-          </Link>
+          </Button>
           <Button
             to="/leaderboard"
             variant="linkLight"
