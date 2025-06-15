@@ -155,6 +155,7 @@ export function DashboardPage() {
 
       <main>
         <h1>Welcome, {user?.username || "Explorer"}!</h1>
+        <p>Your journey to mastering AP Statistics starts here.</p>
         <section className="dashboard-overview">
           <h2>Your Learning Journey</h2>
 

@@ -84,7 +84,9 @@
 }
 
 .quizzesGrid {
-  composes: quizzes-grid from global;
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
 }
 
 .videoCard {
@@ -199,23 +201,50 @@
 
 /* Quiz styles mapped to existing globals */
 .quizCard {
-  composes: quiz-card from global;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+/* header inside quiz card */
+.quizCard h4 {
+  margin: 0 0 1rem 0;
+  color: #374151;
+  font-size: 1.1rem;
 }
 
 .quizHeader {
-  composes: quiz-header from global;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
 }
 
 .quizHeaderActions {
-  composes: quiz-header-actions from global;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .quizLinks {
-  composes: quiz-links from global;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 .quizLink {
-  composes: quiz-link from global;
+  display: inline-block;
+  padding: 0.75rem 1rem;
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: 600;
+  text-align: center;
+  transition: all 0.2s ease;
+  background: #f3f4f6;
+  color: #374151;
+}
+.quizLink:hover {
+  background: #e5e7eb;
 }
 
 .quizAiActions {

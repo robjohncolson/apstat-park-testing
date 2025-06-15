@@ -25,7 +25,7 @@ export function AppHeader() {
             to="/leaderboard"
             className={location.pathname === "/leaderboard" ? styles.active : ""}
           >
-            Leaderboard
+            🏆 Leaderboard
           </Link>
           <button onClick={handleLogout} className={styles.logoutBtn}>
             Logout
