@@ -8,6 +8,7 @@
   --color-bg-light: #f2fff4;           /* mint-green pastel background */
   --color-surface: #ffffff;            /* cards / panels */
   --color-text-base: #1b1b1b;
+  --color-border: #e5e7eb;
 
   /* Shared design tokens */
   --radius: 8px;
@@ -20,4 +21,5 @@
   --color-bg-light: #0f1e0f;          /* very dark green background */
   --color-surface: #1a2b1a;
   --color-text-base: #f0f0f0;
+  --color-border: #2e2e2e;
 } 
