@@ -21,23 +21,43 @@
 }
 
 .backLink {
-  composes: back-link from global;
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: 600;
+}
+.backLink:hover {
+  text-decoration: underline;
 }
 
 .lessonInfo {
-  composes: lesson-info from global;
+  flex: 1;
 }
 
 .completionBadge {
-  composes: completion-badge from global;
+  display: inline-block;
+  background: #f0fdf4; /* light green */
+  color: #15803d;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
 }
 
 .progressBadge {
-  composes: progress-badge from global;
+  display: inline-block;
+  background: #dbeafe; /* light blue */
+  color: #1d4ed8;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
 }
 
 .lessonActions {
-  composes: lesson-actions from global;
+  display: flex;
+  gap: 1rem;
 }
 
 .lessonMain {
@@ -253,7 +273,10 @@
 }
 
 .quizAiActions {
-  composes: quiz-ai-actions from global;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
 }
 
 .quizAiBtnCopyPromptBtn,
