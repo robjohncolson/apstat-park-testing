@@ -50,8 +50,9 @@
 /* Light nav link (white text on dark header) */
 .linkLight {
   background: transparent;
-  color: #fff;
+  color: #fff; /* white text contrasts against gradient */
   opacity: 0.9;
+  transition: opacity var(--transition), text-decoration var(--transition);
 }
 .linkLight:hover,
 .linkLight.active {
