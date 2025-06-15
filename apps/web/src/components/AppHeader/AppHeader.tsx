@@ -2,6 +2,7 @@ import { useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import styles from "./AppHeader.module.css";
 import { Button } from "../ui/Button";
+import { ThemeSwitch } from "../ui/ThemeSwitch";
 
 export function AppHeader() {
   const { isAuthenticated, logout } = useAuth();
@@ -30,6 +31,7 @@ export function AppHeader() {
           >
             🏆 Leaderboard
           </Button>
+          <ThemeSwitch />
           <Button onClick={handleLogout} variant="danger">
             Logout
           </Button>

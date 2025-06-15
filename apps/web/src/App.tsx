@@ -6,6 +6,7 @@ import {
 } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import { BookmarkProvider, useBookmark } from "./context/BookmarkContext";
+import { ThemeProvider } from "./context/ThemeContext";
 import { LoginPage } from "./pages/LoginPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { LessonPage } from "./pages/LessonPage";
@@ -90,6 +91,7 @@ function App() {
   }
 
   return (
+    <ThemeProvider>
     <BookmarkProvider>
       <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <div className="app">
@@ -148,6 +150,7 @@ function App() {
         </div>
       </Router>
     </BookmarkProvider>
+    </ThemeProvider>
   );
 }
 
