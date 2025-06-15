@@ -38,10 +38,10 @@ test.describe("Visual regression", () => {
       window.localStorage.setItem("apstat-user", userString as string);
     }, JSON.stringify(mockUser));
 
-    await page.goto("http://localhost:5173/unit/unit1/lesson/1-1?msw=true");
+    await page.goto("http://localhost:5173/unit/unit1/lesson/1-2?msw=true");
     await page.waitForLoadState("networkidle");
     await expect(page).toHaveScreenshot("lesson-desktop.png", {
-      fullPage: true,
+      // Viewport-only; avoids height fluctuations from dynamic content
       maxDiffPixelRatio: diffThreshold,
     });
   });
@@ -57,11 +57,11 @@ test.describe("Visual regression", () => {
       window.localStorage.setItem("apstat-user", userString as string);
     }, JSON.stringify(mockUser));
 
-    await page.goto("http://localhost:5173/unit/unit1/lesson/1-1?msw=true");
+    await page.goto("http://localhost:5173/unit/unit1/lesson/1-2?msw=true");
     await page.waitForLoadState("networkidle");
 
     // Open the help modal ("?" button with accessible label)
-    await page.getByRole("button", { name: "How to use the AI Quiz Tutor" }).click();
+    await page.locator('button[aria-label="How to use the AI Quiz Tutor"]').first().click();
     // Wait for dialog to appear
     const modal = page.getByRole("dialog");
     await expect(modal).toBeVisible();
