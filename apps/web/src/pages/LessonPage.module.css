@@ -294,39 +294,103 @@
 
 /* Blooket / Origami */
 .blooketCard {
-  composes: blooket-card from global;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1.5rem;
 }
+
 .blooketHeader {
-  composes: blooket-header from global;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
 }
+
+.blooketHeader h4 {
+  margin: 0;
+  color: #374151;
+  font-size: 1.1rem;
+}
+
 .blooketHeaderActions {
-  composes: blooket-header-actions from global;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
+
 .blooketLinks {
-  composes: blooket-links from global;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
+
 .blooketLink {
-  composes: blooket-link from global;
+  display: inline-block;
+  padding: 0.75rem 1rem;
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: 600;
+  text-align: center;
+  transition: all 0.2s ease;
+  background: #e5e7eb;
+  color: #374151;
+}
+.blooketLink:hover {
+  background: #d1d5db;
 }
 
 .origamiCard {
-  composes: origami-card from global;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1.5rem;
 }
+
 .origamiHeader {
-  composes: origami-header from global;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
 }
+
+.origamiHeader h4 {
+  margin: 0;
+  color: #374151;
+  font-size: 1.1rem;
+}
+
 .origamiHeaderActions {
-  composes: origami-header-actions from global;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
-.origamiDescription {
-  composes: origami-description from global;
-}
+
 .origamiLinks {
-  composes: origami-links from global;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
+
 .origamiLink {
-  composes: origami-link from global;
+  display: inline-block;
+  padding: 0.75rem 1rem;
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: 600;
+  text-align: center;
+  transition: all 0.2s ease;
+  background: #e5e7eb;
+  color: #374151;
 }
+.origamiLink:hover {
+  background: #d1d5db;
+}
+
+.origamiDescription {
+  margin-bottom: 1rem;
+}
+
 .reflection {
   composes: reflection from global;
 }
