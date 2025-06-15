@@ -8,6 +8,7 @@
 .leaderboardHeader {
   text-align: center;
   margin-bottom: 2rem;
+  color: var(--color-text-base);
 }
 
 .leaderboardHeader h1 {

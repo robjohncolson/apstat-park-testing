@@ -29,6 +29,16 @@
   flex: 1;
 }
 
+.lessonInfo h1 {
+  color: var(--color-text-base);
+  margin: 0;
+}
+
+.lessonInfo p {
+  color: var(--color-text-muted);
+  margin: 0.25rem 0 0 0;
+}
+
 .completionBadge {
   display: inline-block;
   background: #f0fdf4; /* light green */
