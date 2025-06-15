@@ -8,6 +8,7 @@
   --color-bg-light: #f2fff4;           /* mint-green pastel background */
   --color-surface: #ffffff;            /* cards / panels */
   --color-text-base: #1b1b1b;
+  --color-text-muted: #6b7280;
   --color-border: #e5e7eb;
 
   /* Button secondary tokens */
@@ -26,6 +27,7 @@
   --color-bg-light: #0f1e0f;          /* very dark green background */
   --color-surface: #1a2b1a;
   --color-text-base: #f0f0f0;
+  --color-text-muted: #9ca3af;
   --color-border: #2e2e2e;
 
   --color-btn-secondary-bg: #2a2a2a;

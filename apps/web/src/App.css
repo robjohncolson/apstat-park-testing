@@ -63,8 +63,10 @@ section h2 {
 
 .status-card {
   padding: 1rem;
-  border-radius: 6px;
-  border: 2px solid;
+  border-radius: 8px;
+  text-align: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   margin-bottom: 1rem;
 }
 
@@ -443,9 +445,9 @@ section h2 {
 
 .progress-bar {
   width: 100%;
+  background-color: var(--color-border);
+  border-radius: 9999px;
   height: 8px;
-  background-color: #e5e7eb;
-  border-radius: 4px;
   overflow: hidden;
   margin-bottom: 0.5rem;
 }

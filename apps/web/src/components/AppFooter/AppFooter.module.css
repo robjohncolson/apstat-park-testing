@@ -2,5 +2,5 @@
   text-align: center;
   padding: 1rem;
   font-size: 0.85rem;
-  color: #6b7280;
+  color: var(--color-text-muted);
 } 
