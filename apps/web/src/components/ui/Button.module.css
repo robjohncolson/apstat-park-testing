@@ -24,11 +24,11 @@
 }
 
 .secondary {
-  background: #e5e7eb;
-  color: #374151;
+  background: var(--color-btn-secondary-bg);
+  color: var(--color-btn-secondary-text);
 }
 .secondary:hover {
-  background: #d1d5db;
+  background: var(--color-btn-secondary-bg-hover);
 }
 
 .ghost {
@@ -36,7 +36,7 @@
   color: var(--color-primary);
 }
 .ghost:hover {
-  background: rgba(99, 102, 241, 0.1); /* subtle primary tint */
+  background: rgba(99, 102, 241, 0.15); /* subtle primary tint */
 }
 
 .danger {

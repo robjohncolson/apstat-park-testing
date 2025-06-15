@@ -10,6 +10,11 @@
   --color-text-base: #1b1b1b;
   --color-border: #e5e7eb;
 
+  /* Button secondary tokens */
+  --color-btn-secondary-bg: #e5e7eb;
+  --color-btn-secondary-bg-hover: #d1d5db;
+  --color-btn-secondary-text: #374151;
+
   /* Shared design tokens */
   --radius: 8px;
   --transition: 150ms ease-in-out;
@@ -22,4 +27,8 @@
   --color-surface: #1a2b1a;
   --color-text-base: #f0f0f0;
   --color-border: #2e2e2e;
+
+  --color-btn-secondary-bg: #2a2a2a;
+  --color-btn-secondary-bg-hover: #3a3a3a;
+  --color-btn-secondary-text: #f0f0f0;
 } 
