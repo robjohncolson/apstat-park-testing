@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { Link } from "react-router-dom";
 import styles from "./LeaderboardPage.module.css";
+import { Spinner } from "../components/ui/Spinner";
 
 interface LeaderboardEntry {
   rank: number;
@@ -99,9 +100,7 @@ export function LeaderboardPage() {
         </Link>
       </header>
 
-      {isLoading && (
-        <div className={styles.loadingSpinner}>Loading leaderboard...</div>
-      )}
+      {isLoading && <Spinner>Loading leaderboard...</Spinner>}
       {error && (
         <div
           className={`${styles.errorMessage} ${error.includes("sample data") ? styles.offlineNotice : ""}`}
@@ -121,9 +120,7 @@ export function LeaderboardPage() {
                 <span className={styles.username}>{userRank.username} (You)</span>
                 <span className={styles.stat}>📝 {userRank.completed_quizzes}</span>
                 <span className={styles.stat}>📺 {userRank.completed_videos}</span>
-                <span className={styles.totalScore}>
-                  {userRank.total_completed} Total
-                </span>
+                <span className={styles.totalScore}>{userRank.total_completed} Total</span>
               </div>
             </div>
           )}
@@ -138,9 +135,7 @@ export function LeaderboardPage() {
                 <span className={styles.username}>{entry.username}</span>
                 <span className={styles.stat}>📝 {entry.completed_quizzes}</span>
                 <span className={styles.stat}>📺 {entry.completed_videos}</span>
-                <span className={styles.totalScore}>
-                  {entry.total_completed} Total
-                </span>
+                <span className={styles.totalScore}>{entry.total_completed} Total</span>
               </div>
             ))}
           </div>

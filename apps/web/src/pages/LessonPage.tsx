@@ -14,6 +14,8 @@ import WorkflowExplainer from "../components/WorkflowExplainer/WorkflowExplainer
 import styles from "./LessonPage.module.css";
 import { Badge } from "../components/ui/Badge";
 import { Button } from "../components/ui/Button";
+import { Card } from "../components/ui/Card";
+import { Spinner } from "../components/ui/Spinner";
 
 // Interface for granular progress tracking
 interface LessonProgress {
@@ -361,9 +363,7 @@ export function LessonPage() {
   if (isLoading) {
     return (
       <div className={styles.lessonPage}>
-        <div className={styles.loadingSpinner}>
-          <p>Loading lesson...</p>
-        </div>
+        <Spinner>Loading lesson...</Spinner>
       </div>
     );
   }
@@ -442,7 +442,7 @@ export function LessonPage() {
                   );
 
                   return (
-                    <div key={index} className={styles.videoCard}>
+                    <Card key={index} className={styles.videoCard}>
                       <div className={styles.videoHeader}>
                         <h4>Video {index + 1}</h4>
                         <div className={styles.videoHeaderActions}>
@@ -499,7 +499,7 @@ export function LessonPage() {
                               : "Mark as Watched"}
                         </Button>
                       </div>
-                    </div>
+                    </Card>
                   );
                 })}
               </div>
@@ -523,7 +523,7 @@ export function LessonPage() {
                   );
 
                   return (
-                    <div key={quiz.quizId} className={styles.quizCard}>
+                    <Card key={quiz.quizId} className={styles.quizCard}>
                       <div className={styles.quizHeader}>
                         <h4>Quiz {index + 1}</h4>
                         <div className={styles.quizHeaderActions}>
@@ -608,7 +608,7 @@ export function LessonPage() {
                               : "Mark Complete"}
                         </Button>
                       </div>
-                    </div>
+                    </Card>
                   );
                 })}
               </div>
@@ -619,7 +619,7 @@ export function LessonPage() {
           {topic.blooket.url && (
             <section className={styles.contentSection}>
               <h3>🎮 Blooket Game</h3>
-              <div className={styles.blooketCard}>
+              <Card className={styles.blooketCard}>
                 <div className={styles.blooketHeader}>
                   <h4>Interactive Review Game</h4>
                   <div className={styles.blooketHeaderActions}>
@@ -653,7 +653,7 @@ export function LessonPage() {
                         : "Mark Done"}
                   </Button>
                 </div>
-              </div>
+              </Card>
             </section>
           )}
 
@@ -661,7 +661,7 @@ export function LessonPage() {
           {topic.origami && (
             <section className={styles.contentSection}>
               <h3>🎨 Origami Activity</h3>
-              <div className={styles.origamiCard}>
+              <Card className={styles.origamiCard}>
                 <div className={styles.origamiHeader}>
                   <h4>{topic.origami.name}</h4>
                   <div className={styles.origamiHeaderActions}>
@@ -701,7 +701,7 @@ export function LessonPage() {
                         : "Mark Done"}
                   </Button>
                 </div>
-              </div>
+              </Card>
             </section>
           )}
         </div>
