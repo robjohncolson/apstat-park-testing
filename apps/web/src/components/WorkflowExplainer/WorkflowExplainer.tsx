@@ -19,7 +19,7 @@ const WorkflowExplainer: React.FC = () => {
         }}
       >
         <iframe
-          src="https://www.youtube.com/embed/xtIUnLh1dK8"
+          src="https://www.youtube.com/embed/CnJyUYjnwJk"
           title="AI Quiz Tutor Workflow Walk-through"
           style={{
             position: "absolute",
@@ -59,7 +59,7 @@ const WorkflowExplainer: React.FC = () => {
         <li>
           <strong>Step 4: Paste &amp; Attach</strong>
           <ul>
-            <li>Paste the copied prompt into the chat box, then attach the Question and Answer PDFs.</li>
+            <li>Paste the copied prompt into the chat box, then attach the Question and Answer PDFs.  Press Submit when you are ready to start your session.</li>
           </ul>
         </li>
         <li>
@@ -72,8 +72,7 @@ const WorkflowExplainer: React.FC = () => {
           <strong>Step 6: Review &amp; Reflect</strong>
           <ul>
             <li>
-              Read the AI's guidance, verify with the provided answers, and make notes in your
-              study journal.
+              Read the AI's guidance, verify with the provided answers. *Between this quiz and the videos for each lesson, I recommend keeping pencil and paper nearby!
             </li>
           </ul>
         </li>

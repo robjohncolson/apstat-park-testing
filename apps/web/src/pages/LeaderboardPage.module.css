@@ -1,0 +1,122 @@
+.leaderboardPage {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 1rem;
+  color: var(--color-text-base);
+}
+
+.leaderboardHeader {
+  text-align: center;
+  margin-bottom: 2rem;
+  color: var(--color-text-base);
+}
+
+.leaderboardHeader h1 {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  color: var(--color-primary-dark);
+}
+
+.leaderboardHeader p {
+  font-size: 1.1rem;
+  color: var(--color-text-muted);
+  margin-bottom: 1rem;
+}
+
+.backToDashboard {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.9rem;
+  transition: color var(--transition);
+}
+.backToDashboard:hover {
+  color: var(--color-primary-dark);
+  text-decoration: underline;
+}
+
+.leaderboardContainer {
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  box-shadow: var(--elev-1);
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+}
+
+.userRankHighlight {
+  padding: 1.25rem 1.5rem;
+  background: var(--color-btn-secondary-bg);
+  border-bottom: 1px solid var(--color-border);
+}
+.userRankHighlight h3 {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.9rem;
+  color: var(--color-primary-dark);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-weight: 600;
+}
+
+.leaderboardItem {
+  display: grid;
+  grid-template-columns: 40px 1fr 80px 80px 100px;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--color-border);
+  gap: 1rem;
+  transition: background-color var(--transition);
+}
+.leaderboardList .leaderboardItem:hover {
+  background-color: var(--color-btn-secondary-bg-hover);
+}
+.leaderboardList .leaderboardItem:last-child {
+  border-bottom: none;
+}
+
+.currentUser {
+  font-weight: bold;
+  color: var(--color-primary);
+  background-color: rgba(66, 153, 225, 0.25);
+}
+.currentUserDimmed {
+  background-color: var(--color-surface);
+  opacity: 0.8;
+}
+.rank {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+.currentUser .rank {
+  color: var(--color-primary);
+}
+.username { font-weight: 500; }
+.stat {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.totalScore {
+  font-weight: bold;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.errorMessage {
+  text-align: center;
+  padding: 4rem 2rem;
+  font-size: 1.2rem;
+  color: #ef4444;
+  background-color: rgba(220,53,69,0.15);
+  border: 1px solid #ef4444;
+}
+.offlineNotice {
+  color: #b45309;
+  background-color: rgba(253,230,138,0.25);
+  border: 1px solid #b45309;
+}
+
+.leaderboardList {
+  /* acts as wrapper for items */
+} 

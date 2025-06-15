@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { Link } from "react-router-dom";
-import "./LeaderboardPage.css";
+import styles from "./LeaderboardPage.module.css";
+import { Spinner } from "../components/ui/Spinner";
 
 interface LeaderboardEntry {
   rank: number;
@@ -90,21 +91,19 @@ export function LeaderboardPage() {
   );
 
   return (
-    <div className="leaderboard-page">
-      <header className="leaderboard-header">
+    <div className={styles.leaderboardPage}>
+      <header className={styles.leaderboardHeader}>
         <h1>🏆 Leaderboard</h1>
         <p>See how you stack up against other AP Stat Park explorers!</p>
-        <Link to="/dashboard" className="back-to-dashboard">
+        <Link to="/dashboard" className={styles.backToDashboard}>
           ← Back to Dashboard
         </Link>
       </header>
 
-      {isLoading && (
-        <div className="loading-spinner">Loading leaderboard...</div>
-      )}
+      {isLoading && <Spinner>Loading leaderboard...</Spinner>}
       {error && (
         <div
-          className={`error-message ${error.includes("sample data") ? "offline-notice" : ""}`}
+          className={`${styles.errorMessage} ${error.includes("sample data") ? styles.offlineNotice : ""}`}
         >
           {error.includes("sample data") ? "📱 " : "⚠️ "}
           {error}
@@ -112,35 +111,31 @@ export function LeaderboardPage() {
       )}
 
       {!isLoading && !error && (
-        <div className="leaderboard-container">
+        <div className={styles.leaderboardContainer}>
           {userRank && (
-            <div className="user-rank-highlight">
+            <div className={styles.userRankHighlight}>
               <h3>Your Rank</h3>
-              <div className="leaderboard-item current-user">
-                <span className="rank">{userRank.rank}</span>
-                <span className="username">{userRank.username} (You)</span>
-                <span className="stat">📝 {userRank.completed_quizzes}</span>
-                <span className="stat">📺 {userRank.completed_videos}</span>
-                <span className="total-score">
-                  {userRank.total_completed} Total
-                </span>
+              <div className={`${styles.leaderboardItem} ${styles.currentUser}`}>
+                <span className={styles.rank}>{userRank.rank}</span>
+                <span className={styles.username}>{userRank.username} (You)</span>
+                <span className={styles.stat}>📝 {userRank.completed_quizzes}</span>
+                <span className={styles.stat}>📺 {userRank.completed_videos}</span>
+                <span className={styles.totalScore}>{userRank.total_completed} Total</span>
               </div>
             </div>
           )}
 
-          <div className="leaderboard-list">
+          <div className={styles.leaderboardList}>
             {leaderboard.map((entry) => (
               <div
                 key={entry.rank}
-                className={`leaderboard-item ${entry.username === user?.username ? "current-user-dimmed" : ""}`}
+                className={`${styles.leaderboardItem} ${entry.username === user?.username ? styles.currentUserDimmed : ""}`}
               >
-                <span className="rank">{entry.rank}</span>
-                <span className="username">{entry.username}</span>
-                <span className="stat">📝 {entry.completed_quizzes}</span>
-                <span className="stat">📺 {entry.completed_videos}</span>
-                <span className="total-score">
-                  {entry.total_completed} Total
-                </span>
+                <span className={styles.rank}>{entry.rank}</span>
+                <span className={styles.username}>{entry.username}</span>
+                <span className={styles.stat}>📝 {entry.completed_quizzes}</span>
+                <span className={styles.stat}>📺 {entry.completed_videos}</span>
+                <span className={styles.totalScore}>{entry.total_completed} Total</span>
               </div>
             ))}
           </div>

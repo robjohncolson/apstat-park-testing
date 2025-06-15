@@ -1,0 +1,109 @@
+.loginPage {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-light);
+  padding: 1ch; /* one character space around edges */
+}
+
+.loginContainer {
+  background: var(--color-surface);
+  border: 2px solid var(--color-primary);
+  border-radius: var(--radius);
+  box-shadow: var(--elev-1);
+  padding: 2rem;
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+}
+
+.loginHeader h1 {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+  color: var(--color-primary-dark);
+}
+
+.loginHeader p {
+  color: var(--color-text-muted);
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+}
+
+.loginForm h2 {
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+  color: var(--color-accent);
+}
+
+.errorMessage {
+  background: rgba(220, 53, 69, 0.15);
+  color: #ef4444;
+  border: 1px solid #ef4444;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius);
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.usernameSection,
+.customUsernameSection {
+  margin-bottom: 1.5rem;
+}
+
+.usernameSection h3,
+.customUsernameSection h3 {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  color: var(--color-primary-dark);
+}
+
+.suggestedUsername {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.usernameDisplay {
+  background: var(--color-btn-secondary-bg);
+  padding: 0.5rem;
+  border-radius: var(--radius);
+  font-family: monospace;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 1rem 0;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
+}
+
+.usernameInput {
+  width: 100%;
+  padding: 0.5rem;
+  border: 2px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text-base);
+  border-radius: var(--radius);
+  font-family: monospace;
+}
+.usernameInput:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.loginInfo {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+} 

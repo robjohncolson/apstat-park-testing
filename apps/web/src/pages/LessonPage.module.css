@@ -1,0 +1,461 @@
+.lessonPage {
+  /* formerly `lesson-page` global */
+  min-height: 100vh;
+  padding: 2rem;
+}
+
+.lessonHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  background: var(--color-surface);
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+}
+
+.backLink {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: 600;
+}
+.backLink:hover {
+  text-decoration: underline;
+}
+
+.lessonInfo {
+  flex: 1;
+}
+
+.lessonInfo h1 {
+  color: var(--color-text-base);
+  margin: 0;
+}
+
+.lessonInfo p {
+  color: var(--color-text-muted);
+  margin: 0.25rem 0 0 0;
+}
+
+.completionBadge {
+  display: inline-block;
+  background: #f0fdf4; /* light green */
+  color: #15803d;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
+}
+
+.progressBadge {
+  display: inline-block;
+  background: #dbeafe; /* light blue */
+  color: #1d4ed8;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
+}
+
+.lessonActions {
+  display: flex;
+  gap: 1rem;
+}
+
+.lessonMain {
+  max-width: 1200px;
+  margin: 0 auto;
+  background: var(--color-surface);
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.lessonContent {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.lessonDescription h2 {
+  color: #374151;
+  margin-bottom: 2rem;
+  font-size: 1.5rem;
+  line-height: 1.4;
+}
+
+.contentSection {
+  margin: 3rem 0;
+  padding: 2rem 0;
+  border-top: 1px solid var(--color-border);
+}
+.contentSection:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+.contentSection h3 {
+  margin: 0 0 1.5rem 0;
+  color: #374151;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.videosGrid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.quizzesGrid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.videoCard {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+/* header inside card */
+.videoCard h4 {
+  margin: 0 0 1rem 0;
+  color: #374151;
+  font-size: 1.1rem;
+}
+
+.videoHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.videoHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.completionIndicator {
+  background: #dcfce7;
+  color: #15803d;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.bookmarkBtn {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity var(--transition);
+  margin-left: 0.5rem;
+}
+.bookmarkBtn:hover:not(:disabled) {
+  opacity: 1;
+}
+.bookmarkBtn:disabled {
+  cursor: not-allowed;
+  opacity: 0.3;
+}
+
+.videoLinks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Primary & secondary video link buttons re-implemented using tokens */
+.videoLinkPrimary {
+  /* styles moved to Button primary variant */
+}
+
+.videoLinkSecondary {
+  /* obsolete */
+}
+
+.videoLinkSecondary:hover {
+  /* obsolete */
+}
+
+.itemActions {
+  margin-top: 1rem;
+}
+
+.itemCompleteBtn {
+  /* replaced by Button component */
+}
+
+.itemCompleteBtn.completed {
+  /* replaced by Badge/variant */
+}
+
+.itemCompleteBtn:disabled {
+  /* obsolete */
+}
+
+.completed {
+  background: #10b981; /* match green success */
+  color: #fff;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* Quiz styles mapped to existing globals */
+.quizCard {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+/* header inside quiz card */
+.quizCard h4 {
+  margin: 0 0 1rem 0;
+  color: #374151;
+  font-size: 1.1rem;
+}
+
+.quizHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.quizHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.quizLinks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.quizLink {
+  display: inline-block;
+  padding: 0.75rem 1rem;
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: 600;
+  text-align: center;
+  transition: all 0.2s ease;
+  background: #f3f4f6;
+  color: #374151;
+}
+.quizLink:hover {
+  background: #e5e7eb;
+}
+
+.quizAiActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.quizAiBtnCopyPromptBtn,
+.quizAiBtnOpenGrokBtn {
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+
+.quizAiBtnCopyPromptBtn {
+  background: var(--color-accent); /* purple */
+}
+.quizAiBtnCopyPromptBtn.copied {
+  background: #10b981; /* success green */
+}
+
+.quizAiBtnOpenGrokBtn {
+  background: #1da1f2; /* twitter blue */
+}
+
+.quizAiHelpBtn {
+  background: transparent;
+  border: 1px solid var(--color-accent);
+  color: var(--color-accent);
+  padding: 0.5rem 0.75rem;
+  border-radius: 50%;
+  font-size: 0.85rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.quizAiHelpBtn:hover {
+  background: var(--color-accent);
+  color: #fff;
+}
+
+/* Blooket / Origami */
+.blooketCard {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.blooketHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.blooketHeader h4 {
+  margin: 0;
+  color: #374151;
+  font-size: 1.1rem;
+}
+
+.blooketHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.blooketLinks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.blooketLink {
+  display: inline-block;
+  padding: 0.75rem 1rem;
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: 600;
+  text-align: center;
+  transition: all 0.2s ease;
+  background: #e5e7eb;
+  color: #374151;
+}
+.blooketLink:hover {
+  background: #d1d5db;
+}
+
+.origamiCard {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.origamiHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.origamiHeader h4 {
+  margin: 0;
+  color: #374151;
+  font-size: 1.1rem;
+}
+
+.origamiHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.origamiLinks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.origamiLink {
+  display: inline-block;
+  padding: 0.75rem 1rem;
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: 600;
+  text-align: center;
+  transition: all 0.2s ease;
+  background: #e5e7eb;
+  color: #374151;
+}
+.origamiLink:hover {
+  background: #d1d5db;
+}
+
+.origamiDescription {
+  margin-bottom: 1rem;
+}
+
+.reflection {
+  margin-top: 2rem;
+}
+.reflection h5 {
+  margin: 0 0 0.5rem 0;
+  color: #374151;
+}
+.reflection p {
+  margin: 0;
+  color: #6b7280;
+}
+
+@media (max-width: 480px) {
+  .lessonPage {
+    padding: 1rem;
+  }
+  .lessonHeader {
+    padding: 1rem;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .lessonMain {
+    padding: 1rem;
+  }
+  .videoCard,
+  .quizCard,
+  .blooketCard,
+  .origamiCard {
+    padding: 1rem;
+  }
+  .videoLinkPrimary,
+  .videoLinkSecondary,
+  .quizLink,
+  .blooketLink,
+  .origamiLink {
+    padding: 0.5rem 0.75rem;
+  }
+  .videosGrid,
+  .quizzesGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.videoLinkPrimary,
+.videoLinkSecondary,
+.videoLinkSecondary:hover,
+.quizLink,
+.quizLink:hover,
+.itemCompleteBtn,
+.itemCompleteBtn.completed,
+.itemCompleteBtn:disabled {
+  /* obsolete - intentionally left blank */
+} 

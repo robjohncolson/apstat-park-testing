@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import styles from "./LoginPage.module.css";
+import { Button } from "../components/ui/Button";
 
 export function LoginPage() {
   const { login, generateUsername, isLoading } = useAuth();
@@ -50,72 +52,72 @@ export function LoginPage() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div className="login-page">
-      <div className="login-container">
-        <header className="login-header">
+    <div className={styles.loginPage}>
+      <div className={styles.loginContainer}>
+        <header className={styles.loginHeader}>
           <h1>🏞️ Welcome to APStat Park</h1>
           <p>Your journey through AP Statistics starts here!</p>
         </header>
 
-        <div className="login-form">
+        <div className={styles.loginForm}>
           <h2>Choose Your Adventure Name</h2>
 
-          {error && <div className="error-message">{error}</div>}
+          {error && <div className={styles.errorMessage}>{error}</div>}
 
-          <div className="username-section">
+          <div className={styles.usernameSection}>
             <h3>Suggested Username</h3>
-            <div className="suggested-username">
-              <div className="username-display">
+            <div className={styles.suggestedUsername}>
+              <div className={styles.usernameDisplay}>
                 {isGenerating
                   ? "Generating..."
                   : suggestedUsername || "No username generated"}
               </div>
-              <button
+              <Button
                 onClick={handleGenerateUsername}
                 disabled={isGenerating}
-                className="generate-btn"
+                variant="secondary"
               >
                 {isGenerating ? "Generating..." : "Generate New"}
-              </button>
+              </Button>
             </div>
 
             {suggestedUsername && (
-              <button
+              <Button
                 onClick={() => handleLogin(suggestedUsername)}
                 disabled={isLoading}
-                className="login-btn primary"
+                variant="primary"
               >
                 {isLoading
                   ? "Logging in..."
                   : `Continue as ${suggestedUsername}`}
-              </button>
+              </Button>
             )}
           </div>
 
-          <div className="divider">
+          <div className={styles.divider}>
             <span>or</span>
           </div>
 
-          <div className="custom-username-section">
+          <div className={styles.customUsernameSection}>
             <h3>Create Your Own Username</h3>
             <input
               type="text"
               value={customUsername}
               onChange={(e) => setCustomUsername(e.target.value)}
               placeholder="Enter your preferred username"
-              className="username-input"
+              className={styles.usernameInput}
               maxLength={30}
             />
-            <button
+            <Button
               onClick={() => handleLogin(customUsername)}
               disabled={isLoading || !customUsername.trim()}
-              className="login-btn secondary"
+              variant="secondary"
             >
               {isLoading ? "Logging in..." : "Continue with Custom Name"}
-            </button>
+            </Button>
           </div>
 
-          <div className="login-info">
+          <div className={styles.loginInfo}>
             <p>
               <strong>Note:</strong> Your username will be saved locally in your
               browser. You can use the same name across different devices to

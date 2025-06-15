@@ -6,11 +6,14 @@ import {
 } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import { BookmarkProvider, useBookmark } from "./context/BookmarkContext";
+import { ThemeProvider } from "./context/ThemeContext";
 import { LoginPage } from "./pages/LoginPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { LessonPage } from "./pages/LessonPage";
 import { LeaderboardPage } from "./pages/LeaderboardPage";
+import { PageShell } from "./components/PageShell/PageShell";
 import "./App.css";
+import { Spinner } from "./components/ui/Spinner";
 
 // Global Bookmark Star Component
 function GlobalBookmarkStar() {
@@ -79,15 +82,16 @@ function App() {
   if (isLoading) {
     return (
       <div className="app loading">
-        <div className="loading-spinner">
+        <Spinner>
           <h1>🏞️ APStat Park</h1>
           <p>Loading your learning journey...</p>
-        </div>
+        </Spinner>
       </div>
     );
   }
 
   return (
+    <ThemeProvider>
     <BookmarkProvider>
       <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <div className="app">
@@ -99,7 +103,9 @@ function App() {
                 isAuthenticated ? (
                   <Navigate to="/dashboard" replace />
                 ) : (
-                  <LoginPage />
+                  <PageShell fluid>
+                    <LoginPage />
+                  </PageShell>
                 )
               }
             />
@@ -107,7 +113,9 @@ function App() {
               path="/dashboard"
               element={
                 isAuthenticated ? (
-                  <DashboardPage />
+                  <PageShell fluid>
+                    <DashboardPage />
+                  </PageShell>
                 ) : (
                   <Navigate to="/" replace />
                 )
@@ -116,14 +124,22 @@ function App() {
             <Route
               path="/unit/:unitId/lesson/:lessonId"
               element={
-                isAuthenticated ? <LessonPage /> : <Navigate to="/" replace />
+                isAuthenticated ? (
+                  <PageShell fluid>
+                    <LessonPage />
+                  </PageShell>
+                ) : (
+                  <Navigate to="/" replace />
+                )
               }
             />
             <Route
               path="/leaderboard"
               element={
                 isAuthenticated ? (
-                  <LeaderboardPage />
+                  <PageShell fluid>
+                    <LeaderboardPage />
+                  </PageShell>
                 ) : (
                   <Navigate to="/" replace />
                 )
@@ -134,6 +150,7 @@ function App() {
         </div>
       </Router>
     </BookmarkProvider>
+    </ThemeProvider>
   );
 }
 

@@ -1,0 +1,16 @@
+.dashboardContainer {
+  width: 100%;
+  margin: 0 auto;
+  padding: 1rem 2rem;
+}
+
+/* Prevent horizontal overflow on small viewports */
+:global {
+  @media (max-width: 480px) {
+    .dashboard-page {
+      max-width: 100vw;
+      overflow-x: hidden;
+      padding: 1rem; /* align with other pages */
+    }
+  }
+} 
