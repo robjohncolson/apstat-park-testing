@@ -514,7 +514,7 @@ section h2 {
 }
 
 .unit-weight {
-  color: #6b7280;
+  color: var(--color-text-muted);
   font-size: 0.9rem;
   margin: 0 0 0.75rem 0;
 }
@@ -526,7 +526,7 @@ section h2 {
 }
 
 .unit-progress span {
-  color: #6b7280;
+  color: var(--color-text-muted);
   font-size: 0.8rem;
   white-space: nowrap;
 }
@@ -593,8 +593,8 @@ section h2 {
 }
 
 .completion-percentage {
-  background: #f3f4f6;
-  color: #6b7280;
+  background: var(--color-btn-secondary-bg);
+  color: var(--color-text-muted);
   padding: 0.25rem 0.75rem;
   border-radius: 12px;
   font-size: 0.9rem;
@@ -602,8 +602,8 @@ section h2 {
 }
 
 .completion-percentage.in-progress {
-  background: #dbeafe;
-  color: #1d4ed8;
+  background: rgba(59, 130, 246, 0.2);
+  color: #3b82f6;
 }
 
 .topic-completion {
@@ -612,7 +612,7 @@ section h2 {
 }
 
 .topic-description {
-  color: #6b7280;
+  color: var(--color-text-muted);
   margin: 0 0 0.75rem 0;
   font-size: 0.9rem;
   line-height: 1.4;
@@ -625,16 +625,16 @@ section h2 {
 }
 
 .content-count {
-  color: #6b7280;
+  color: var(--color-text-muted);
   font-size: 0.8rem;
   padding: 0.25rem 0.5rem;
-  background: #f3f4f6;
+  background: var(--color-btn-secondary-bg);
   border-radius: 12px;
   white-space: nowrap;
 }
 
 .topic-arrow {
-  color: #9ca3af;
+  color: var(--color-text-muted);
   font-size: 1.2rem;
   margin-left: 1rem;
 }

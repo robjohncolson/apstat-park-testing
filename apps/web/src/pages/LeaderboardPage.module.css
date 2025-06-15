@@ -18,7 +18,7 @@
 
 .leaderboardHeader p {
   font-size: 1.1rem;
-  color: #666;
+  color: var(--color-text-muted);
   margin-bottom: 1rem;
 }
 
@@ -44,8 +44,8 @@
 
 .userRankHighlight {
   padding: 1.25rem 1.5rem;
-  background: linear-gradient(to right, #eef7ff, #f8f9fa);
-  border-bottom: 1px solid #d1eaff;
+  background: var(--color-btn-secondary-bg);
+  border-bottom: 1px solid var(--color-border);
 }
 .userRankHighlight h3 {
   margin: 0 0 0.75rem 0;
@@ -61,7 +61,7 @@
   grid-template-columns: 40px 1fr 80px 80px 100px;
   align-items: center;
   padding: 1rem 1.5rem;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--color-border);
   gap: 1rem;
   transition: background-color var(--transition);
 }
@@ -78,13 +78,13 @@
   background-color: rgba(66, 153, 225, 0.25);
 }
 .currentUserDimmed {
-  background-color: #f8f9fa;
+  background-color: var(--color-surface);
   opacity: 0.8;
 }
 .rank {
   font-size: 1.2rem;
   font-weight: bold;
-  color: #888;
+  color: var(--color-text-muted);
   text-align: center;
 }
 .currentUser .rank {
@@ -93,7 +93,7 @@
 .username { font-weight: 500; }
 .stat {
   font-size: 0.9rem;
-  color: #555;
+  color: var(--color-text-muted);
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
@@ -106,18 +106,14 @@
   text-align: center;
   padding: 4rem 2rem;
   font-size: 1.2rem;
-  color: #6c757d;
-}
-.errorMessage {
-  color: #dc3545;
-  background-color: #f8d7da;
-  border: 1px solid #f5c6cb;
-  border-radius: var(--radius);
+  color: #ef4444;
+  background-color: rgba(220,53,69,0.15);
+  border: 1px solid #ef4444;
 }
 .offlineNotice {
-  color: #856404;
-  background-color: #fff3cd;
-  border: 1px solid #ffeaa7;
+  color: #b45309;
+  background-color: rgba(253,230,138,0.25);
+  border: 1px solid #b45309;
 }
 
 .leaderboardList {

@@ -7,16 +7,16 @@
 }
 
 .success {
-  background: #f0fdf4;
-  color: #15803d;
+  background: rgba(34,197,94,0.15);
+  color: #16a34a;
 }
 
 .info {
-  background: #dbeafe;
-  color: #1d4ed8;
+  background: rgba(59,130,246,0.2);
+  color: #3b82f6;
 }
 
 .warning {
-  background: #fef3c7;
-  color: #92400e;
+  background: rgba(253, 230, 138, 0.25);
+  color: #b45309;
 } 
