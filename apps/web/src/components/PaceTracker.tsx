@@ -88,8 +88,8 @@ export function PaceTracker({
   // --- END OF FIX ---
 
   const paceTrackerStyle: React.CSSProperties = {
-    background: "#f8f9fa",
-    border: "2px solid #e9ecef",
+    background: "var(--color-surface)",
+    border: "2px solid var(--color-border)",
     borderRadius: "12px",
     padding: "1rem",
     marginBottom: "1rem",
@@ -107,15 +107,15 @@ export function PaceTracker({
   const metricItemStyle: React.CSSProperties = {
     textAlign: "center",
     padding: "0.5rem",
-    background: "white",
+    background: "var(--color-surface)",
     borderRadius: "8px",
-    border: "1px solid #dee2e6",
+    border: "1px solid var(--color-border)",
   };
 
   const metricLabelStyle: React.CSSProperties = {
     display: "block",
     fontSize: "0.8rem",
-    color: "#6c757d",
+    color: "var(--color-text-muted)",
     marginBottom: "0.25rem",
   };
 
@@ -123,7 +123,7 @@ export function PaceTracker({
     display: "block",
     fontWeight: 600,
     fontSize: "1.1rem",
-    color: "#495057",
+    color: "var(--color-text-base)",
   };
 
   const paceStatusStyle: React.CSSProperties = {
@@ -132,15 +132,15 @@ export function PaceTracker({
     fontWeight: 500,
     padding: "0.5rem",
     marginBottom: "0.5rem",
-    background: "white",
+    background: "var(--color-surface)",
     borderRadius: "8px",
-    border: "1px solid #dee2e6",
+    border: "1px solid var(--color-border)",
   };
 
   const encouragementStyle: React.CSSProperties = {
     textAlign: "center",
     fontSize: "0.85rem",
-    color: "#6c757d",
+    color: "var(--color-text-muted)",
     fontStyle: "italic",
   };
 
