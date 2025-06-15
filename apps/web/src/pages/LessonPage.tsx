@@ -548,23 +548,23 @@ export function LessonPage() {
                       </div>
                       <div className={styles.quizLinks}>
                         {quiz.questionPdf && (
-                          <a
+                          <Button
                             href={quiz.questionPdf}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className={styles.quizLink}
+                            variant="secondary"
                           >
                             📄 Questions
-                          </a>
+                          </Button>
                         )}
-                        <a
+                        <Button
                           href={quiz.answersPdf}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className={styles.quizLink}
+                          variant="secondary"
                         >
                           📄 Answers
-                        </a>
+                        </Button>
                       </div>
                       <div className={styles.quizAiActions}>
                         <button
@@ -630,14 +630,14 @@ export function LessonPage() {
                 </div>
                 <p>Test your knowledge with this interactive game!</p>
                 <div className={styles.blooketLinks}>
-                  <a
+                  <Button
                     href={topic.blooket.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={styles.blooketLink}
+                    variant="secondary"
                   >
                     Play Blooket Game
-                  </a>
+                  </Button>
                 </div>
                 <div className={styles.itemActions}>
                   <Button
@@ -674,14 +674,14 @@ export function LessonPage() {
                   {topic.origami.description}
                 </p>
                 <div className={styles.origamiLinks}>
-                  <a
+                  <Button
                     href={topic.origami.videoUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={styles.origamiLink}
+                    variant="secondary"
                   >
                     Watch Origami Tutorial
-                  </a>
+                  </Button>
                 </div>
                 <div className={styles.reflection}>
                   <h5>💭 Reflection</h5>
