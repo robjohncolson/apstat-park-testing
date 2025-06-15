@@ -151,22 +151,10 @@ export function DashboardPage() {
 
   return (
     <div className={styles.dashboardContainer}>
-      <header className={styles.dashboardHeader}>
-        <div className="user-info">
-          <h1>Welcome, {user?.username || "Explorer"}!</h1>
-          <p>Your journey to mastering AP Statistics starts here.</p>
-        </div>
-        <div className={styles.headerActions}>
-          <Link to="/leaderboard" className={styles.leaderboardLink}>
-            🏆 Leaderboard
-          </Link>
-          <button onClick={handleLogout} className={styles.logoutButton}>
-            Logout
-          </button>
-        </div>
-      </header>
+      {/* Removed redundant local header now provided by PageShell */}
 
       <main>
+        <h1>Welcome, {user?.username || "Explorer"}!</h1>
         <section className="dashboard-overview">
           <h2>Your Learning Journey</h2>
 
