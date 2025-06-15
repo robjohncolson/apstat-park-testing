@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import styles from "./LoginPage.module.css";
+import { Button } from "../components/ui/Button";
 
 export function LoginPage() {
   const { login, generateUsername, isLoading } = useAuth();
@@ -71,25 +72,25 @@ export function LoginPage() {
                   ? "Generating..."
                   : suggestedUsername || "No username generated"}
               </div>
-              <button
+              <Button
                 onClick={handleGenerateUsername}
                 disabled={isGenerating}
-                className={styles.generateBtn}
+                variant="secondary"
               >
                 {isGenerating ? "Generating..." : "Generate New"}
-              </button>
+              </Button>
             </div>
 
             {suggestedUsername && (
-              <button
+              <Button
                 onClick={() => handleLogin(suggestedUsername)}
                 disabled={isLoading}
-                className={`${styles.loginBtn} ${styles.primary}`}
+                variant="primary"
               >
                 {isLoading
                   ? "Logging in..."
                   : `Continue as ${suggestedUsername}`}
-              </button>
+              </Button>
             )}
           </div>
 
@@ -107,13 +108,13 @@ export function LoginPage() {
               className={styles.usernameInput}
               maxLength={30}
             />
-            <button
+            <Button
               onClick={() => handleLogin(customUsername)}
               disabled={isLoading || !customUsername.trim()}
-              className={`${styles.loginBtn} ${styles.secondary}`}
+              variant="secondary"
             >
               {isLoading ? "Logging in..." : "Continue with Custom Name"}
-            </button>
+            </Button>
           </div>
 
           <div className={styles.loginInfo}>
