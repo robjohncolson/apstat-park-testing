@@ -13,6 +13,7 @@ import Modal from "../components/Modal/Modal";
 import WorkflowExplainer from "../components/WorkflowExplainer/WorkflowExplainer";
 import styles from "./LessonPage.module.css";
 import { Badge } from "../components/ui/Badge";
+import { Button } from "../components/ui/Button";
 
 // Interface for granular progress tracking
 interface LessonProgress {
@@ -465,37 +466,38 @@ export function LessonPage() {
                         </div>
                       </div>
                       <div className={styles.videoLinks}>
-                        <a
+                        <Button
                           href={video.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className={styles.videoLinkPrimary}
+                          variant="primary"
                         >
                           Watch on AP Classroom
-                        </a>
+                        </Button>
                         {video.altUrl && (
-                          <a
+                          <Button
                             href={video.altUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className={styles.videoLinkSecondary}
+                            variant="secondary"
                           >
                             Alternative Link
-                          </a>
+                          </Button>
                         )}
                       </div>
                       <div className={styles.itemActions}>
-                        <button
-                          className={`${styles.itemCompleteBtn} ${isWatched ? styles.completed : ""}`}
+                        <Button
                           onClick={() => handleVideoWatched(videoIndex)}
                           disabled={isWatched || isUpdating}
+                          variant="primary"
+                          className={isWatched ? styles.completed : ""}
                         >
                           {isUpdating
                             ? "Saving..."
                             : isWatched
                               ? "✓ Watched"
                               : "Mark as Watched"}
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   );
@@ -593,17 +595,18 @@ export function LessonPage() {
                         </button>
                       </div>
                       <div className={styles.itemActions}>
-                        <button
-                          className={`${styles.itemCompleteBtn} ${isCompleted ? styles.completed : ""}`}
+                        <Button
                           onClick={() => handleQuizCompleted(quizIndex)}
                           disabled={isCompleted || isUpdating}
+                          variant="primary"
+                          className={isCompleted ? styles.completed : ""}
                         >
                           {isUpdating
                             ? "Saving..."
                             : isCompleted
                               ? "✓ Complete"
                               : "Mark Complete"}
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   );
@@ -637,17 +640,18 @@ export function LessonPage() {
                   </a>
                 </div>
                 <div className={styles.itemActions}>
-                  <button
-                    className={`${styles.itemCompleteBtn} ${progress?.blooket_completed ? styles.completed : ""}`}
+                  <Button
                     onClick={handleBlooketCompleted}
                     disabled={updatingItems.has("blooket")}
+                    variant="primary"
+                    className={progress?.blooket_completed ? styles.completed : ""}
                   >
                     {updatingItems.has("blooket")
                       ? "Saving..."
                       : progress?.blooket_completed
                         ? "✓ Done"
                         : "Mark Done"}
-                  </button>
+                  </Button>
                 </div>
               </div>
             </section>
@@ -684,17 +688,18 @@ export function LessonPage() {
                   <p>{topic.origami.reflection}</p>
                 </div>
                 <div className={styles.itemActions}>
-                  <button
-                    className={`${styles.itemCompleteBtn} ${progress?.origami_completed ? styles.completed : ""}`}
+                  <Button
                     onClick={handleOrigamiCompleted}
                     disabled={updatingItems.has("origami")}
+                    variant="primary"
+                    className={progress?.origami_completed ? styles.completed : ""}
                   >
                     {updatingItems.has("origami")
                       ? "Saving..."
                       : progress?.origami_completed
                         ? "✓ Done"
                         : "Mark Done"}
-                  </button>
+                  </Button>
                 </div>
               </div>
             </section>

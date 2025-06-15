@@ -8,17 +8,24 @@ type BaseProps = {
   children: React.ReactNode;
 };
 
-type ButtonAsLink = BaseProps & {
+type ButtonRouterLink = BaseProps & {
   to: string;
-  onClick?: never;
-  type?: never;
-};
+  href?: never;
+} & React.AnchorHTMLAttributes<HTMLAnchorElement>;
+
+type ButtonExternalLink = BaseProps & {
+  href: string;
+  target?: string;
+  rel?: string;
+  to?: never;
+} & React.AnchorHTMLAttributes<HTMLAnchorElement>;
 
 type ButtonAsButton = BaseProps & React.ButtonHTMLAttributes<HTMLButtonElement> & {
   to?: undefined;
+  href?: undefined;
 };
 
-export type ButtonProps = ButtonAsLink | ButtonAsButton;
+export type ButtonProps = ButtonRouterLink | ButtonExternalLink | ButtonAsButton;
 
 export function Button(props: ButtonProps) {
   const {
@@ -38,6 +45,14 @@ export function Button(props: ButtonProps) {
       <Link to={props.to} className={classes} {...(rest as any)}>
         {children}
       </Link>
+    );
+  }
+
+  if ("href" in props && props.href) {
+    return (
+      <a href={props.href} className={classes} {...(rest as any)}>
+        {children}
+      </a>
     );
   }
 
