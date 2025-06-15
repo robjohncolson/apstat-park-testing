@@ -4,10 +4,6 @@
   padding: 2rem;
 }
 
-.loadingSpinner {
-  composes: loading-spinner from global;
-}
-
 .lessonHeader {
   display: flex;
   align-items: center;
@@ -441,4 +437,15 @@
   .quizzesGrid {
     grid-template-columns: 1fr;
   }
+}
+
+.videoLinkPrimary,
+.videoLinkSecondary,
+.videoLinkSecondary:hover,
+.quizLink,
+.quizLink:hover,
+.itemCompleteBtn,
+.itemCompleteBtn.completed,
+.itemCompleteBtn:disabled {
+  /* obsolete - intentionally left blank */
 } 

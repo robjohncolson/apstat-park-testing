@@ -12,24 +12,6 @@
   justify-content: center;
 }
 
-.loading-spinner {
-  text-align: center;
-  padding: 2rem;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.loading-spinner h1 {
-  margin: 0 0 1rem 0;
-  color: #374151;
-}
-
-.loading-spinner p {
-  margin: 0;
-  color: #6b7280;
-}
-
 header {
   text-align: center;
   margin-bottom: 3rem;
