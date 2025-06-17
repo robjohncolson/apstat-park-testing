@@ -66,8 +66,8 @@ export function calculatePaceMetrics(
       hoursPerLesson = hoursUntilExam / lessonsRemaining;
 
       // 🚨 CRITICAL BUG FIX: Use FIXED deadline, don't recalculate every second!
-      if (lastDeadline && lastDeadline > now) {
-        // Use existing fixed deadline if it's still in the future
+      if (lastDeadline) {
+        // Always use existing fixed deadline (even if it has passed!)
         nextDeadline = lastDeadline;
       } else {
         // Calculate NEW fixed deadline (only when starting or after completing a lesson)

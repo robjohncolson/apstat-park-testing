@@ -22,31 +22,23 @@ export function PaceTracker({
 }: PaceTrackerProps) {
   const { user } = useAuth();
   
-  // Phase 2: State for real-time countdown updates
-  const [now, setNow] = useState(new Date());
-  // Phase 2: State for fixed deadline (doesn't move with time)
-  const [fixedDeadline, setFixedDeadline] = useState<Date | undefined>(
-    undefined,
-  );
-  // State for the buffer, which will now accumulate and persist
-  const [bufferHours, setBufferHours] = useState(0);
+  // Keys for localStorage - use stable keys that don't change between login sessions
+  // Since user IDs are randomly generated in offline mode, we use global keys
+  const deadlineKey = 'apstat_pace_deadline';
+  const bufferKey = 'apstat_pace_buffer';
 
-  // Ref to track the previous number of completed lessons
-  const prevCompletedLessonsRef = useRef(completedLessons);
-
-  // Keys for localStorage
-  const deadlineKey = `pace_deadline_${user?.id || 'guest'}`;
-  const bufferKey = `pace_buffer_${user?.id || 'guest'}`;
-
-  // Load persisted data on mount
-  useEffect(() => {
+  // Synchronously load initial values from localStorage to avoid race conditions
+  const loadInitialValues = () => {
+    let initialDeadline: Date | undefined = undefined;
+    let initialBuffer = 0;
+    
     try {
       // Load persisted deadline
       const savedDeadline = localStorage.getItem(deadlineKey);
       if (savedDeadline) {
         const deadline = new Date(savedDeadline);
         if (!isNaN(deadline.getTime())) {
-          setFixedDeadline(deadline);
+          initialDeadline = deadline;
         }
       }
 
@@ -55,13 +47,27 @@ export function PaceTracker({
       if (savedBuffer) {
         const buffer = parseFloat(savedBuffer);
         if (!isNaN(buffer)) {
-          setBufferHours(buffer);
+          initialBuffer = buffer;
         }
       }
     } catch (error) {
       console.warn('Failed to load pace tracker data from localStorage:', error);
     }
-  }, [deadlineKey, bufferKey]);
+    
+    return { initialDeadline, initialBuffer };
+  };
+
+  const { initialDeadline, initialBuffer } = loadInitialValues();
+
+  // Phase 2: State for real-time countdown updates
+  const [now, setNow] = useState(new Date());
+  // Phase 2: State for fixed deadline (doesn't move with time) - initialized from localStorage
+  const [fixedDeadline, setFixedDeadline] = useState<Date | undefined>(initialDeadline);
+  // State for the buffer, which will now accumulate and persist - initialized from localStorage
+  const [bufferHours, setBufferHours] = useState(initialBuffer);
+
+  // Ref to track the previous number of completed lessons
+  const prevCompletedLessonsRef = useRef(completedLessons);
 
   // Persist deadline when it changes
   useEffect(() => {
@@ -136,12 +142,12 @@ export function PaceTracker({
     fixedDeadline,
   );
 
-  // Set a new fixed deadline if one doesn't exist or has passed
+  // Set a new fixed deadline ONLY if one doesn't exist (not if it has passed)
   useEffect(() => {
-    if (!fixedDeadline || fixedDeadline <= now) {
+    if (!fixedDeadline) {
       setFixedDeadline(metrics.nextDeadline);
     }
-  }, [fixedDeadline, now, metrics.nextDeadline]);
+  }, [fixedDeadline, metrics.nextDeadline]);
 
   const paceTrackerStyle: React.CSSProperties = {
     background: "var(--color-surface)",

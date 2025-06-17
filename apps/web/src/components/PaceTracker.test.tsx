@@ -340,22 +340,6 @@ describe("PaceTracker Component", () => {
     });
 
     it("should save deadline to localStorage when set", async () => {
-      // Mock the AuthContext to provide a user ID
-      const mockUser = { id: "test-user", email: "test@example.com", password: "test" };
-      
-      const MockedAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-        return (
-          <div data-testid="auth-provider" data-user-id={mockUser.id}>
-            {children}
-          </div>
-        );
-      };
-
-      // Mock useAuth to return our test user
-      vi.doMock("../context/AuthContext", () => ({
-        useAuth: () => ({ user: mockUser }),
-      }));
-
       render(<PaceTracker completedLessons={35} totalLessons={50} />);
 
       // The component should eventually save data to localStorage
@@ -363,16 +347,16 @@ describe("PaceTracker Component", () => {
       await new Promise(resolve => setTimeout(resolve, 100));
 
       // Check that localStorage keys exist
-      const deadlineKey = `pace_deadline_${mockUser.id}`;
-      const bufferKey = `pace_buffer_${mockUser.id}`;
+      const deadlineKey = 'apstat_pace_deadline';
+      const bufferKey = 'apstat_pace_buffer';
       
       // Buffer should be saved (starts at 0)
       expect(localStorage.getItem(bufferKey)).toBe("0");
       
       // We can't easily test deadline saving without more complex mocking,
-      // but we can verify the keys are being constructed correctly
-      expect(deadlineKey).toBe("pace_deadline_test-user");
-      expect(bufferKey).toBe("pace_buffer_test-user");
+      // but we can verify the keys are correct
+      expect(deadlineKey).toBe("apstat_pace_deadline");
+      expect(bufferKey).toBe("apstat_pace_buffer");
     });
 
     it("should handle localStorage errors gracefully", () => {
@@ -403,7 +387,7 @@ describe("PaceTracker Component", () => {
       warnSpy.mockRestore();
     });
 
-    it("should use guest key when no user is logged in", () => {
+    it("should work when no user is logged in", () => {
       // Mock useAuth to return no user
       vi.doMock("../context/AuthContext", () => ({
         useAuth: () => ({ user: null }),
@@ -411,7 +395,7 @@ describe("PaceTracker Component", () => {
 
       render(<PaceTracker completedLessons={35} totalLessons={50} />);
 
-      // The component should use 'guest' as fallback
+      // The component should work regardless of user state
       // This is mostly testing that it doesn't crash
       expect(screen.getByText("📊 Study Pace Tracker")).toBeInTheDocument();
     });
