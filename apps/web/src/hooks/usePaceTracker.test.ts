@@ -200,8 +200,11 @@ describe("usePaceTracker Hook", () => {
       server.resetHandlers(); // Extra safety reset
       server.use(
         http.get('http://localhost:3001/api/v1/pace/:userId', () => {
-          console.log('🔥 ERROR HANDLER CALLED'); // Debug log
-          return new HttpResponse(null, { status: 500 });
+          console.log('🔥 ERROR HANDLER CALLED - Returning 500 error'); // Debug log
+          return HttpResponse.json(
+            { error: "Internal Server Error" }, 
+            { status: 500 }
+          );
         })
       );
 
@@ -210,6 +213,12 @@ describe("usePaceTracker Hook", () => {
       );
 
       await waitFor(() => {
+        console.log('🔍 API ERROR TEST - Current hook state:', {
+          isError: result.current.isError,
+          error: result.current.error?.message,
+          isLoading: result.current.isLoading,
+          paceData: result.current.paceData
+        });
         expect(result.current.isError).toBe(true);
       }, { timeout: 5000 });
 
@@ -368,7 +377,10 @@ describe("usePaceTracker Hook", () => {
         // But failed PUT for update
         http.put('http://localhost:3001/api/v1/pace/:userId', () => {
           console.log('❌ UPDATE ERROR TEST - PUT HANDLER CALLED'); // Debug log
-          return new HttpResponse(null, { status: 400 });
+          return HttpResponse.json(
+            { error: "Bad Request" }, 
+            { status: 400 }
+          );
         })
       );
 
@@ -495,6 +507,13 @@ describe("usePaceTracker Hook", () => {
       );
 
       await waitFor(() => {
+        console.log('🔍 OVERDUE TEST - Current hook state:', {
+          isOverdue: result.current.isOverdue,
+          currentDeadline: result.current.currentDeadline?.toISOString(),
+          hoursUntilDeadline: result.current.hoursUntilDeadline,
+          isLoading: result.current.isLoading,
+          paceData: result.current.paceData?.currentDeadline
+        });
         expect(result.current.isOverdue).toBe(true);
       }, { timeout: 5000 });
 
