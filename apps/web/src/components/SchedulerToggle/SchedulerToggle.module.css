@@ -1,0 +1,73 @@
+.toggleContainer {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.toggleContainer h2 {
+  margin: 0 0 1rem 0;
+  color: var(--color-text-base);
+  font-size: 1.5rem;
+}
+
+.toggleButtons {
+  display: flex;
+  justify-content: center;
+  gap: 0;
+  background: var(--color-bg-light);
+  border-radius: 12px;
+  padding: 4px;
+  border: 1px solid var(--color-border);
+  margin-bottom: 1rem;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.toggleButton {
+  flex: 1;
+  padding: 1rem 1.5rem;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.toggleButton:hover {
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--color-primary);
+}
+
+.toggleButton.active {
+  background: var(--color-primary);
+  color: white;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+  font-weight: 600;
+}
+
+.description {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.4;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .toggleButtons {
+    flex-direction: column;
+    max-width: 300px;
+  }
+  
+  .toggleButton {
+    padding: 0.8rem 1rem;
+    font-size: 0.9rem;
+  }
+} 

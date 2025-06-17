@@ -9,6 +9,8 @@ import {
   calculateTopicFraction,
 } from "../data/allUnitsData";
 import { PaceTracker } from "../components/PaceTracker";
+import { LessonScheduler } from "../components/LessonScheduler/LessonScheduler";
+import { SchedulerToggle } from "../components/SchedulerToggle/SchedulerToggle";
 import type { Unit, Topic } from "../data/allUnitsData";
 import styles from "./DashboardPage.module.css";
 
@@ -28,6 +30,7 @@ export function DashboardPage() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [progress, setProgress] = useState<UserProgress[]>([]);
+  const [schedulerView, setSchedulerView] = useState<'pace' | 'scheduler'>('pace');
 
   const handleLogout = () => {
     logout();
@@ -159,11 +162,28 @@ export function DashboardPage() {
         <section className="dashboard-overview">
           <h2>Your Learning Journey</h2>
 
-          {/* Pace Tracker */}
-          <PaceTracker
-            completedLessons={stats.completedLessons}
-            totalLessons={stats.totalLessons}
+          {/* Scheduler Toggle */}
+          <SchedulerToggle
+            activeView={schedulerView}
+            onViewChange={setSchedulerView}
           />
+
+          {/* Conditional Rendering: Pace Tracker or Lesson Scheduler */}
+          {schedulerView === 'pace' ? (
+            <PaceTracker
+              completedLessons={stats.completedLessons}
+              totalLessons={stats.totalLessons}
+            />
+          ) : (
+            <LessonScheduler
+              completedLessons={progress.filter(p => p.lesson_completed).map(p => p.lesson_id)}
+              userProgress={progress}
+              onScheduleChange={(schedule) => {
+                console.log('Schedule updated:', schedule);
+                // TODO: Sync to API when available
+              }}
+            />
+          )}
 
           {/* Progress Overview */}
           <div className="progress-overview">
