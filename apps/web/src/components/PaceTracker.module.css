@@ -22,28 +22,28 @@
 }
 
 .paceTracker.error {
-  border-color: #dc2626;
-  background: color-mix(in srgb, var(--color-surface) 90%, #dc2626 10%);
+  border-color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-surface) 95%, var(--color-accent) 5%);
 }
 
 .paceTracker.ahead {
   border-color: var(--color-primary);
-  background: color-mix(in srgb, var(--color-surface) 90%, var(--color-primary) 10%);
+  background: color-mix(in srgb, var(--color-surface) 95%, var(--color-primary) 5%);
 }
 
 .paceTracker.onTrack {
   border-color: var(--color-achievement);
-  background: color-mix(in srgb, var(--color-surface) 90%, var(--color-achievement) 10%);
+  background: color-mix(in srgb, var(--color-surface) 95%, var(--color-achievement) 5%);
 }
 
 .paceTracker.behind {
   border-color: var(--color-accent);
-  background: color-mix(in srgb, var(--color-surface) 90%, var(--color-accent) 10%);
+  background: color-mix(in srgb, var(--color-surface) 95%, var(--color-accent) 5%);
 }
 
 .paceTracker.overdue {
-  border-color: #dc2626;
-  background: color-mix(in srgb, var(--color-surface) 90%, #dc2626 10%);
+  border-color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-surface) 95%, var(--color-accent) 5%);
   animation: pulse 2s ease-in-out infinite;
 }
 
@@ -65,7 +65,7 @@
   align-items: center;
   margin-bottom: 1rem;
   padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--color-border, #e5e7eb);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .title {
@@ -124,12 +124,13 @@
 
 .errorDetails {
   font-size: 0.875rem;
-  color: #dc2626;
+  color: var(--color-accent);
   font-family: monospace;
   background: var(--color-surface);
   padding: 0.5rem;
   border-radius: var(--radius);
   margin: 0.5rem 0;
+  border: 1px solid var(--color-border);
 }
 
 /* Loading Spinner */
@@ -189,15 +190,15 @@
 .metricsSection,
 .encouragementSection {
   padding: 1rem;
-  background: var(--color-surface-elevated, #f9fafb);
-  border-radius: 8px;
-  border: 1px solid var(--color-border-light, #f3f4f6);
+  background: color-mix(in srgb, var(--color-surface) 97%, var(--color-border) 3%);
+  border-radius: var(--radius);
+  border: 1px solid var(--color-border);
 }
 
 .sectionLabel {
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--color-text-base, #1f2937);
+  color: var(--color-text-base);
   margin-bottom: 0.5rem;
 }
 
@@ -205,7 +206,7 @@
   font-family: monospace;
   font-size: 1.25rem;
   font-weight: 600;
-  color: var(--color-primary, #3b82f6);
+  color: var(--color-primary);
   text-align: center;
 }
 
@@ -220,12 +221,12 @@
 .bufferAmount {
   font-size: 1.125rem;
   font-weight: 600;
-  color: var(--color-success, #16a34a);
+  color: var(--color-primary);
 }
 
 .bufferDescription {
   font-size: 0.875rem;
-  color: var(--color-text-muted, #6b7280);
+  color: var(--color-text-muted);
 }
 
 /* Metrics Section */
@@ -240,7 +241,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 0.5rem 0;
-  border-bottom: 1px solid var(--color-border-light, #f3f4f6);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .metricRow:last-child {
@@ -249,26 +250,26 @@
 
 .metricLabel {
   font-size: 0.875rem;
-  color: var(--color-text-muted, #6b7280);
+  color: var(--color-text-muted);
 }
 
 .metricValue {
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--color-text-base, #1f2937);
+  color: var(--color-text-base);
 }
 
 /* Encouragement Section */
 .encouragementSection {
-  background: linear-gradient(135deg, #fef3c7, #fde68a);
-  border-color: var(--color-warning, #eab308);
+  background: color-mix(in srgb, var(--color-surface) 85%, var(--color-achievement) 15%);
+  border-color: var(--color-achievement);
   text-align: center;
 }
 
 .encouragementText {
   font-size: 1rem;
   font-weight: 500;
-  color: var(--color-text-base, #1f2937);
+  color: var(--color-text-base);
   margin: 0;
 }
 
@@ -276,14 +277,14 @@
 .userInfo {
   text-align: center;
   padding: 0.75rem;
-  background: var(--color-surface-elevated, #f9fafb);
-  border-radius: 6px;
-  border: 1px solid var(--color-border-light, #f3f4f6);
+  background: color-mix(in srgb, var(--color-surface) 97%, var(--color-border) 3%);
+  border-radius: var(--radius);
+  border: 1px solid var(--color-border);
 }
 
 .userText {
   font-size: 0.75rem;
-  color: var(--color-text-muted, #6b7280);
+  color: var(--color-text-muted);
   font-weight: 500;
 }
 
@@ -342,7 +343,7 @@
 @media print {
   .paceTracker {
     break-inside: avoid;
-    border: 1px solid #000;
+    border: 1px solid var(--color-text-base);
     box-shadow: none;
   }
   
@@ -359,7 +360,7 @@
   }
   
   .progressFill {
-    background: #000;
+    background: var(--color-text-base);
   }
   
   .statusIcon {
