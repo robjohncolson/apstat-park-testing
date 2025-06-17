@@ -129,4 +129,99 @@ export const handlers = [
     ];
     return HttpResponse.json(mockProgress);
   }),
+
+  // --- Pace Tracker API endpoints ---
+  http.get(`${API_BASE_URL_3001}/v1/pace/:userId`, ({ params, request }) => {
+    console.log("MSW: Intercepted GET pace data (3001)");
+    const url = new URL(request.url);
+    const completedLessons = parseInt(url.searchParams.get('completedLessons') || '35', 10);
+    const totalLessons = parseInt(url.searchParams.get('totalLessons') || '89', 10);
+    
+    // Calculate mock exam date (next May 13th)
+    const currentYear = new Date().getFullYear();
+    const mayExamDate = new Date(currentYear, 4, 13, 8, 0, 0);
+    const examDate = new Date() > mayExamDate 
+      ? new Date(currentYear + 1, 4, 13, 8, 0, 0)
+      : mayExamDate;
+    
+    // Mock deadline (24 hours from now)
+    const currentDeadline = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    
+    // Mock metrics calculation
+    const lessonsRemaining = Math.max(0, totalLessons - completedLessons);
+    const daysUntilExam = Math.ceil((examDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+    const hoursUntilExam = (examDate.getTime() - Date.now()) / (1000 * 60 * 60);
+    const targetLessonsPerDay = lessonsRemaining / Math.max(1, daysUntilExam);
+    const hoursPerLesson = hoursUntilExam / Math.max(1, lessonsRemaining);
+    
+    return HttpResponse.json({
+      userId: parseInt(params.userId as string, 10),
+      currentDeadline: currentDeadline.toISOString(),
+      bufferHours: 5.5,
+      lastCompletedLessons: completedLessons,
+      lastLessonCompletion: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
+      examDate: examDate.toISOString(),
+      updatedAt: new Date().toISOString(),
+      wasLessonCompleted: false,
+      metrics: {
+        daysUntilExam,
+        hoursUntilExam,
+        lessonsRemaining,
+        totalLessons,
+        completedLessons,
+        lessonsPerDay: completedLessons > 0 ? completedLessons / 30 : 0, // Assume 30 days elapsed
+        hoursPerLesson,
+        isOnTrack: true,
+        paceStatus: "on-track" as const,
+        targetLessonsPerDay,
+        targetHoursPerDay: targetLessonsPerDay * hoursPerLesson,
+        nextDeadline: currentDeadline.toISOString(),
+        bufferHours: 5.5,
+        aheadLessons: 1.2
+      }
+    });
+  }),
+
+  http.put(`${API_BASE_URL_3001}/v1/pace/:userId`, async ({ params, request }) => {
+    console.log("MSW: Intercepted PUT pace data (3001)");
+    const body = await request.json() as { completedLessons: number; totalLessons: number; examDate?: string };
+    
+    // Calculate updated values based on the request body
+    const { completedLessons, totalLessons } = body;
+    const examDate = body.examDate ? new Date(body.examDate) : new Date(new Date().getFullYear(), 4, 13, 8, 0, 0);
+    const currentDeadline = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    
+    const lessonsRemaining = Math.max(0, totalLessons - completedLessons);
+    const daysUntilExam = Math.ceil((examDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+    const hoursUntilExam = (examDate.getTime() - Date.now()) / (1000 * 60 * 60);
+    const targetLessonsPerDay = lessonsRemaining / Math.max(1, daysUntilExam);
+    const hoursPerLesson = hoursUntilExam / Math.max(1, lessonsRemaining);
+    
+    return HttpResponse.json({
+      userId: parseInt(params.userId as string, 10),
+      currentDeadline: currentDeadline.toISOString(),
+      bufferHours: 6.0, // Slightly increased after update
+      lastCompletedLessons: completedLessons,
+      lastLessonCompletion: new Date().toISOString(), // Just updated
+      examDate: examDate.toISOString(),
+      updatedAt: new Date().toISOString(),
+      wasLessonCompleted: true,
+      metrics: {
+        daysUntilExam,
+        hoursUntilExam,
+        lessonsRemaining,
+        totalLessons,
+        completedLessons,
+        lessonsPerDay: completedLessons > 0 ? completedLessons / 30 : 0,
+        hoursPerLesson,
+        isOnTrack: true,
+        paceStatus: "ahead" as const, // Show as ahead after update
+        targetLessonsPerDay,
+        targetHoursPerDay: targetLessonsPerDay * hoursPerLesson,
+        nextDeadline: currentDeadline.toISOString(),
+        bufferHours: 6.0,
+        aheadLessons: 1.5
+      }
+    });
+  }),
 ];

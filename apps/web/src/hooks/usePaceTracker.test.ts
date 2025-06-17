@@ -1,207 +1,290 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { renderHook, act } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach, beforeAll, afterAll } from "vitest";
+import { renderHook, waitFor, act } from "@testing-library/react";
 import { usePaceTracker } from "./usePaceTracker";
-import * as timeTracking from "../utils/timeTracking";
-
-// Mock the timeTracking module
-vi.mock("../utils/timeTracking", () => ({
-  calculatePaceMetrics: vi.fn(),
-  formatPaceStatus: vi.fn(),
-  getEncouragementMessage: vi.fn(),
-  formatDeadlineCountdown: vi.fn(),
-  formatBufferStatus: vi.fn(),
-  formatTargetPace: vi.fn(),
-}));
 
 // Mock AuthContext
+const mockUser = { id: 123, username: "test-user-123" };
 vi.mock("../context/AuthContext", () => ({
-  useAuth: vi.fn(() => ({ user: { id: "test-user-123" } })),
+  useAuth: vi.fn(() => ({ user: mockUser })),
 }));
 
-const mockTimeTracking = vi.mocked(timeTracking);
+// Setup MSW for this test file
+import { setupServer } from 'msw/node';
+import { http, HttpResponse } from 'msw';
 
-const DEFAULT_METRICS = {
-  daysUntilExam: 20,
-  hoursUntilExam: 480,
-  lessonsRemaining: 15,
-  totalLessons: 50,
-  completedLessons: 35,
-  lessonsPerDay: 0,
-  hoursPerLesson: 1.5,
-  isOnTrack: true,
-  paceStatus: "on-track" as const,
-  targetLessonsPerDay: 0.75,
-  targetHoursPerDay: 1.125,
-  nextDeadline: new Date(Date.now() + 24 * 60 * 60 * 1000),
-  bufferHours: 2,
-  aheadLessons: 1.3,
-};
+const server = setupServer();
+
+beforeAll(() => server.listen());
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
 
 describe("usePaceTracker Hook", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    localStorage.clear();
     
-    // Set up default mock returns
-    mockTimeTracking.calculatePaceMetrics.mockReturnValue(DEFAULT_METRICS);
-    mockTimeTracking.formatPaceStatus.mockReturnValue("✅ On track!");
-    mockTimeTracking.getEncouragementMessage.mockReturnValue("💪 Keep it up!");
-    mockTimeTracking.formatDeadlineCountdown.mockReturnValue("1h 30m");
-    mockTimeTracking.formatBufferStatus.mockReturnValue("🟢 1.3 lessons ahead");
-    mockTimeTracking.formatTargetPace.mockReturnValue("0.8 per day");
-  });
-
-  afterEach(() => {
-    vi.clearAllTimers();
+    // Setup default successful API response
+    server.use(
+      http.get('http://localhost:3001/api/v1/pace/:userId', ({ params, request }) => {
+        const url = new URL(request.url);
+        const completedLessons = parseInt(url.searchParams.get('completedLessons') || '35', 10);
+        const totalLessons = parseInt(url.searchParams.get('totalLessons') || '89', 10);
+        
+        return HttpResponse.json({
+          userId: parseInt(params.userId as string, 10),
+          currentDeadline: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+          bufferHours: 5.5,
+          lastCompletedLessons: completedLessons,
+          lastLessonCompletion: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+          examDate: new Date(2024, 4, 13, 8, 0, 0).toISOString(),
+          updatedAt: new Date().toISOString(),
+          wasLessonCompleted: false,
+          metrics: {
+            daysUntilExam: 50,
+            hoursUntilExam: 1200,
+            lessonsRemaining: totalLessons - completedLessons,
+            totalLessons,
+            completedLessons,
+            lessonsPerDay: 1.2,
+            hoursPerLesson: 1.5,
+            isOnTrack: true,
+            paceStatus: "on-track" as const,
+            targetLessonsPerDay: 0.8,
+            targetHoursPerDay: 1.2,
+            nextDeadline: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+            bufferHours: 5.5,
+            aheadLessons: 1.2
+          }
+        });
+      })
+    );
   });
 
   describe("Initialization", () => {
-    it("should initialize with loading state", () => {
+    it("should start with loading state when user is authenticated", () => {
       const { result } = renderHook(() => 
-        usePaceTracker({ completedLessons: 35, totalLessons: 50 })
+        usePaceTracker({ completedLessons: 35, totalLessons: 89 })
       );
 
       expect(result.current.isLoading).toBe(true);
+      expect(result.current.isDisabled).toBe(false);
+      expect(result.current.paceData).toBeUndefined();
     });
 
-    it("should load data from localStorage with user-specific keys", async () => {
-      // Pre-populate localStorage with user-specific data
-      localStorage.setItem("apstat_pace_deadline_test-user-123", "2024-05-01T10:00:00.000Z");
-      localStorage.setItem("apstat_pace_buffer_test-user-123", "5.5");
+    it("should be disabled when user is not authenticated", () => {
+      // Mock no user
+      vi.mocked(require("../context/AuthContext").useAuth).mockReturnValue({ user: null });
 
       const { result } = renderHook(() => 
-        usePaceTracker({ completedLessons: 35, totalLessons: 50 })
+        usePaceTracker({ completedLessons: 35, totalLessons: 89 })
       );
 
-      // Wait for loading to complete
+      expect(result.current.isDisabled).toBe(true);
       expect(result.current.isLoading).toBe(false);
     });
 
-    it("should handle localStorage errors gracefully", () => {
-      // Mock localStorage to throw an error
-      const originalGetItem = localStorage.getItem;
-      localStorage.getItem = vi.fn(() => {
-        throw new Error("Storage access denied");
-      });
-
+    it("should fetch pace data successfully", async () => {
       const { result } = renderHook(() => 
-        usePaceTracker({ completedLessons: 35, totalLessons: 50 })
+        usePaceTracker({ completedLessons: 35, totalLessons: 89 })
       );
 
-      expect(result.current.error).toBe("Failed to load saved progress data");
-      
-      // Restore localStorage
-      localStorage.getItem = originalGetItem;
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(result.current.paceData).toBeDefined();
+      expect(result.current.paceData?.userId).toBe(123);
+      expect(result.current.paceData?.lastCompletedLessons).toBe(35);
+      expect(result.current.metrics).toBeDefined();
+      expect(result.current.metrics?.completedLessons).toBe(35);
+      expect(result.current.metrics?.totalLessons).toBe(89);
     });
   });
 
-  describe("Data Formatting", () => {
-    it("should return formatted data for display", () => {
-      const { result } = renderHook(() => 
-        usePaceTracker({ completedLessons: 35, totalLessons: 50 })
+  describe("API Error Handling", () => {
+    it("should handle API errors gracefully", async () => {
+      server.use(
+        http.get('http://localhost:3001/api/v1/pace/:userId', () => {
+          return HttpResponse.json({ error: "Server error" }, { status: 500 });
+        })
       );
 
-      expect(result.current.formattedData).toEqual({
-        paceStatus: "✅ On track!",
-        encouragementMessage: "💪 Keep it up!",
-        deadlineCountdown: "1h 30m",
-        bufferStatus: "🟢 1.3 lessons ahead",
-        targetPace: "0.8 per day",
+      const { result } = renderHook(() => 
+        usePaceTracker({ completedLessons: 35, totalLessons: 89 })
+      );
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
       });
+
+      expect(result.current.isError).toBe(true);
+      expect(result.current.error).toBeDefined();
     });
 
-    it("should pass correct parameters to calculatePaceMetrics", () => {
-      renderHook(() => 
-        usePaceTracker({ completedLessons: 10, totalLessons: 89 })
+    it("should handle network failures gracefully", async () => {
+      server.use(
+        http.get('http://localhost:3001/api/v1/pace/:userId', () => {
+          return HttpResponse.error();
+        })
       );
 
-      expect(mockTimeTracking.calculatePaceMetrics).toHaveBeenCalledWith(
-        10,
-        89,
-        undefined,
-        expect.any(Date),
-        0, // Initial buffer
-        undefined // Initial deadline
+      const { result } = renderHook(() => 
+        usePaceTracker({ completedLessons: 35, totalLessons: 89 })
       );
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(result.current.isError).toBe(true);
+      expect(result.current.error?.message).toContain('Backend API');
     });
   });
 
-  describe("Timer Updates", () => {
-    it("should update time periodically", () => {
-      vi.useFakeTimers();
-      
-      renderHook(() => 
-        usePaceTracker({ completedLessons: 35, totalLessons: 50 })
+  describe("Update Functionality", () => {
+    it("should update pace data successfully", async () => {
+      server.use(
+        http.put('http://localhost:3001/api/v1/pace/:userId', async ({ request }) => {
+          const body = await request.json() as any;
+          return HttpResponse.json({
+            userId: 123,
+            currentDeadline: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+            bufferHours: 6.0,
+            lastCompletedLessons: body.completedLessons,
+            lastLessonCompletion: new Date().toISOString(),
+            examDate: new Date(2024, 4, 13, 8, 0, 0).toISOString(),
+            updatedAt: new Date().toISOString(),
+            wasLessonCompleted: true,
+            metrics: {
+              daysUntilExam: 50,
+              hoursUntilExam: 1200,
+              lessonsRemaining: body.totalLessons - body.completedLessons,
+              totalLessons: body.totalLessons,
+              completedLessons: body.completedLessons,
+              lessonsPerDay: 1.2,
+              hoursPerLesson: 1.5,
+              isOnTrack: true,
+              paceStatus: "ahead" as const,
+              targetLessonsPerDay: 0.8,
+              targetHoursPerDay: 1.2,
+              nextDeadline: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+              bufferHours: 6.0,
+              aheadLessons: 1.5
+            }
+          });
+        })
       );
 
-      const initialCallCount = mockTimeTracking.calculatePaceMetrics.mock.calls.length;
+      const { result } = renderHook(() => 
+        usePaceTracker({ completedLessons: 35, totalLessons: 89 })
+      );
 
-      // Advance time by 5 seconds
-      act(() => {
-        vi.advanceTimersByTime(5000);
+      // Wait for initial load
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
       });
 
-      expect(mockTimeTracking.calculatePaceMetrics.mock.calls.length).toBeGreaterThan(initialCallCount);
-      
-      vi.useRealTimers();
+      // Test update
+      await act(async () => {
+        await result.current.updatePace({ 
+          completedLessons: 36, 
+          totalLessons: 89 
+        });
+      });
+
+      expect(result.current.paceData?.lastCompletedLessons).toBe(36);
+      expect(result.current.paceData?.wasLessonCompleted).toBe(true);
+      expect(result.current.metrics?.paceStatus).toBe("ahead");
+    });
+
+    it("should handle update errors", async () => {
+      server.use(
+        http.put('http://localhost:3001/api/v1/pace/:userId', () => {
+          return HttpResponse.json({ error: "Update failed" }, { status: 400 });
+        })
+      );
+
+      const { result } = renderHook(() => 
+        usePaceTracker({ completedLessons: 35, totalLessons: 89 })
+      );
+
+      // Wait for initial load
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      // Test failed update
+      await expect(async () => {
+        await act(async () => {
+          await result.current.updatePace({ 
+            completedLessons: 36, 
+            totalLessons: 89 
+          });
+        });
+      }).rejects.toThrow();
+
+      expect(result.current.updateError).toBeDefined();
     });
   });
 
-  describe("LocalStorage Persistence", () => {
-    it("should save data to localStorage with user-specific keys", () => {
+  describe("Computed Values", () => {
+    it("should calculate deadline-related values correctly", async () => {
       const { result } = renderHook(() => 
-        usePaceTracker({ completedLessons: 35, totalLessons: 50 })
+        usePaceTracker({ completedLessons: 35, totalLessons: 89 })
       );
 
-      // Trigger a state change that should persist
-      // This would happen through normal usage
-      expect(localStorage.setItem).toHaveBeenCalledWith(
-        "apstat_pace_buffer_test-user-123",
-        "0"
-      );
-    });
-
-    it("should handle localStorage write errors gracefully", () => {
-      // Mock localStorage.setItem to throw an error
-      const originalSetItem = localStorage.setItem;
-      localStorage.setItem = vi.fn(() => {
-        throw new Error("Storage quota exceeded");
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
       });
 
-      const { result } = renderHook(() => 
-        usePaceTracker({ completedLessons: 35, totalLessons: 50 })
-      );
-
-      // Should not crash and should set error state
-      expect(result.current.error).toBe("Failed to save progress data");
-      
-      // Restore localStorage
-      localStorage.setItem = originalSetItem;
+      expect(result.current.currentDeadline).toBeInstanceOf(Date);
+      expect(result.current.bufferHours).toBe(5.5);
+      expect(result.current.hoursUntilDeadline).toBeGreaterThan(0);
+      expect(result.current.isOverdue).toBe(false);
     });
-  });
 
-  describe("Props Changes", () => {
-    it("should update metrics when completedLessons changes", () => {
-      const { result, rerender } = renderHook(
-        ({ completedLessons, totalLessons }) => 
-          usePaceTracker({ completedLessons, totalLessons }),
-        {
-          initialProps: { completedLessons: 10, totalLessons: 50 }
-        }
+    it("should detect overdue deadlines", async () => {
+      // Mock a deadline in the past
+      server.use(
+        http.get('http://localhost:3001/api/v1/pace/:userId', () => {
+          return HttpResponse.json({
+            userId: 123,
+            currentDeadline: new Date(Date.now() - 60 * 60 * 1000).toISOString(), // 1 hour ago
+            bufferHours: 0,
+            lastCompletedLessons: 35,
+            lastLessonCompletion: null,
+            examDate: new Date(2024, 4, 13, 8, 0, 0).toISOString(),
+            updatedAt: new Date().toISOString(),
+            wasLessonCompleted: false,
+            metrics: {
+              daysUntilExam: 50,
+              hoursUntilExam: 1200,
+              lessonsRemaining: 54,
+              totalLessons: 89,
+              completedLessons: 35,
+              lessonsPerDay: 1.2,
+              hoursPerLesson: 1.5,
+              isOnTrack: false,
+              paceStatus: "behind" as const,
+              targetLessonsPerDay: 1.0,
+              targetHoursPerDay: 1.5,
+              nextDeadline: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+              bufferHours: 0,
+              aheadLessons: -0.5
+            }
+          });
+        })
       );
 
-      mockTimeTracking.calculatePaceMetrics.mockClear();
-
-      rerender({ completedLessons: 11, totalLessons: 50 });
-
-      expect(mockTimeTracking.calculatePaceMetrics).toHaveBeenCalledWith(
-        11,
-        50,
-        undefined,
-        expect.any(Date),
-        expect.any(Number),
-        undefined
+      const { result } = renderHook(() => 
+        usePaceTracker({ completedLessons: 35, totalLessons: 89 })
       );
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(result.current.isOverdue).toBe(true);
+      expect(result.current.hoursUntilDeadline).toBe(0);
     });
   });
 }); 
