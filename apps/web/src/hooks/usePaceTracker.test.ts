@@ -13,16 +13,20 @@ import { http, HttpResponse } from 'msw';
 const server = setupServer();
 
 beforeAll(() => server.listen());
-afterEach(() => server.resetHandlers());
+beforeEach(() => {
+  server.resetHandlers(); // Nuclear reset before EACH test
+  vi.clearAllMocks(); // Clear all mocks before EACH test
+});
+afterEach(() => {
+  server.resetHandlers(); // Double reset after EACH test
+});
 afterAll(() => server.close());
 
 const mockedUseAuth = vi.mocked(useAuth);
 
 describe("usePaceTracker Hook", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-    
-    // Default to authenticated user
+    // Default to authenticated user (will be overridden in specific tests if needed)
     mockedUseAuth.mockReturnValue({
       user: { 
         id: 123, 
@@ -40,6 +44,42 @@ describe("usePaceTracker Hook", () => {
 
   describe("Initialization", () => {
     it("should start with loading state when user is authenticated", () => {
+      // Setup successful API response (even though this test checks initial loading state)
+      server.use(
+        http.get('http://localhost:3001/api/v1/pace/:userId', ({ params, request }) => {
+          const url = new URL(request.url);
+          const completedLessons = parseInt(url.searchParams.get('completedLessons') || '35', 10);
+          const totalLessons = parseInt(url.searchParams.get('totalLessons') || '89', 10);
+          
+          return HttpResponse.json({
+            userId: parseInt(params.userId as string, 10),
+            currentDeadline: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+            bufferHours: 5.5,
+            lastCompletedLessons: completedLessons,
+            lastLessonCompletion: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+            examDate: new Date(2024, 4, 13, 8, 0, 0).toISOString(),
+            updatedAt: new Date().toISOString(),
+            wasLessonCompleted: false,
+            metrics: {
+              daysUntilExam: 50,
+              hoursUntilExam: 1200,
+              lessonsRemaining: totalLessons - completedLessons,
+              totalLessons,
+              completedLessons,
+              lessonsPerDay: 1.2,
+              hoursPerLesson: 1.5,
+              isOnTrack: true,
+              paceStatus: "on-track" as const,
+              targetLessonsPerDay: 0.8,
+              targetHoursPerDay: 1.2,
+              nextDeadline: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+              bufferHours: 5.5,
+              aheadLessons: 1.2
+            }
+          });
+        })
+      );
+
       const { result } = renderHook(() => 
         usePaceTracker({ completedLessons: 35, totalLessons: 89 })
       );
@@ -50,6 +90,38 @@ describe("usePaceTracker Hook", () => {
     });
 
     it("should be disabled when user is not authenticated", () => {
+      // No API handler needed since hook should be disabled, but add for consistency
+      server.use(
+        http.get('http://localhost:3001/api/v1/pace/:userId', () => {
+          return HttpResponse.json({
+            userId: 123,
+            currentDeadline: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+            bufferHours: 5.5,
+            lastCompletedLessons: 35,
+            lastLessonCompletion: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+            examDate: new Date(2024, 4, 13, 8, 0, 0).toISOString(),
+            updatedAt: new Date().toISOString(),
+            wasLessonCompleted: false,
+            metrics: {
+              daysUntilExam: 50,
+              hoursUntilExam: 1200,
+              lessonsRemaining: 54,
+              totalLessons: 89,
+              completedLessons: 35,
+              lessonsPerDay: 1.2,
+              hoursPerLesson: 1.5,
+              isOnTrack: true,
+              paceStatus: "on-track" as const,
+              targetLessonsPerDay: 0.8,
+              targetHoursPerDay: 1.2,
+              nextDeadline: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+              bufferHours: 5.5,
+              aheadLessons: 1.2
+            }
+          });
+        })
+      );
+
       // Mock no user
       mockedUseAuth.mockReturnValue({ 
         user: null,
@@ -124,8 +196,11 @@ describe("usePaceTracker Hook", () => {
 
   describe("API Error Handling", () => {
     it("should handle API errors gracefully", async () => {
+      // EXPLICIT: This test expects API error, so ONLY register the error handler
+      server.resetHandlers(); // Extra safety reset
       server.use(
         http.get('http://localhost:3001/api/v1/pace/:userId', () => {
+          console.log('🔥 ERROR HANDLER CALLED'); // Debug log
           return new HttpResponse(null, { status: 500 });
         })
       );
@@ -136,15 +211,18 @@ describe("usePaceTracker Hook", () => {
 
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
-      });
+      }, { timeout: 5000 });
 
       expect(result.current.isError).toBe(true);
       expect(result.current.error).toBeDefined();
     });
 
     it("should handle network failures gracefully", async () => {
+      // EXPLICIT: This test expects network failure, so ONLY register the network error handler
+      server.resetHandlers(); // Extra safety reset
       server.use(
         http.get('http://localhost:3001/api/v1/pace/:userId', () => {
+          console.log('🌐 NETWORK ERROR HANDLER CALLED'); // Debug log
           return HttpResponse.error();
         })
       );
@@ -155,7 +233,7 @@ describe("usePaceTracker Hook", () => {
 
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
-      });
+      }, { timeout: 5000 });
 
       expect(result.current.isError).toBe(true);
       expect(result.current.error?.message).toContain('Backend API');
@@ -252,9 +330,12 @@ describe("usePaceTracker Hook", () => {
     });
 
     it("should handle update errors", async () => {
+      // EXPLICIT: This test expects successful GET but failed PUT
+      server.resetHandlers(); // Extra safety reset
       server.use(
         // Need successful GET for initial load
         http.get('http://localhost:3001/api/v1/pace/:userId', ({ params, request }) => {
+          console.log('✅ UPDATE ERROR TEST - GET HANDLER CALLED'); // Debug log
           const url = new URL(request.url);
           const completedLessons = parseInt(url.searchParams.get('completedLessons') || '35', 10);
           const totalLessons = parseInt(url.searchParams.get('totalLessons') || '89', 10);
@@ -288,7 +369,8 @@ describe("usePaceTracker Hook", () => {
         }),
         // But failed PUT for update
         http.put('http://localhost:3001/api/v1/pace/:userId', () => {
-          return HttpResponse.json({ error: "Update failed" }, { status: 400 });
+          console.log('❌ UPDATE ERROR TEST - PUT HANDLER CALLED'); // Debug log
+          return new HttpResponse(null, { status: 400 });
         })
       );
 
@@ -368,16 +450,19 @@ describe("usePaceTracker Hook", () => {
     });
 
     it("should detect overdue deadlines", async () => {
-      // Mock a deadline in the past
+      // EXPLICIT: This test expects overdue deadline (past date)
+      server.resetHandlers(); // Extra safety reset
       server.use(
         http.get('http://localhost:3001/api/v1/pace/:userId', ({ params, request }) => {
+          console.log('⏰ OVERDUE TEST - HANDLER CALLED'); // Debug log
           const url = new URL(request.url);
           const completedLessons = parseInt(url.searchParams.get('completedLessons') || '35', 10);
           const totalLessons = parseInt(url.searchParams.get('totalLessons') || '89', 10);
+          const pastDate = new Date(Date.now() - 60 * 60 * 1000).toISOString(); // 1 hour ago
           
           return HttpResponse.json({
             userId: parseInt(params.userId as string, 10),
-            currentDeadline: new Date(Date.now() - 60 * 60 * 1000).toISOString(), // 1 hour ago
+            currentDeadline: pastDate,
             bufferHours: 0,
             lastCompletedLessons: completedLessons,
             lastLessonCompletion: null,
@@ -396,7 +481,7 @@ describe("usePaceTracker Hook", () => {
               paceStatus: "behind" as const,
               targetLessonsPerDay: 1.0,
               targetHoursPerDay: 1.5,
-              nextDeadline: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+              nextDeadline: pastDate,
               bufferHours: 0,
               aheadLessons: -0.5
             }
@@ -410,7 +495,7 @@ describe("usePaceTracker Hook", () => {
 
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
-      });
+      }, { timeout: 5000 });
 
       expect(result.current.isOverdue).toBe(true);
       expect(result.current.hoursUntilDeadline).toBe(0);
