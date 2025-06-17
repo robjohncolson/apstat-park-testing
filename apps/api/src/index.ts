@@ -237,7 +237,8 @@ setupProcessErrorHandlers();
 app.get("/health", healthCheckHandler);
 app.get("/metrics", metricsHandler);
 
-// Pace tracking routes
+// Pace tracking routes  
+// Note: Using pool directly until Knex is properly configured
 app.use("/api/v1/pace", createPaceRouter(pool));
 
 // Username generation lists

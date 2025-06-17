@@ -1,167 +1,292 @@
+import React, { useEffect } from "react";
+import { useAuth } from "../context/AuthContext";
 import { usePaceTracker } from "../hooks/usePaceTracker";
 import { CountdownTimer } from "./ui/CountdownTimer";
+import { ErrorBoundary } from "./ui/ErrorBoundary";
+import styles from "./PaceTracker.module.css";
 
 interface PaceTrackerProps {
   completedLessons: number;
   totalLessons: number;
+  examDate?: string;
   className?: string;
+  onLessonComplete?: () => void;
 }
 
-export function PaceTracker({
-  completedLessons,
-  totalLessons,
+function PaceTrackerContent({ 
+  completedLessons, 
+  totalLessons, 
+  examDate,
   className = "",
+  onLessonComplete,
 }: PaceTrackerProps) {
-  const { metrics, formattedData, isLoading, error } = usePaceTracker({
+  const { user, isAuthenticated } = useAuth();
+
+  // Use the new backend-integrated hook
+  const {
+    paceData,
+    metrics,
+    isLoading,
+    isError,
+    error,
+    updatePace,
+    isUpdating,
+    updateError,
+    isDisabled,
+    currentDeadline,
+    bufferHours,
+    hoursUntilDeadline,
+    isOverdue,
+  } = usePaceTracker({
     completedLessons,
     totalLessons,
+    examDate,
+    enabled: isAuthenticated,
   });
+
+  // Update pace when completedLessons changes
+  useEffect(() => {
+    if (!isDisabled && paceData) {
+      const lessonsDelta = Math.floor(completedLessons) - Math.floor(paceData.lastCompletedLessons);
+      
+      if (lessonsDelta > 0) {
+        updatePace({
+          completedLessons,
+          totalLessons,
+          examDate,
+        }).then(() => {
+          onLessonComplete?.();
+        }).catch((err) => {
+          console.error('Failed to update pace:', err);
+        });
+      }
+    }
+  }, [completedLessons, totalLessons, examDate, updatePace, isDisabled, paceData, onLessonComplete]);
+
+  // Handle non-authenticated users
+  if (!isAuthenticated || isDisabled) {
+    return (
+      <div className={`${styles.paceTracker} ${styles.disabled} ${className}`}>
+        <div className={styles.header}>
+          <h3 className={styles.title}>📊 Pace Tracker</h3>
+          <div className={styles.status}>
+            <span className={styles.statusText}>Disabled</span>
+          </div>
+        </div>
+        <div className={styles.content}>
+          <div className={styles.disabledMessage}>
+            <p>🔐 Please log in to track your pace</p>
+            <p className={styles.hint}>
+              Pace tracking helps you stay on schedule for the AP Statistics exam
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Loading state
   if (isLoading) {
     return (
-      <div className={`pace-tracker ${className}`} style={paceTrackerStyle}>
-        <div style={{ textAlign: 'center', padding: '2rem' }}>
-          <p>📊 Loading pace tracker...</p>
+      <div className={`${styles.paceTracker} ${styles.loading} ${className}`}>
+        <div className={styles.header}>
+          <h3 className={styles.title}>📊 Pace Tracker</h3>
+          <div className={styles.status}>
+            <span className={styles.statusText}>Loading...</span>
+          </div>
+        </div>
+        <div className={styles.content}>
+          <div className={styles.loadingSpinner}>
+            <div className={styles.spinner}></div>
+            <p>Loading your pace data...</p>
+          </div>
         </div>
       </div>
     );
   }
 
   // Error state
-  if (error) {
+  if (isError || updateError) {
+    const errorMessage = error?.message || updateError?.message || 'Unknown error';
     return (
-      <div className={`pace-tracker ${className}`} style={paceTrackerStyle}>
-        <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--color-danger)' }}>
-          <p>⚠️ {error}</p>
-          <p style={{ fontSize: '0.875rem', marginTop: '0.5rem' }}>
-            Please refresh the page to try again
-          </p>
+      <div className={`${styles.paceTracker} ${styles.error} ${className}`}>
+        <div className={styles.header}>
+          <h3 className={styles.title}>📊 Pace Tracker</h3>
+          <div className={styles.status}>
+            <span className={styles.statusText}>Error</span>
+          </div>
+        </div>
+        <div className={styles.content}>
+          <div className={styles.errorMessage}>
+            <p>⚠️ Unable to load pace data</p>
+            <p className={styles.errorDetails}>{errorMessage}</p>
+            <p className={styles.hint}>
+              Please check your connection and try refreshing the page
+            </p>
+          </div>
         </div>
       </div>
     );
   }
 
+  // No metrics available
+  if (!metrics) {
+    return (
+      <div className={`${styles.paceTracker} ${styles.noData} ${className}`}>
+        <div className={styles.header}>
+          <h3 className={styles.title}>📊 Pace Tracker</h3>
+          <div className={styles.status}>
+            <span className={styles.statusText}>No Data</span>
+          </div>
+        </div>
+        <div className={styles.content}>
+          <div className={styles.noDataMessage}>
+            <p>📈 Start completing lessons to track your pace!</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Determine status styling
+  const getStatusClass = () => {
+    if (isOverdue) return styles.overdue;
+    if (metrics.paceStatus === 'ahead') return styles.ahead;
+    if (metrics.paceStatus === 'on-track') return styles.onTrack;
+    if (metrics.paceStatus === 'behind') return styles.behind;
+    return '';
+  };
+
+  const getStatusIcon = () => {
+    if (isOverdue) return '🔴';
+    if (metrics.paceStatus === 'ahead') return '🟢';
+    if (metrics.paceStatus === 'on-track') return '🟡';
+    if (metrics.paceStatus === 'behind') return '🟠';
+    return '⚪';
+  };
+
+  const getStatusText = () => {
+    if (isOverdue) return 'Overdue';
+    if (isUpdating) return 'Updating...';
+    return metrics.paceStatus === 'on-track' ? 'On Track' : 
+           metrics.paceStatus.charAt(0).toUpperCase() + metrics.paceStatus.slice(1);
+  };
+
+  const getEncouragementMessage = () => {
+    const progress = completedLessons / totalLessons;
+    if (progress >= 0.9) return "🎉 Almost there! You're doing great!";
+    if (progress >= 0.75) return "💪 Keep up the excellent work!";
+    if (progress >= 0.5) return "🚀 You're making solid progress!";
+    if (progress >= 0.25) return "📚 Great start! Keep it up!";
+    return "🌟 Every lesson gets you closer to success!";
+  };
+
   return (
-    <div
-      className={`pace-tracker p-6 rounded-lg border-2 border-gray-200 shadow-lg ${className}`}
-      style={paceTrackerStyle}
-    >
-      {/* Primary - Soft Deadline Countdown */}
-      <div className="deadline-section mb-4 p-4 bg-green-50 rounded-lg border border-green-200">
-        <h3 className="text-lg font-semibold text-green-800 mb-2">
-          📅 Next Lesson Deadline
-        </h3>
-        <CountdownTimer
-          deadline={metrics.nextDeadline}
-          className="text-2xl font-mono text-green-900 mb-2"
-        />
-        <div className="text-sm text-green-700">
-          Complete next lesson by: {metrics.nextDeadline.toLocaleString()}
+    <div className={`${styles.paceTracker} ${getStatusClass()} ${className}`}>
+      <div className={styles.header}>
+        <h3 className={styles.title}>📊 Pace Tracker</h3>
+        <div className={styles.status}>
+          <span className={styles.statusIcon}>{getStatusIcon()}</span>
+          <span className={styles.statusText}>{getStatusText()}</span>
         </div>
       </div>
 
-      {/* Secondary - Buffer Status */}
-      <div className="buffer-section mb-4">
-        <div className="text-lg font-medium mb-1">
-          {formattedData.bufferStatus}
-        </div>
-        <div className="text-sm text-gray-600">
-          {formattedData.targetPace}
-        </div>
-      </div>
-
-      <h2 className="text-2xl font-bold mb-4 text-center">
-        📊 Study Pace Tracker
-      </h2>
-
-      {/* Progress Summary */}
-      <div className="progress-summary mb-6">
-        <div className="text-lg">
-          <strong>{metrics.completedLessons.toFixed(2)}</strong> of{" "}
-          <strong>{metrics.totalLessons}</strong> lessons completed
-        </div>
-        <div className="text-sm text-gray-600 mt-1">
-          {metrics.lessonsRemaining.toFixed(2)} lessons remaining
-        </div>
-      </div>
-
-      {/* Metrics Grid */}
-      <div style={metricRowStyle}>
-        <div style={metricItemStyle}>
-          <span style={metricLabelStyle}>Lessons Remaining</span>
-          <span style={metricValueStyle}>{metrics.lessonsRemaining}</span>
+      <div className={styles.content}>
+        {/* Progress Overview */}
+        <div className={styles.progressSection}>
+          <div className={styles.progressBar}>
+            <div 
+              className={styles.progressFill}
+              style={{ width: `${(completedLessons / totalLessons) * 100}%` }}
+            />
+          </div>
+          <div className={styles.progressText}>
+            {completedLessons.toFixed(1)} / {totalLessons} lessons
+            ({((completedLessons / totalLessons) * 100).toFixed(1)}%)
+          </div>
         </div>
 
-        <div style={metricItemStyle}>
-          <span style={metricLabelStyle}>Target Pace</span>
-          <span style={metricValueStyle}>
-            {metrics.targetLessonsPerDay.toFixed(1)} per day
+                 {/* Countdown Timer */}
+         {currentDeadline && (
+           <div className={styles.deadlineSection}>
+             <p className={styles.sectionLabel}>Next Lesson Deadline:</p>
+             <CountdownTimer 
+               deadline={currentDeadline}
+               className={styles.countdown}
+             />
+           </div>
+         )}
+
+        {/* Buffer Status */}
+        {bufferHours > 0 && (
+          <div className={styles.bufferSection}>
+            <p className={styles.sectionLabel}>Time Buffer:</p>
+            <div className={styles.bufferDisplay}>
+              <span className={styles.bufferAmount}>
+                +{bufferHours.toFixed(1)} hours
+              </span>
+              <span className={styles.bufferDescription}>
+                ({(bufferHours / 24).toFixed(1)} days ahead)
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Pace Metrics */}
+        <div className={styles.metricsSection}>
+          <div className={styles.metricRow}>
+            <span className={styles.metricLabel}>Days until exam:</span>
+            <span className={styles.metricValue}>{metrics.daysUntilExam}</span>
+          </div>
+          <div className={styles.metricRow}>
+            <span className={styles.metricLabel}>Lessons remaining:</span>
+            <span className={styles.metricValue}>{metrics.lessonsRemaining}</span>
+          </div>
+          <div className={styles.metricRow}>
+            <span className={styles.metricLabel}>Target pace:</span>
+            <span className={styles.metricValue}>
+              {metrics.targetLessonsPerDay.toFixed(2)} lessons/day
+            </span>
+          </div>
+        </div>
+
+        {/* Encouragement */}
+        <div className={styles.encouragementSection}>
+          <p className={styles.encouragementText}>
+            {getEncouragementMessage()}
+          </p>
+        </div>
+
+        {/* User Info */}
+        <div className={styles.userInfo}>
+          <span className={styles.userText}>
+            📝 Tracking progress for {user?.username}
           </span>
         </div>
-      </div>
-
-      <div style={paceStatusStyle}>{formattedData.paceStatus}</div>
-
-      <div style={encouragementStyle}>
-        {formattedData.encouragementMessage}
       </div>
     </div>
   );
 }
 
-// Styles extracted for reusability
-const paceTrackerStyle: React.CSSProperties = {
-  background: "var(--color-surface)",
-  border: "2px solid var(--color-border)",
-  borderRadius: "12px",
-  padding: "1rem",
-  marginBottom: "1rem",
-};
-
-const metricRowStyle: React.CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "1fr 1fr",
-  gap: "1rem",
-  marginBottom: "0.75rem",
-};
-
-const metricItemStyle: React.CSSProperties = {
-  textAlign: "center",
-  padding: "0.5rem",
-  background: "var(--color-surface)",
-  borderRadius: "8px",
-  border: "1px solid var(--color-border)",
-};
-
-const metricLabelStyle: React.CSSProperties = {
-  display: "block",
-  fontSize: "0.8rem",
-  color: "var(--color-text-muted)",
-  marginBottom: "0.25rem",
-};
-
-const metricValueStyle: React.CSSProperties = {
-  display: "block",
-  fontWeight: 600,
-  fontSize: "1.1rem",
-  color: "var(--color-text-base)",
-};
-
-const paceStatusStyle: React.CSSProperties = {
-  textAlign: "center",
-  fontSize: "0.9rem",
-  fontWeight: 500,
-  padding: "0.5rem",
-  marginBottom: "0.5rem",
-  background: "var(--color-surface)",
-  borderRadius: "8px",
-  border: "1px solid var(--color-border)",
-};
-
-const encouragementStyle: React.CSSProperties = {
-  textAlign: "center",
-  fontSize: "0.85rem",
-  color: "var(--color-text-muted)",
-  fontStyle: "italic",
-};
+export function PaceTracker(props: PaceTrackerProps) {
+  return (
+    <ErrorBoundary fallback={
+      <div className={`${styles.paceTracker} ${styles.error} ${props.className || ""}`}>
+        <div className={styles.header}>
+          <h3 className={styles.title}>📊 Pace Tracker</h3>
+          <div className={styles.status}>
+            <span className={styles.statusText}>Error</span>
+          </div>
+        </div>
+        <div className={styles.content}>
+          <div className={styles.errorMessage}>
+            <p>⚠️ Pace Tracker encountered an error</p>
+            <p className={styles.hint}>Please refresh the page to try again</p>
+          </div>
+        </div>
+      </div>
+    }>
+      <PaceTrackerContent {...props} />
+    </ErrorBoundary>
+  );
+}

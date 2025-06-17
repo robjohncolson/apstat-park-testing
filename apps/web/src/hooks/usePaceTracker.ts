@@ -1,171 +1,211 @@
-import { useState, useEffect, useRef } from "react";
-import { useAuth } from "../context/AuthContext";
-import {
-  calculatePaceMetrics,
-  formatPaceStatus,
-  getEncouragementMessage,
-  formatDeadlineCountdown,
-  formatBufferStatus,
-  formatTargetPace,
-  type PaceMetrics,
-} from "../utils/timeTracking";
+import { useState, useEffect, useCallback } from 'react';
+import { useAuth } from '../context/AuthContext';
 
-interface UsePaceTrackerProps {
+// API Types
+interface PaceData {
+  userId: number;
+  currentDeadline: string | null;
+  bufferHours: number;
+  lastCompletedLessons: number;
+  lastLessonCompletion: string | null;
+  examDate: string;
+  updatedAt: string;
+  metrics?: APIPaceMetrics;
+  wasLessonCompleted?: boolean;
+}
+
+interface APIPaceMetrics {
+  daysUntilExam: number;
+  hoursUntilExam: number;
+  lessonsRemaining: number;
+  totalLessons: number;
+  completedLessons: number;
+  lessonsPerDay: number;
+  hoursPerLesson: number;
+  isOnTrack: boolean;
+  paceStatus: "ahead" | "on-track" | "behind" | "unknown";
+  targetLessonsPerDay: number;
+  targetHoursPerDay: number;
+  nextDeadline: string;
+  bufferHours: number;
+  aheadLessons: number;
+}
+
+interface UpdatePaceParams {
   completedLessons: number;
   totalLessons: number;
+  examDate?: string;
 }
 
-interface PaceTrackerData {
-  metrics: PaceMetrics;
-  formattedData: {
-    paceStatus: string;
-    encouragementMessage: string;
-    deadlineCountdown: string;
-    bufferStatus: string;
-    targetPace: string;
-  };
+// API Base URL
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
+// API Functions
+async function fetchPaceData(userId: number, completedLessons?: number, totalLessons?: number): Promise<PaceData> {
+  let url = `${API_BASE_URL}/api/v1/pace/${userId}`;
+  
+  if (completedLessons !== undefined && totalLessons !== undefined) {
+    url += `?completedLessons=${completedLessons}&totalLessons=${totalLessons}`;
+  }
+
+  const response = await fetch(url);
+  
+  if (!response.ok) {
+    throw new Error(`Failed to fetch pace data: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+async function updatePaceData(userId: number, params: UpdatePaceParams): Promise<PaceData> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/pace/${userId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(params),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to update pace data: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+// Hook Types
+interface UsePaceTrackerOptions {
+  completedLessons: number;
+  totalLessons: number;
+  examDate?: string;
+  enabled?: boolean;
+}
+
+interface UsePaceTrackerReturn {
+  // Data
+  paceData: PaceData | undefined;
+  metrics: APIPaceMetrics | undefined;
+  
+  // State
   isLoading: boolean;
-  error?: string;
+  isError: boolean;
+  error: Error | null;
+  
+  // Actions
+  updatePace: (params: UpdatePaceParams) => Promise<void>;
+  isUpdating: boolean;
+  updateError: Error | null;
+  
+  // Computed values
+  isDisabled: boolean;
+  currentDeadline: Date | null;
+  bufferHours: number;
+  hoursUntilDeadline: number;
+  isOverdue: boolean;
 }
 
-export function usePaceTracker({ completedLessons, totalLessons }: UsePaceTrackerProps): PaceTrackerData {
+// Mock implementation for when React Query is not available
+export function usePaceTracker(options: UsePaceTrackerOptions): UsePaceTrackerReturn {
   const { user } = useAuth();
   
-  // User-specific localStorage keys
-  const userId = user?.id || 'anonymous';
-  const deadlineKey = `apstat_pace_deadline_${userId}`;
-  const bufferKey = `apstat_pace_buffer_${userId}`;
+  const {
+    completedLessons,
+    totalLessons,
+    examDate,
+    enabled = true,
+  } = options;
 
-  // State
-  const [now, setNow] = useState(new Date());
-  const [fixedDeadline, setFixedDeadline] = useState<Date | undefined>();
-  const [bufferHours, setBufferHours] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string>();
-  
-  // Ref to track previous completed lessons
-  const prevCompletedLessonsRef = useRef(completedLessons);
+  // State management
+  const [paceData, setPaceData] = useState<PaceData | undefined>();
+  const [isLoading, setIsLoading] = useState(false);
+  const [isError, setIsError] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [updateError, setUpdateError] = useState<Error | null>(null);
 
-  // Load initial values from localStorage
-  useEffect(() => {
+  // Disable for anonymous users or when explicitly disabled
+  const isDisabled = !user?.id || !enabled;
+
+  // Fetch data function
+  const fetchData = useCallback(async () => {
+    if (isDisabled) return;
+    
     try {
-      const savedDeadline = localStorage.getItem(deadlineKey);
-      if (savedDeadline) {
-        const deadline = new Date(savedDeadline);
-        if (!isNaN(deadline.getTime())) {
-          setFixedDeadline(deadline);
-        }
-      }
-
-      const savedBuffer = localStorage.getItem(bufferKey);
-      if (savedBuffer) {
-        const buffer = parseFloat(savedBuffer);
-        if (!isNaN(buffer)) {
-          setBufferHours(buffer);
-        }
-      }
+      setIsLoading(true);
+      setIsError(false);
+      setError(null);
+      
+      const data = await fetchPaceData(user!.id, completedLessons, totalLessons);
+      setPaceData(data);
     } catch (err) {
-      console.warn('Failed to load pace tracker data from localStorage:', err);
-      setError('Failed to load saved progress data');
+      const error = err instanceof Error ? err : new Error('Unknown error');
+      setIsError(true);
+      setError(error);
+      console.error('Failed to fetch pace data:', error);
     } finally {
       setIsLoading(false);
     }
-  }, [deadlineKey, bufferKey]);
+  }, [isDisabled, user?.id, completedLessons, totalLessons]);
 
-  // Persist deadline when it changes
-  useEffect(() => {
-    if (!isLoading) {
-      try {
-        if (fixedDeadline) {
-          localStorage.setItem(deadlineKey, fixedDeadline.toISOString());
-        } else {
-          localStorage.removeItem(deadlineKey);
-        }
-      } catch (err) {
-        console.warn('Failed to save deadline to localStorage:', err);
-        setError('Failed to save progress data');
-      }
+  // Update pace function
+  const updatePace = useCallback(async (params: UpdatePaceParams) => {
+    if (isDisabled) {
+      throw new Error('Pace tracking is disabled for anonymous users');
     }
-  }, [fixedDeadline, deadlineKey, isLoading]);
-
-  // Persist buffer when it changes
-  useEffect(() => {
-    if (!isLoading) {
-      try {
-        localStorage.setItem(bufferKey, bufferHours.toString());
-      } catch (err) {
-        console.warn('Failed to save buffer to localStorage:', err);
-        setError('Failed to save progress data');
-      }
-    }
-  }, [bufferHours, bufferKey, isLoading]);
-
-  // Update timer (reduced frequency for better performance)
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setNow(new Date());
-    }, 5000);
-
-    return () => clearInterval(timer);
-  }, []);
-
-  // Handle lesson completion and buffer accumulation
-  useEffect(() => {
-    const prevFloored = Math.floor(prevCompletedLessonsRef.current);
-    const currentFloored = Math.floor(completedLessons);
-
-    // Only trigger if we've crossed a whole number threshold
-    if (currentFloored > prevFloored && fixedDeadline) {
-      const currentTime = new Date();
+    
+    try {
+      setIsUpdating(true);
+      setUpdateError(null);
       
-      // Calculate time saved for the lesson that was just completed
-      const timeSavedInHours = (fixedDeadline.getTime() - currentTime.getTime()) / (1000 * 60 * 60);
-      const lessonsFinished = currentFloored - prevFloored;
-
-      // Add the saved time to buffer and cap it at 336 hours (14 days)
-      setBufferHours((prevBuffer) => {
-        const newBuffer = prevBuffer + timeSavedInHours * lessonsFinished;
-        return Math.min(newBuffer, 336);
-      });
-
-      // Reset the deadline so a new one is calculated
-      setFixedDeadline(undefined);
+      const data = await updatePaceData(user!.id, params);
+      setPaceData(data);
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Unknown error');
+      setUpdateError(error);
+      console.error('Failed to update pace:', error);
+      throw error;
+    } finally {
+      setIsUpdating(false);
     }
+  }, [isDisabled, user?.id]);
 
-    // Always update the ref to the latest value for the next check
-    prevCompletedLessonsRef.current = completedLessons;
-  }, [completedLessons, fixedDeadline]);
-
-  // Calculate metrics
-  const metrics = calculatePaceMetrics(
-    completedLessons,
-    totalLessons,
-    undefined,
-    now,
-    bufferHours,
-    fixedDeadline,
-  );
-
-  // Set a new fixed deadline only if one doesn't exist
+  // Initial data fetch
   useEffect(() => {
-    if (!fixedDeadline && !isLoading) {
-      setFixedDeadline(metrics.nextDeadline);
+    if (!isDisabled) {
+      fetchData();
     }
-  }, [fixedDeadline, metrics.nextDeadline, isLoading]);
+  }, [fetchData, isDisabled]);
 
-  // Format data for display
-  const formattedData = {
-    paceStatus: formatPaceStatus(metrics),
-    encouragementMessage: getEncouragementMessage(metrics.completedLessons / metrics.totalLessons),
-    deadlineCountdown: formatDeadlineCountdown(metrics.nextDeadline, now),
-    bufferStatus: formatBufferStatus(metrics),
-    targetPace: formatTargetPace(metrics.targetLessonsPerDay),
-  };
+  // Computed values
+  const currentDeadline = paceData?.currentDeadline ? new Date(paceData.currentDeadline) : null;
+  const bufferHours = paceData?.bufferHours || 0;
+  
+  const hoursUntilDeadline = currentDeadline 
+    ? Math.max(0, (currentDeadline.getTime() - Date.now()) / (1000 * 60 * 60))
+    : 0;
+    
+  const isOverdue = currentDeadline ? Date.now() > currentDeadline.getTime() : false;
 
   return {
-    metrics,
-    formattedData,
+    // Data
+    paceData,
+    metrics: paceData?.metrics,
+    
+    // State
     isLoading,
+    isError,
     error,
+    
+    // Actions
+    updatePace,
+    isUpdating,
+    updateError,
+    
+    // Computed values
+    isDisabled,
+    currentDeadline,
+    bufferHours,
+    hoursUntilDeadline,
+    isOverdue,
   };
 } 
