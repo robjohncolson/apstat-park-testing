@@ -9,9 +9,13 @@ vi.mock("../hooks/usePaceTracker", () => ({
 }));
 
 // Mock the AuthContext
-vi.mock("../context/AuthContext", () => ({
-  useAuth: vi.fn(),
-}));
+vi.mock("../context/AuthContext", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../context/AuthContext")>();
+  return {
+    ...actual, // Keep all the real exports (like AuthProvider)
+    useAuth: vi.fn(), // But specifically override useAuth with a mock function
+  };
+});
 
 import { usePaceTracker } from "../hooks/usePaceTracker";
 import { useAuth } from "../context/AuthContext";
@@ -65,10 +69,17 @@ beforeEach(() => {
   
   // Mock authenticated user by default
   mockedUseAuth.mockReturnValue({
-    user: { id: 123, username: "test-user" },
+    user: { 
+      id: 123, 
+      username: "test-user",
+      created_at: "2024-01-01T00:00:00Z",
+      last_sync: "2024-01-01T00:00:00Z"
+    },
     isAuthenticated: true,
+    isLoading: false,
     login: vi.fn(),
     logout: vi.fn(),
+    generateUsername: vi.fn(),
   });
   
   mockedUsePaceTracker.mockReturnValue(DEFAULT_HOOK_DATA);
@@ -115,13 +126,15 @@ describe("PaceTracker Component", () => {
 
   describe("Unauthenticated User - Disabled State", () => {
     beforeEach(() => {
-      // Mock unauthenticated user
-      mockedUseAuth.mockReturnValue({
-        user: null,
-        isAuthenticated: false,
-        login: vi.fn(),
-        logout: vi.fn(),
-      });
+          // Mock unauthenticated user
+    mockedUseAuth.mockReturnValue({
+      user: null,
+      isAuthenticated: false,
+      isLoading: false,
+      login: vi.fn(),
+      logout: vi.fn(),
+      generateUsername: vi.fn(),
+    });
 
       // Mock disabled hook state
       mockedUsePaceTracker.mockReturnValue({

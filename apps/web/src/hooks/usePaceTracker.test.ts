@@ -1,12 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach, beforeAll, afterAll } from "vitest";
 import { renderHook, waitFor, act } from "@testing-library/react";
 import { usePaceTracker } from "./usePaceTracker";
+import { useAuth } from "../context/AuthContext";
 
 // Mock AuthContext
-const mockUser = { id: 123, username: "test-user-123" };
-vi.mock("../context/AuthContext", () => ({
-  useAuth: vi.fn(() => ({ user: mockUser })),
-}));
+vi.mock("../context/AuthContext");
 
 // Setup MSW for this test file
 import { setupServer } from 'msw/node';
@@ -18,9 +16,26 @@ beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
+const mockedUseAuth = vi.mocked(useAuth);
+
 describe("usePaceTracker Hook", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    
+    // Default to authenticated user
+    mockedUseAuth.mockReturnValue({
+      user: { 
+        id: 123, 
+        username: "test-user-123",
+        created_at: "2024-01-01T00:00:00Z",
+        last_sync: "2024-01-01T00:00:00Z"
+      },
+      isAuthenticated: true,
+      isLoading: false,
+      login: vi.fn(),
+      logout: vi.fn(),
+      generateUsername: vi.fn(),
+    });
     
     // Setup default successful API response
     server.use(
@@ -72,7 +87,14 @@ describe("usePaceTracker Hook", () => {
 
     it("should be disabled when user is not authenticated", () => {
       // Mock no user
-      vi.mocked(require("../context/AuthContext").useAuth).mockReturnValue({ user: null });
+      mockedUseAuth.mockReturnValue({ 
+        user: null,
+        isAuthenticated: false,
+        isLoading: false,
+        login: vi.fn(),
+        logout: vi.fn(),
+        generateUsername: vi.fn(),
+      });
 
       const { result } = renderHook(() => 
         usePaceTracker({ completedLessons: 35, totalLessons: 89 })
