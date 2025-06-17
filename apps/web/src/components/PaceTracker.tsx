@@ -111,9 +111,12 @@ export function PaceTracker({
 
     // Only trigger if we've crossed a whole number threshold
     if (currentFloored > prevFloored && fixedDeadline) {
+      // Get the current time when the effect actually runs to avoid stale closures
+      const currentTime = new Date();
+      
       // Calculate how much time was saved for the lesson that was just completed
       const timeSavedInHours =
-        (fixedDeadline.getTime() - now.getTime()) / (1000 * 60 * 60);
+        (fixedDeadline.getTime() - currentTime.getTime()) / (1000 * 60 * 60);
 
       // The number of whole lessons just completed (usually 1)
       const lessonsFinished = currentFloored - prevFloored;
@@ -130,7 +133,7 @@ export function PaceTracker({
 
     // Always update the ref to the latest value for the next check
     prevCompletedLessonsRef.current = completedLessons;
-  }, [completedLessons, fixedDeadline, now]);
+  }, [completedLessons, fixedDeadline]);
 
   // Pass the STATEFUL buffer to the calculation function
   const metrics = calculatePaceMetrics(
