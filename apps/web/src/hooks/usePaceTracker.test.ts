@@ -126,7 +126,7 @@ describe("usePaceTracker Hook", () => {
     it("should handle API errors gracefully", async () => {
       server.use(
         http.get('http://localhost:3001/api/v1/pace/:userId', () => {
-          return HttpResponse.json({ error: "Server error" }, { status: 500 });
+          return new HttpResponse(null, { status: 500 });
         })
       );
 
@@ -267,12 +267,16 @@ describe("usePaceTracker Hook", () => {
     it("should detect overdue deadlines", async () => {
       // Mock a deadline in the past
       server.use(
-        http.get('http://localhost:3001/api/v1/pace/:userId', () => {
+        http.get('http://localhost:3001/api/v1/pace/:userId', ({ params, request }) => {
+          const url = new URL(request.url);
+          const completedLessons = parseInt(url.searchParams.get('completedLessons') || '35', 10);
+          const totalLessons = parseInt(url.searchParams.get('totalLessons') || '89', 10);
+          
           return HttpResponse.json({
-            userId: 123,
+            userId: parseInt(params.userId as string, 10),
             currentDeadline: new Date(Date.now() - 60 * 60 * 1000).toISOString(), // 1 hour ago
             bufferHours: 0,
-            lastCompletedLessons: 35,
+            lastCompletedLessons: completedLessons,
             lastLessonCompletion: null,
             examDate: new Date(2024, 4, 13, 8, 0, 0).toISOString(),
             updatedAt: new Date().toISOString(),
@@ -280,9 +284,9 @@ describe("usePaceTracker Hook", () => {
             metrics: {
               daysUntilExam: 50,
               hoursUntilExam: 1200,
-              lessonsRemaining: 54,
-              totalLessons: 89,
-              completedLessons: 35,
+              lessonsRemaining: totalLessons - completedLessons,
+              totalLessons,
+              completedLessons,
               lessonsPerDay: 1.2,
               hoursPerLesson: 1.5,
               isOnTrack: false,

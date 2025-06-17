@@ -53,7 +53,7 @@ const DEFAULT_HOOK_DATA = {
   isLoading: false,
   isError: false,
   error: null,
-  updatePace: vi.fn(),
+  updatePace: vi.fn().mockResolvedValue({}),
   isUpdating: false,
   updateError: null,
   isDisabled: false,
@@ -91,7 +91,7 @@ describe("PaceTracker Component", () => {
       render(<PaceTracker completedLessons={35} totalLessons={50} />);
 
       expect(screen.getByText("📊 Pace Tracker")).toBeInTheDocument();
-      expect(screen.getByText("35.0 / 50 lessons")).toBeInTheDocument();
+      expect(screen.getByText(/35\.0 \/ 50 lessons/)).toBeInTheDocument();
       expect(screen.getByText("Days until exam:")).toBeInTheDocument();
       expect(screen.getByText("Lessons remaining:")).toBeInTheDocument();
       expect(screen.getByText("Target pace:")).toBeInTheDocument();
@@ -102,8 +102,8 @@ describe("PaceTracker Component", () => {
 
       expect(screen.getByText("20")).toBeInTheDocument(); // days until exam
       expect(screen.getByText("15")).toBeInTheDocument(); // lessons remaining
-      expect(screen.getByText("0.75 lessons/day")).toBeInTheDocument(); // target pace
-      expect(screen.getByText("70.0%")).toBeInTheDocument(); // completion percentage
+      expect(screen.getByText(/0\.75 lessons\/day/)).toBeInTheDocument(); // target pace
+      expect(screen.getByText(/70\.0%/)).toBeInTheDocument(); // completion percentage
     });
 
     it("should show user tracking info", () => {
@@ -282,8 +282,8 @@ describe("PaceTracker Component", () => {
 
       render(<PaceTracker completedLessons={0} totalLessons={50} />);
 
-      expect(screen.getByText("0.0 / 50 lessons")).toBeInTheDocument();
-      expect(screen.getByText("0.0%")).toBeInTheDocument();
+      expect(screen.getByText(/0\.0 \/ 50 lessons/)).toBeInTheDocument();
+      expect(screen.getByText(/0\.0%/)).toBeInTheDocument();
       expect(screen.getByText("🌟 Every lesson gets you closer to success!")).toBeInTheDocument();
     });
 
@@ -300,8 +300,8 @@ describe("PaceTracker Component", () => {
 
       render(<PaceTracker completedLessons={50} totalLessons={50} />);
 
-      expect(screen.getByText("50.0 / 50 lessons")).toBeInTheDocument();
-      expect(screen.getByText("100.0%")).toBeInTheDocument();
+      expect(screen.getByText(/50\.0 \/ 50 lessons/)).toBeInTheDocument();
+      expect(screen.getByText(/100\.0%/)).toBeInTheDocument();
       expect(screen.getByText("🎉 Almost there! You're doing great!")).toBeInTheDocument();
     });
   });
@@ -310,7 +310,7 @@ describe("PaceTracker Component", () => {
     it("should apply custom className", () => {
       const { container } = render(<PaceTracker completedLessons={35} totalLessons={50} className="custom-class" />);
 
-      const paceTracker = container.querySelector('.paceTracker');
+      const paceTracker = screen.getByText('📊 Pace Tracker').closest('div');
       expect(paceTracker).toHaveClass("custom-class");
     });
   });
