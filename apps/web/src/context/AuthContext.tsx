@@ -70,8 +70,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const generateUsername = async (): Promise<string> => {
     try {
+      const apiUrl = import.meta.env.VITE_API_BASE_URL || '';
       const response = await fetch(
-        "http://localhost:3000/api/generate-username",
+        `${apiUrl}/api/generate-username`,
       );
       const data = await response.json();
       return data.username;
@@ -97,8 +98,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // Try to create user via API, but fall back to offline mode if it fails
       let user;
       try {
+        const apiUrl = import.meta.env.VITE_API_BASE_URL || '';
         const response = await fetch(
-          "http://localhost:3000/api/users/get-or-create",
+          `${apiUrl}/api/users/get-or-create`,
           {
             method: "POST",
             headers: {

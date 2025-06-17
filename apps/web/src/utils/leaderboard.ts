@@ -22,7 +22,8 @@ export async function fetchLeaderboardData(currentUsername?: string): Promise<{
   error: string | null;
 }> {
   try {
-    const response = await fetch("/api/leaderboard");
+    const apiUrl = import.meta.env.VITE_API_BASE_URL || '';
+    const response = await fetch(`${apiUrl}/api/leaderboard`);
 
     if (!response.ok) {
       throw new Error("Failed to fetch leaderboard data.");
