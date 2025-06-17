@@ -24,7 +24,10 @@ export function LeaderboardPage() {
         setIsLoading(true);
         setError(null);
         const apiUrl = import.meta.env.VITE_API_BASE_URL || '';
-        const response = await fetch(`${apiUrl}/api/leaderboard`);
+        const fullUrl = `${apiUrl}/api/leaderboard`;
+        console.log('LeaderboardPage - API Base URL:', apiUrl);
+        console.log('LeaderboardPage - Full API URL:', fullUrl);
+        const response = await fetch(fullUrl);
         if (!response.ok) {
           throw new Error("Failed to fetch leaderboard data.");
         }
