@@ -108,21 +108,37 @@ function PaceTrackerContent({
   // Error state
   if (isError || updateError) {
     const errorMessage = error?.message || updateError?.message || 'Unknown error';
+    const isBackendDown = errorMessage.includes('Backend API is not running');
+    
     return (
       <div className={`${styles.paceTracker} ${styles.error} ${className}`}>
         <div className={styles.header}>
           <h3 className={styles.title}>📊 Pace Tracker</h3>
           <div className={styles.status}>
-            <span className={styles.statusText}>Error</span>
+            <span className={styles.statusText}>{isBackendDown ? 'Backend Offline' : 'Error'}</span>
           </div>
         </div>
         <div className={styles.content}>
           <div className={styles.errorMessage}>
-            <p>⚠️ Unable to load pace data</p>
-            <p className={styles.errorDetails}>{errorMessage}</p>
-            <p className={styles.hint}>
-              Please check your connection and try refreshing the page
-            </p>
+            <p>{isBackendDown ? '🔌 Backend API is offline' : '⚠️ Unable to load pace data'}</p>
+            {isBackendDown ? (
+              <div>
+                <p className={styles.hint}>
+                  To enable pace tracking, start the API server:
+                </p>
+                <p className={styles.errorDetails}>cd apps/api && npm run dev</p>
+                <p className={styles.hint}>
+                  Or continue using the app without pace tracking
+                </p>
+              </div>
+            ) : (
+              <div>
+                <p className={styles.errorDetails}>{errorMessage}</p>
+                <p className={styles.hint}>
+                  Please check your connection and try refreshing the page
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>

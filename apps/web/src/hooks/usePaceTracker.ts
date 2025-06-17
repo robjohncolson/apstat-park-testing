@@ -139,9 +139,19 @@ export function usePaceTracker(options: UsePaceTrackerOptions): UsePaceTrackerRe
       setPaceData(data);
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Unknown error');
+      
+      // Check if this is a connection error (backend not running)
+      if (error.message.includes('Failed to fetch') || error.message.includes('ERR_CONNECTION_REFUSED')) {
+        // Provide a more user-friendly error message
+        const friendlyError = new Error('Backend API is not running. Please start the API server or use offline mode.');
+        setError(friendlyError);
+        console.warn('Backend API unavailable. To start the API server, run: cd apps/api && npm run dev');
+      } else {
+        setError(error);
+        console.error('Failed to fetch pace data:', error);
+      }
+      
       setIsError(true);
-      setError(error);
-      console.error('Failed to fetch pace data:', error);
     } finally {
       setIsLoading(false);
     }

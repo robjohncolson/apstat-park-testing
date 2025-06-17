@@ -40,7 +40,7 @@ const io = new Server(server, {
     methods: ["GET", "POST"],
   },
 });
-const port = parseInt(process.env.PORT || "3000", 10);
+const port = parseInt(process.env.PORT || "3001", 10);
 
 // Add Winston request logger middleware
 app.use(requestLogger);
