@@ -310,6 +310,36 @@ export class MigrationRunner {
       pending: pendingMigrations,
     };
   }
+
+  /**
+   * Mark a migration as applied without running it
+   */
+  async markMigrationAsApplied(migrationId: string): Promise<void> {
+    await this.initializeMigrationsTable();
+
+    const availableMigrations = await this.getAvailableMigrations();
+    const migration = availableMigrations.find((m) => m.id === migrationId);
+
+    if (!migration) {
+      throw new Error(`Migration not found: ${migrationId}`);
+    }
+
+    const client = await this.pool.connect();
+    try {
+      await client.query(
+        `
+        INSERT INTO schema_migrations (migration_id, migration_name)
+        VALUES ($1, $2)
+        ON CONFLICT (migration_id) DO NOTHING
+      `,
+        [migration.id, migration.name],
+      );
+
+      appLogger.info(`Marked migration as applied: ${migration.id}_${migration.name}`);
+    } finally {
+      client.release();
+    }
+  }
 }
 
 export default MigrationRunner;

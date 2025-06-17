@@ -1,4 +1,5 @@
 #!/usr/bin/env ts-node
+import "dotenv/config";
 import { Pool } from "pg";
 import * as fs from "fs";
 import * as path from "path";
@@ -176,6 +177,28 @@ async function resetDatabase(): Promise<void> {
 }
 
 /**
+ * Mark existing migrations as applied
+ */
+async function markExistingMigrationsAsApplied(): Promise<void> {
+  try {
+    console.log("🏷️  Marking existing migrations as applied...");
+    
+    // Get all available migrations
+    const availableMigrations = await migrationRunner.getAvailableMigrations();
+    
+    for (const migration of availableMigrations) {
+      await migrationRunner.markMigrationAsApplied(migration.id);
+      console.log(`✅ Marked ${migration.id}_${migration.name} as applied`);
+    }
+    
+    console.log("✅ All existing migrations marked as applied");
+  } catch (error) {
+    console.error("❌ Failed to mark migrations as applied:", error);
+    process.exit(1);
+  }
+}
+
+/**
  * Main CLI function
  */
 async function main(): Promise<void> {
@@ -195,6 +218,10 @@ async function main(): Promise<void> {
     case "down":
     case "rollback":
       await rollbackMigration();
+      break;
+
+    case "mark-applied":
+      await markExistingMigrationsAsApplied();
       break;
 
     case "status":
