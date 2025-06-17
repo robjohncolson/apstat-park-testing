@@ -50,6 +50,8 @@ async function fetchPaceData(userId: number, completedLessons?: number, totalLes
 
   const response = await fetch(url);
   
+
+  
   if (!response.ok) {
     throw new Error(`Failed to fetch pace data: ${response.statusText}`);
   }
@@ -139,6 +141,8 @@ export function usePaceTracker(options: UsePaceTrackerOptions): UsePaceTrackerRe
       setPaceData(data);
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Unknown error');
+      
+
       
       // Check if this is a connection error (backend not running)
       if (error.message.includes('Failed to fetch') || error.message.includes('ERR_CONNECTION_REFUSED')) {

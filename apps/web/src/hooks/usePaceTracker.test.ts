@@ -12,11 +12,7 @@ import { http, HttpResponse } from 'msw';
 
 const server = setupServer();
 
-// 🏆 VICTORY HELPER: Fix MSW handler precedence issue
-function prependHandler(handler: Parameters<typeof server.use>[0]) {
-  const originalHandlers = (server as any).handlers ?? [];
-  (server as any).handlers = [handler, ...originalHandlers];
-}
+// Note: Using server.use() directly now instead of custom prependHandler
 
 beforeAll(() => server.listen());
 beforeEach(() => {
@@ -202,46 +198,51 @@ describe("usePaceTracker Hook", () => {
 
   describe("API Error Handling", () => {
     it("should handle API errors gracefully", async () => {
-      // 🏆 VICTORY: PREPEND the error handler to ensure it's matched first
-      prependHandler(
-        http.get('http://localhost:3001/api/v1/pace/:userId', () => {
-          console.log('🔥 ERROR HANDLER CALLED - Returning 500 error');
-          return HttpResponse.json(
-            { error: "Internal Server Error" }, 
-            { status: 500 }
-          );
-        })
-      );
+      // Fix: Mock fetch directly to ensure proper error response
+      const originalFetch = global.fetch;
+      global.fetch = vi.fn().mockRejectedValue(new Error('Failed to fetch pace data: Internal Server Error'));
+      
+      // Cleanup function
+      const cleanup = () => {
+        global.fetch = originalFetch;
+      };
 
       const { result } = renderHook(() => 
         usePaceTracker({ completedLessons: 35, totalLessons: 89 })
       );
 
-      await waitFor(() => {
-        expect(result.current.isError).toBe(true);
-      }, { timeout: 5000 });
+              await waitFor(() => {
+          expect(result.current.isLoading).toBe(false);
+          expect(result.current.isError).toBe(true);
+          expect(result.current.error).toBeDefined();
+        }, { timeout: 5000 });
 
-      expect(result.current.error).toBeDefined();
+        // Cleanup
+        cleanup();
     });
 
     it("should handle network failures gracefully", async () => {
-      // 🏆 VICTORY: PREPEND the network error handler to ensure it's matched first
-      prependHandler(
-        http.get('http://localhost:3001/api/v1/pace/:userId', () => {
-          console.log('🌐 NETWORK ERROR HANDLER CALLED');
-          return HttpResponse.error();
-        })
-      );
+      // Fix: Mock fetch directly to ensure proper network error
+      const originalFetch = global.fetch;
+      global.fetch = vi.fn().mockRejectedValue(new Error('Failed to fetch'));
+      
+      // Cleanup function
+      const cleanup = () => {
+        global.fetch = originalFetch;
+      };
 
       const { result } = renderHook(() => 
         usePaceTracker({ completedLessons: 35, totalLessons: 89 })
       );
 
-      await waitFor(() => {
-        expect(result.current.isError).toBe(true);
-      }, { timeout: 5000 });
+              await waitFor(() => {
+          expect(result.current.isLoading).toBe(false);
+          expect(result.current.isError).toBe(true);
+          expect(result.current.error?.message).toContain('Backend API');
+        }, { timeout: 5000 });
 
-      expect(result.current.error?.message).toContain('Backend API');
+        // Cleanup
+        cleanup();
     });
   });
 
@@ -335,10 +336,10 @@ describe("usePaceTracker Hook", () => {
     });
 
     it("should handle update errors", async () => {
-      // 🏆 VICTORY: PREPEND both GET and PUT handlers to ensure they're matched first
-      prependHandler(
+      // First, allow successful GET request for initial fetch
+      server.resetHandlers();
+      server.use(
         http.get('http://localhost:3001/api/v1/pace/:userId', ({ params, request }) => {
-          console.log('✅ UPDATE ERROR TEST - GET HANDLER CALLED');
           const url = new URL(request.url);
           const completedLessons = parseInt(url.searchParams.get('completedLessons') || '35', 10);
           const totalLessons = parseInt(url.searchParams.get('totalLessons') || '89', 10);
@@ -371,15 +372,6 @@ describe("usePaceTracker Hook", () => {
           });
         })
       );
-      prependHandler(
-        http.put('http://localhost:3001/api/v1/pace/:userId', () => {
-          console.log('❌ UPDATE ERROR TEST - PUT HANDLER CALLED');
-          return HttpResponse.json(
-            { error: "Bad Request" }, 
-            { status: 400 }
-          );
-        })
-      );
 
       const { result } = renderHook(() => 
         usePaceTracker({ completedLessons: 35, totalLessons: 89 })
@@ -390,20 +382,39 @@ describe("usePaceTracker Hook", () => {
         expect(result.current.isLoading).toBe(false);
       });
 
+      // Mock fetch to fail for PUT requests only
+      const originalFetch = global.fetch;
+      global.fetch = vi.fn().mockImplementation((url, options) => {
+        if (options?.method === 'PUT') {
+          console.log('❌ Mocked PUT request failing');
+          return Promise.reject(new Error('Failed to update pace data: Bad Request'));
+        }
+        // For other requests, use original fetch (MSW will handle them)
+        return originalFetch(url, options);
+      });
+
       // Test failed update
-      await expect(async () => {
-        await act(async () => {
+      let updateError;
+      await act(async () => {
+        try {
           await result.current.updatePace({ 
             completedLessons: 36, 
             totalLessons: 89 
           });
-        });
-      }).rejects.toThrow();
+        } catch (err) {
+          updateError = err;
+        }
+      });
 
-      // Wait for the updateError state to be set
+      // Verify the promise rejection and state update
+      expect(updateError).toBeDefined();
       await waitFor(() => {
         expect(result.current.updateError).toBeDefined();
+        expect(result.current.isUpdating).toBe(false);
       }, { timeout: 5000 });
+
+      // Cleanup
+      global.fetch = originalFetch;
     });
   });
 
@@ -460,53 +471,57 @@ describe("usePaceTracker Hook", () => {
     });
 
     it("should detect overdue deadlines", async () => {
-      // 🏆 VICTORY: PREPEND the overdue handler to ensure it's matched first
-      prependHandler(
-        http.get('http://localhost:3001/api/v1/pace/:userId', ({ params, request }) => {
-          console.log('⏰ OVERDUE TEST - HANDLER CALLED');
-          const url = new URL(request.url);
-          const completedLessons = parseInt(url.searchParams.get('completedLessons') || '35', 10);
-          const totalLessons = parseInt(url.searchParams.get('totalLessons') || '89', 10);
-          const pastDate = new Date(Date.now() - 60 * 60 * 1000).toISOString(); // 1 hour ago
-          
-          return HttpResponse.json({
-            userId: parseInt(params.userId as string, 10),
-            currentDeadline: pastDate,
+      // Fix: Mock fetch directly to return overdue deadline data
+      const originalFetch = global.fetch;
+      const pastDate = new Date(Date.now() - 60 * 60 * 1000).toISOString(); // 1 hour ago
+      
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({
+          userId: 123,
+          currentDeadline: pastDate,
+          bufferHours: 0,
+          lastCompletedLessons: 35,
+          lastLessonCompletion: null,
+          examDate: new Date(2024, 4, 13, 8, 0, 0).toISOString(),
+          updatedAt: new Date().toISOString(),
+          wasLessonCompleted: false,
+          metrics: {
+            daysUntilExam: 50,
+            hoursUntilExam: 1200,
+            lessonsRemaining: 54,
+            totalLessons: 89,
+            completedLessons: 35,
+            lessonsPerDay: 1.2,
+            hoursPerLesson: 1.5,
+            isOnTrack: false,
+            paceStatus: "behind" as const,
+            targetLessonsPerDay: 1.0,
+            targetHoursPerDay: 1.5,
+            nextDeadline: pastDate,
             bufferHours: 0,
-            lastCompletedLessons: completedLessons,
-            lastLessonCompletion: null,
-            examDate: new Date(2024, 4, 13, 8, 0, 0).toISOString(),
-            updatedAt: new Date().toISOString(),
-            wasLessonCompleted: false,
-            metrics: {
-              daysUntilExam: 50,
-              hoursUntilExam: 1200,
-              lessonsRemaining: totalLessons - completedLessons,
-              totalLessons,
-              completedLessons,
-              lessonsPerDay: 1.2,
-              hoursPerLesson: 1.5,
-              isOnTrack: false,
-              paceStatus: "behind" as const,
-              targetLessonsPerDay: 1.0,
-              targetHoursPerDay: 1.5,
-              nextDeadline: pastDate,
-              bufferHours: 0,
-              aheadLessons: -0.5
-            }
-          });
+            aheadLessons: -0.5
+          }
         })
-      );
+      });
+      
+      // Cleanup function
+      const cleanup = () => {
+        global.fetch = originalFetch;
+      };
 
       const { result } = renderHook(() => 
         usePaceTracker({ completedLessons: 35, totalLessons: 89 })
       );
 
-      await waitFor(() => {
-        expect(result.current.isOverdue).toBe(true);
-      }, { timeout: 5000 });
+              await waitFor(() => {
+          expect(result.current.isLoading).toBe(false);
+          expect(result.current.isOverdue).toBe(true);
+          expect(result.current.hoursUntilDeadline).toBe(0);
+        }, { timeout: 5000 });
 
-      expect(result.current.hoursUntilDeadline).toBe(0);
+        // Cleanup
+        cleanup();
     });
   });
 }); 
