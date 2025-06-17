@@ -133,21 +133,13 @@ export function calculatePaceMetrics(
 }
 
 /**
- * Get the default AP Statistics exam date (typically early May)
- * For 2024: May 13, 2024
- * This should be configurable in a real app
+ * Get the default AP Statistics exam date from configuration
+ * @deprecated Use getExamConfig().examDate or calculateNextExamDate() from examConfig instead
  */
 export function getDefaultExamDate(): Date {
-  const currentYear = new Date().getFullYear();
-  let examYear = currentYear;
-
-  // If we're past May, assume next year's exam
-  const mayExamDate = new Date(currentYear, 4, 13); // May 13th
-  if (new Date() > mayExamDate) {
-    examYear = currentYear + 1;
-  }
-
-  return new Date(examYear, 4, 13, 8, 0, 0); // May 13th, 8:00 AM
+  // Import here to avoid circular dependencies
+  const { calculateNextExamDate } = require('../config/examConfig');
+  return calculateNextExamDate();
 }
 
 /**

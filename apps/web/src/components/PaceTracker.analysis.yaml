@@ -1,0 +1,182 @@
+# APStat Park - PaceTracker Component Analysis
+# This YAML file documents the structure and identified issues with the PaceTracker component
+
+component:
+  name: "PaceTracker"
+  location: "apps/web/src/components/PaceTracker.tsx"
+  dependencies:
+    - "apps/web/src/utils/timeTracking.ts"
+    - "apps/web/src/context/AuthContext.tsx"
+  purpose: "Track student progress against AP Statistics exam timeline with soft deadlines and buffer system"
+
+architecture:
+  type: "React Functional Component"
+  state_management:
+    - "useState for real-time countdown updates"
+    - "useState for fixed deadline persistence"
+    - "useState for accumulating buffer hours"
+    - "useRef for tracking previous completed lessons"
+    - "localStorage for persistence across sessions"
+
+core_features:
+  deadline_system:
+    description: "Soft deadline system with countdown timer"
+    mechanism: "Fixed deadlines that don't move with time"
+    persistence: "localStorage with global keys (not user-specific)"
+    
+  buffer_system:
+    description: "Accumulates time saved when completing lessons early"
+    calculation: "Time difference between deadline and completion"
+    persistence: "Persisted in localStorage"
+    cap: "336 hours (14 days) maximum buffer"
+    
+  progress_tracking:
+    description: "Monitors lesson completion fractional progress"
+    trigger: "Whole lesson completion threshold crossing"
+    display: "Visual progress bars and metrics"
+
+problems:
+  critical_issues:
+    - issue: "Non-user-specific persistence"
+      description: "Uses global localStorage keys instead of user-specific keys"
+      impact: "Buffer and deadlines shared across all users on same device"
+      location: "Lines 21-22: deadlineKey = 'apstat_pace_deadline', bufferKey = 'apstat_pace_buffer'"
+      
+    - issue: "Race condition in localStorage loading"
+      description: "Synchronous localStorage loading in render path"
+      impact: "Potential race conditions and stale data"
+      location: "Lines 26-50: loadInitialValues() function"
+      
+    - issue: "Complex state synchronization"
+      description: "Multiple interdependent useEffect hooks with complex dependencies"
+      impact: "Difficult to debug, potential infinite loops"
+      location: "Lines 79-102: Multiple useEffect blocks"
+
+  design_issues:
+    - issue: "Overly complex buffer calculation"
+      description: "Buffer calculation involves multiple date comparisons and state updates"
+      impact: "Hard to test, potential timing bugs"
+      location: "Lines 103-127: Buffer accumulation effect"
+      
+    - issue: "Mixed concerns in component"
+      description: "Component handles both UI rendering and complex business logic"
+      impact: "Violates single responsibility principle"
+      
+    - issue: "Hardcoded exam date logic"
+      description: "Exam date calculation embedded in utility function"
+      impact: "Not configurable, requires code changes for different years"
+      location: "timeTracking.ts lines 144-154"
+
+  performance_issues:
+    - issue: "Frequent timer updates"
+      description: "Component updates every second for countdown display"
+      impact: "Unnecessary re-renders, battery drain on mobile"
+      location: "Lines 71-78: setInterval every 1000ms"
+      
+    - issue: "Repeated localStorage operations"
+      description: "localStorage read/write operations in multiple effects"
+      impact: "Potential performance impact, error handling complexity"
+
+data_flow:
+  inputs:
+    - "completedLessons: number (from parent component)"
+    - "totalLessons: number (from parent component)"
+    - "className?: string (optional styling)"
+    
+  outputs:
+    - "Visual progress display"
+    - "Deadline countdown"
+    - "Buffer status"
+    - "Pace recommendations"
+    
+  persistence:
+    - "Deadline stored in localStorage['apstat_pace_deadline']"
+    - "Buffer hours stored in localStorage['apstat_pace_buffer']"
+
+testing:
+  unit_tests: "apps/web/src/components/PaceTracker.test.tsx"
+  integration_tests: "apps/web/src/components/PaceTracker.integration.test.tsx"
+  simple_tests: "apps/web/src/components/PaceTracker.simple.test.tsx"
+  
+  testing_issues:
+    - "Heavy mocking requirements make tests brittle"
+    - "Integration tests minimal due to complexity"
+    - "localStorage persistence difficult to test"
+
+recommended_refactoring:
+  immediate_fixes:
+    - "Make persistence user-specific"
+    - "Extract business logic to custom hook"
+    - "Reduce timer frequency (5-10 seconds instead of 1 second)"
+    - "Add proper error boundaries"
+    
+  architectural_improvements:
+    - "Separate PaceCalculator service class"
+    - "Use React Query or SWR for persistence"
+    - "Implement proper state machine for deadline/buffer states"
+    - "Move exam date to configuration"
+    
+  performance_optimizations:
+    - "Memoize expensive calculations"
+    - "Debounce localStorage writes"
+    - "Use requestAnimationFrame for countdown updates"
+
+risk_assessment:
+  severity: "LOW" # Updated after refactoring
+  impact_areas:
+    - "✅ User experience (now user-specific with error handling)"
+    - "✅ Data integrity (backend persistence with validation)"
+    - "✅ Performance (optimized rendering and reduced timer frequency)"
+    - "✅ Maintainability (clean separation of concerns)"
+  
+  user_impact:
+    - "✅ User-specific data prevents cross-contamination"
+    - "✅ Backend persistence ensures data reliability"
+    - "✅ Optimized performance for mobile devices"
+    - "✅ Clear error states and loading indicators"
+
+dependencies:
+  react_hooks:
+    - "useState (multiple instances)"
+    - "useEffect (multiple instances)" 
+    - "useRef"
+  
+  external_utilities:
+    - "calculatePaceMetrics"
+    - "formatPaceStatus"
+    - "formatDeadlineCountdown"
+    - "formatBufferStatus"
+    - "formatTargetPace"
+    - "getEncouragementMessage"
+  
+  browser_apis:
+    - "localStorage"
+    - "setInterval"
+    - "Date"
+
+refactoring_completed:
+  phase_1_stabilization:
+    - "✅ User-specific localStorage keys implemented"
+    - "✅ Timer frequency reduced from 1s to 5s"
+    - "✅ Error boundaries added for crash protection"
+    
+  phase_2_architecture:
+    - "✅ Business logic extracted to usePaceTracker hook"
+    - "✅ Component simplified to pure presentation"
+    - "✅ Comprehensive test suite for hook and component"
+    
+  phase_3_backend:
+    - "✅ Database schema designed (user_pace table)"
+    - "✅ RESTful API endpoints created (GET/PUT /api/v1/pace)"
+    - "✅ Backend business logic with proper validation"
+    
+  phase_4_polish:
+    - "✅ Configurable exam dates system"
+    - "✅ Optimized CountdownTimer component"
+    - "✅ Adaptive update intervals based on urgency"
+
+notes:
+  - "✅ Successfully refactored from problematic monolithic component"
+  - "✅ All critical issues resolved with modern architecture"
+  - "✅ Performance optimized with separated concerns"
+  - "✅ Future-ready with backend integration and configuration" 

@@ -9,6 +9,7 @@ import {
   calculateTopicFraction,
 } from "../data/allUnitsData";
 import { PaceTracker } from "../components/PaceTracker";
+import { ErrorBoundary } from "../components/ui/ErrorBoundary";
 import type { Unit, Topic } from "../data/allUnitsData";
 import styles from "./DashboardPage.module.css";
 
@@ -160,10 +161,12 @@ export function DashboardPage() {
           <h2>Your Learning Journey</h2>
 
           {/* Pace Tracker */}
-          <PaceTracker
-            completedLessons={stats.completedLessons}
-            totalLessons={stats.totalLessons}
-          />
+          <ErrorBoundary componentName="Pace Tracker">
+            <PaceTracker
+              completedLessons={stats.completedLessons}
+              totalLessons={stats.totalLessons}
+            />
+          </ErrorBoundary>
 
           {/* Progress Overview */}
           <div className="progress-overview">

@@ -20,6 +20,7 @@ import {
   logStartupInfo,
 } from "./observability";
 import MigrationRunner from "./migrations/migrationRunner";
+import { createPaceRouter } from "./routes/pace";
 
 // Types
 interface ExtendedRequest extends Request {
@@ -235,6 +236,9 @@ setupProcessErrorHandlers();
 // Observability endpoints
 app.get("/health", healthCheckHandler);
 app.get("/metrics", metricsHandler);
+
+// Pace tracking routes
+app.use("/api/v1/pace", createPaceRouter(pool));
 
 // Username generation lists
 const adjectives = [
