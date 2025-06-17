@@ -95,11 +95,16 @@ export class MigrationRunner {
     const migrations: Migration[] = [];
 
     try {
+      const isDevelopment = process.env.NODE_ENV !== "production";
+      const fileExtension = isDevelopment ? ".ts" : ".js";
+      
       const files = fs
         .readdirSync(migrationsDir)
         .filter(
           (file) =>
-            file.match(/^\d{14}_.*\.ts$/) && file !== "migrationRunner.ts",
+            file.match(new RegExp(`^\\d{14}_.*\\${fileExtension}$`)) && 
+            !file.includes("migrationRunner") &&
+            !file.endsWith(".d.ts"),
         )
         .sort();
 
@@ -127,7 +132,8 @@ export class MigrationRunner {
    */
   private async loadMigrationFile(filePath: string): Promise<Migration | null> {
     try {
-      const fileName = path.basename(filePath, ".ts");
+      const extname = path.extname(filePath);
+      const fileName = path.basename(filePath, extname);
       const [timestamp, ...nameParts] = fileName.split("_");
       const name = nameParts.join("_");
 
