@@ -21,6 +21,7 @@ import {
 } from "./observability";
 import MigrationRunner from "./migrations/migrationRunner";
 import { createPaceRouter } from "./routes/pace";
+import { createMockPaceRouter } from "./routes/pace-mock";
 
 // Types
 interface ExtendedRequest extends Request {
@@ -49,6 +50,7 @@ app.use(requestLogger);
 app.use(observabilityMiddleware);
 
 // Database connections
+let isDatabaseConnected = false;
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl:
@@ -237,9 +239,7 @@ setupProcessErrorHandlers();
 app.get("/health", healthCheckHandler);
 app.get("/metrics", metricsHandler);
 
-// Pace tracking routes  
-// Note: Using pool directly until Knex is properly configured
-app.use("/api/v1/pace", createPaceRouter(pool));
+// Pace tracking routes will be registered after database connection check
 
 // Username generation lists
 const adjectives = [
@@ -978,12 +978,14 @@ async function initializeDatabase(): Promise<void> {
 // Test database connection and initialize on startup
 pool.connect(async (err, client, done) => {
   if (err) {
+    isDatabaseConnected = false;
     appLogger.error(
-      "Database connection failed",
+      "Database connection failed - running in mock mode",
       { error: err },
       err instanceof Error ? err : undefined,
     );
   } else {
+    isDatabaseConnected = true;
     appLogger.info("Database connected successfully");
     done();
 
@@ -993,12 +995,22 @@ pool.connect(async (err, client, done) => {
       // Initialize real-time notifications after database is ready
       await initializeNotificationListener();
     } catch (initError) {
+      isDatabaseConnected = false;
       appLogger.error(
-        "Failed to initialize database",
+        "Failed to initialize database - falling back to mock mode",
         { error: initError },
         initError instanceof Error ? initError : undefined,
       );
     }
+  }
+
+  // Register pace routes after database connection check
+  if (isDatabaseConnected) {
+    app.use("/api/v1/pace", createPaceRouter(pool));
+    appLogger.info("Registered database-backed pace router");
+  } else {
+    app.use("/api/v1/pace", createMockPaceRouter());
+    appLogger.info("Registered mock pace router (no database available)");
   }
 });
 
