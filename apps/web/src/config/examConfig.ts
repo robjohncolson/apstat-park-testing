@@ -1,6 +1,8 @@
 // Exam Configuration
 // This file contains configurable settings for AP Statistics exam scheduling
 
+import { calculateNextExamDate } from '../utils/dateUtils';
+
 export interface ExamConfig {
   examDate: string; // ISO date string
   examYear: number;
@@ -33,22 +35,7 @@ export function getExamConfig(): ExamConfig {
   return DEFAULT_EXAM_CONFIG;
 }
 
-/**
- * Calculate the next AP Statistics exam date based on the current year.
- * AP Statistics exam is typically held in early May.
- */
-export function calculateNextExamDate(): Date {
-  const currentYear = new Date().getFullYear();
-  let examYear = currentYear;
 
-  // If we're past May, assume next year's exam
-  const mayExamDate = new Date(currentYear, 4, 13, 8, 0, 0); // May 13th, 8:00 AM
-  if (new Date() > mayExamDate) {
-    examYear = currentYear + 1;
-  }
-
-  return new Date(examYear, 4, 13, 8, 0, 0); // May 13th, 8:00 AM
-}
 
 /**
  * Check if we're in an exam preparation period (last 30 days before exam)

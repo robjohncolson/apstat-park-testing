@@ -1,6 +1,8 @@
 // timeTracking.ts
 // Utilities for calculating exam countdown, pacing, and progress metrics
 
+import { calculateNextExamDate } from './dateUtils';
+
 export interface PaceMetrics {
   daysUntilExam: number;
   hoursUntilExam: number;
@@ -134,11 +136,9 @@ export function calculatePaceMetrics(
 
 /**
  * Get the default AP Statistics exam date from configuration
- * @deprecated Use getExamConfig().examDate or calculateNextExamDate() from examConfig instead
+ * @deprecated Use getExamConfig().examDate or calculateNextExamDate() from dateUtils instead
  */
 export function getDefaultExamDate(): Date {
-  // Import here to avoid circular dependencies
-  const { calculateNextExamDate } = require('../config/examConfig');
   return calculateNextExamDate();
 }
 
