@@ -210,10 +210,9 @@ describe("usePaceTracker Hook", () => {
       );
 
       await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
+        expect(result.current.isError).toBe(true);
       }, { timeout: 5000 });
 
-      expect(result.current.isError).toBe(true);
       expect(result.current.error).toBeDefined();
     });
 
@@ -232,10 +231,9 @@ describe("usePaceTracker Hook", () => {
       );
 
       await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
+        expect(result.current.isError).toBe(true);
       }, { timeout: 5000 });
 
-      expect(result.current.isError).toBe(true);
       expect(result.current.error?.message).toContain('Backend API');
     });
   });
@@ -393,7 +391,10 @@ describe("usePaceTracker Hook", () => {
         });
       }).rejects.toThrow();
 
-      expect(result.current.updateError).toBeDefined();
+      // Wait for the updateError state to be set
+      await waitFor(() => {
+        expect(result.current.updateError).toBeDefined();
+      }, { timeout: 5000 });
     });
   });
 
@@ -494,10 +495,9 @@ describe("usePaceTracker Hook", () => {
       );
 
       await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
+        expect(result.current.isOverdue).toBe(true);
       }, { timeout: 5000 });
 
-      expect(result.current.isOverdue).toBe(true);
       expect(result.current.hoursUntilDeadline).toBe(0);
     });
   });
