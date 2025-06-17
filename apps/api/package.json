@@ -17,7 +17,8 @@
     "migrate:rollback": "ts-node src/migrations/cli.ts rollback",
     "migrate:status": "ts-node src/migrations/cli.ts status",
     "migrate:reset": "ts-node src/migrations/cli.ts reset",
-    "migrate:mark-applied": "ts-node src/migrations/cli.ts mark-applied"
+    "migrate:mark-applied": "ts-node src/migrations/cli.ts mark-applied",
+    "migrate:force-run": "ts-node src/migrations/cli.ts reset && ts-node src/migrations/cli.ts run"
   },
   "keywords": [
     "education",
