@@ -36,42 +36,6 @@ describe("usePaceTracker Hook", () => {
       logout: vi.fn(),
       generateUsername: vi.fn(),
     });
-    
-    // Setup default successful API response
-    server.use(
-      http.get('http://localhost:3001/api/v1/pace/:userId', ({ params, request }) => {
-        const url = new URL(request.url);
-        const completedLessons = parseInt(url.searchParams.get('completedLessons') || '35', 10);
-        const totalLessons = parseInt(url.searchParams.get('totalLessons') || '89', 10);
-        
-        return HttpResponse.json({
-          userId: parseInt(params.userId as string, 10),
-          currentDeadline: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-          bufferHours: 5.5,
-          lastCompletedLessons: completedLessons,
-          lastLessonCompletion: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-          examDate: new Date(2024, 4, 13, 8, 0, 0).toISOString(),
-          updatedAt: new Date().toISOString(),
-          wasLessonCompleted: false,
-          metrics: {
-            daysUntilExam: 50,
-            hoursUntilExam: 1200,
-            lessonsRemaining: totalLessons - completedLessons,
-            totalLessons,
-            completedLessons,
-            lessonsPerDay: 1.2,
-            hoursPerLesson: 1.5,
-            isOnTrack: true,
-            paceStatus: "on-track" as const,
-            targetLessonsPerDay: 0.8,
-            targetHoursPerDay: 1.2,
-            nextDeadline: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-            bufferHours: 5.5,
-            aheadLessons: 1.2
-          }
-        });
-      })
-    );
   });
 
   describe("Initialization", () => {
@@ -105,6 +69,42 @@ describe("usePaceTracker Hook", () => {
     });
 
     it("should fetch pace data successfully", async () => {
+      // Setup successful API response for this specific test
+      server.use(
+        http.get('http://localhost:3001/api/v1/pace/:userId', ({ params, request }) => {
+          const url = new URL(request.url);
+          const completedLessons = parseInt(url.searchParams.get('completedLessons') || '35', 10);
+          const totalLessons = parseInt(url.searchParams.get('totalLessons') || '89', 10);
+          
+          return HttpResponse.json({
+            userId: parseInt(params.userId as string, 10),
+            currentDeadline: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+            bufferHours: 5.5,
+            lastCompletedLessons: completedLessons,
+            lastLessonCompletion: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+            examDate: new Date(2024, 4, 13, 8, 0, 0).toISOString(),
+            updatedAt: new Date().toISOString(),
+            wasLessonCompleted: false,
+            metrics: {
+              daysUntilExam: 50,
+              hoursUntilExam: 1200,
+              lessonsRemaining: totalLessons - completedLessons,
+              totalLessons,
+              completedLessons,
+              lessonsPerDay: 1.2,
+              hoursPerLesson: 1.5,
+              isOnTrack: true,
+              paceStatus: "on-track" as const,
+              targetLessonsPerDay: 0.8,
+              targetHoursPerDay: 1.2,
+              nextDeadline: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+              bufferHours: 5.5,
+              aheadLessons: 1.2
+            }
+          });
+        })
+      );
+
       const { result } = renderHook(() => 
         usePaceTracker({ completedLessons: 35, totalLessons: 89 })
       );
@@ -164,7 +164,40 @@ describe("usePaceTracker Hook", () => {
 
   describe("Update Functionality", () => {
     it("should update pace data successfully", async () => {
+      // Setup successful API responses for both GET (initial fetch) and PUT (update)
       server.use(
+        http.get('http://localhost:3001/api/v1/pace/:userId', ({ params, request }) => {
+          const url = new URL(request.url);
+          const completedLessons = parseInt(url.searchParams.get('completedLessons') || '35', 10);
+          const totalLessons = parseInt(url.searchParams.get('totalLessons') || '89', 10);
+          
+          return HttpResponse.json({
+            userId: parseInt(params.userId as string, 10),
+            currentDeadline: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+            bufferHours: 5.5,
+            lastCompletedLessons: completedLessons,
+            lastLessonCompletion: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+            examDate: new Date(2024, 4, 13, 8, 0, 0).toISOString(),
+            updatedAt: new Date().toISOString(),
+            wasLessonCompleted: false,
+            metrics: {
+              daysUntilExam: 50,
+              hoursUntilExam: 1200,
+              lessonsRemaining: totalLessons - completedLessons,
+              totalLessons,
+              completedLessons,
+              lessonsPerDay: 1.2,
+              hoursPerLesson: 1.5,
+              isOnTrack: true,
+              paceStatus: "on-track" as const,
+              targetLessonsPerDay: 0.8,
+              targetHoursPerDay: 1.2,
+              nextDeadline: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+              bufferHours: 5.5,
+              aheadLessons: 1.2
+            }
+          });
+        }),
         http.put('http://localhost:3001/api/v1/pace/:userId', async ({ request }) => {
           const body = await request.json() as any;
           return HttpResponse.json({
@@ -220,6 +253,40 @@ describe("usePaceTracker Hook", () => {
 
     it("should handle update errors", async () => {
       server.use(
+        // Need successful GET for initial load
+        http.get('http://localhost:3001/api/v1/pace/:userId', ({ params, request }) => {
+          const url = new URL(request.url);
+          const completedLessons = parseInt(url.searchParams.get('completedLessons') || '35', 10);
+          const totalLessons = parseInt(url.searchParams.get('totalLessons') || '89', 10);
+          
+          return HttpResponse.json({
+            userId: parseInt(params.userId as string, 10),
+            currentDeadline: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+            bufferHours: 5.5,
+            lastCompletedLessons: completedLessons,
+            lastLessonCompletion: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+            examDate: new Date(2024, 4, 13, 8, 0, 0).toISOString(),
+            updatedAt: new Date().toISOString(),
+            wasLessonCompleted: false,
+            metrics: {
+              daysUntilExam: 50,
+              hoursUntilExam: 1200,
+              lessonsRemaining: totalLessons - completedLessons,
+              totalLessons,
+              completedLessons,
+              lessonsPerDay: 1.2,
+              hoursPerLesson: 1.5,
+              isOnTrack: true,
+              paceStatus: "on-track" as const,
+              targetLessonsPerDay: 0.8,
+              targetHoursPerDay: 1.2,
+              nextDeadline: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+              bufferHours: 5.5,
+              aheadLessons: 1.2
+            }
+          });
+        }),
+        // But failed PUT for update
         http.put('http://localhost:3001/api/v1/pace/:userId', () => {
           return HttpResponse.json({ error: "Update failed" }, { status: 400 });
         })
@@ -250,6 +317,42 @@ describe("usePaceTracker Hook", () => {
 
   describe("Computed Values", () => {
     it("should calculate deadline-related values correctly", async () => {
+      // Setup successful API response for this specific test
+      server.use(
+        http.get('http://localhost:3001/api/v1/pace/:userId', ({ params, request }) => {
+          const url = new URL(request.url);
+          const completedLessons = parseInt(url.searchParams.get('completedLessons') || '35', 10);
+          const totalLessons = parseInt(url.searchParams.get('totalLessons') || '89', 10);
+          
+          return HttpResponse.json({
+            userId: parseInt(params.userId as string, 10),
+            currentDeadline: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+            bufferHours: 5.5,
+            lastCompletedLessons: completedLessons,
+            lastLessonCompletion: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+            examDate: new Date(2024, 4, 13, 8, 0, 0).toISOString(),
+            updatedAt: new Date().toISOString(),
+            wasLessonCompleted: false,
+            metrics: {
+              daysUntilExam: 50,
+              hoursUntilExam: 1200,
+              lessonsRemaining: totalLessons - completedLessons,
+              totalLessons,
+              completedLessons,
+              lessonsPerDay: 1.2,
+              hoursPerLesson: 1.5,
+              isOnTrack: true,
+              paceStatus: "on-track" as const,
+              targetLessonsPerDay: 0.8,
+              targetHoursPerDay: 1.2,
+              nextDeadline: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+              bufferHours: 5.5,
+              aheadLessons: 1.2
+            }
+          });
+        })
+      );
+
       const { result } = renderHook(() => 
         usePaceTracker({ completedLessons: 35, totalLessons: 89 })
       );

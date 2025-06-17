@@ -198,7 +198,7 @@ function PaceTrackerContent({
   };
 
   return (
-    <div className={`${styles.paceTracker} ${getStatusClass()} ${className}`}>
+    <div data-testid="pace-tracker-component" className={`${styles.paceTracker} ${getStatusClass()} ${className}`}>
       <div className={styles.header}>
         <h3 className={styles.title}>📊 Pace Tracker</h3>
         <div className={styles.status}>

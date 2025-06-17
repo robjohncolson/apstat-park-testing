@@ -308,9 +308,9 @@ describe("PaceTracker Component", () => {
 
   describe("Custom ClassName", () => {
     it("should apply custom className", () => {
-      const { container } = render(<PaceTracker completedLessons={35} totalLessons={50} className="custom-class" />);
+      render(<PaceTracker completedLessons={35} totalLessons={50} className="custom-class" />);
 
-      const paceTracker = screen.getByText('📊 Pace Tracker').closest('div');
+      const paceTracker = screen.getByTestId('pace-tracker-component');
       expect(paceTracker).toHaveClass("custom-class");
     });
   });
