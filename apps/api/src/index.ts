@@ -22,6 +22,7 @@ import {
 import MigrationRunner from "./migrations/migrationRunner";
 import { createPaceRouter } from "./routes/pace";
 import { createMockPaceRouter } from "./routes/pace-mock";
+import knex from "./db"; // Import Knex instance to initialize it
 
 // Types
 interface ExtendedRequest extends Request {
@@ -987,6 +988,7 @@ pool.connect(async (err, client, done) => {
   } else {
     isDatabaseConnected = true;
     appLogger.info("Database connected successfully");
+    appLogger.info("Knex instance initialized with environment", { environment: process.env.NODE_ENV || 'development' });
     done();
 
     // Initialize database tables

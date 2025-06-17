@@ -9,12 +9,12 @@ const config: { [key: string]: Knex.Config } = {
       ssl: false,
     },
     migrations: {
-      directory: "./src/migrations",
+      directory: "./migrations",
       tableName: "knex_migrations",
       extension: "ts",
     },
     seeds: {
-      directory: "./src/seeds",
+      directory: "./seeds",
     },
   },
 
@@ -25,12 +25,12 @@ const config: { [key: string]: Knex.Config } = {
       ssl: false,
     },
     migrations: {
-      directory: "./src/migrations",
+      directory: "./migrations",
       tableName: "knex_migrations",
       extension: "ts",
     },
     seeds: {
-      directory: "./src/seeds",
+      directory: "./seeds",
     },
   },
 
@@ -41,13 +41,13 @@ const config: { [key: string]: Knex.Config } = {
       ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
     },
     migrations: {
-      directory: "./dist/migrations", // Points to compiled JS files
+      directory: "./migrations", // Points to compiled JS files
       tableName: "knex_migrations",
       // 👇 This line fixes the warnings about missing up/down exports
       loadExtensions: [".js"], 
     },
     seeds: {
-      directory: "./dist/seeds",
+      directory: "./seeds",
       loadExtensions: [".js"],
     },
     pool: {
