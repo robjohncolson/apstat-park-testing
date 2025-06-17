@@ -1,14 +1,17 @@
 import { Request, Response, NextFunction } from 'express';
 import { appLogger as logger } from '../logger';
 
+// User interface for authenticated requests
+export interface AuthenticatedUser {
+  id: number;
+  username: string;
+}
+
 // Extend Express Request type to include user
 declare global {
   namespace Express {
     interface Request {
-      user?: {
-        id: number;
-        username: string;
-      };
+      user?: AuthenticatedUser;
     }
   }
 }

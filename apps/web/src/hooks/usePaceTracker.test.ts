@@ -12,6 +12,12 @@ import { http, HttpResponse } from 'msw';
 
 const server = setupServer();
 
+// 🏆 VICTORY HELPER: Fix MSW handler precedence issue
+function prependHandler(handler: Parameters<typeof server.use>[0]) {
+  const originalHandlers = (server as any).handlers ?? [];
+  (server as any).handlers = [handler, ...originalHandlers];
+}
+
 beforeAll(() => server.listen());
 beforeEach(() => {
   server.resetHandlers(); // Nuclear reset before EACH test
@@ -196,11 +202,10 @@ describe("usePaceTracker Hook", () => {
 
   describe("API Error Handling", () => {
     it("should handle API errors gracefully", async () => {
-      // EXPLICIT: This test expects API error, so ONLY register the error handler
-      server.resetHandlers(); // Extra safety reset
-      server.use(
+      // 🏆 VICTORY: PREPEND the error handler to ensure it's matched first
+      prependHandler(
         http.get('http://localhost:3001/api/v1/pace/:userId', () => {
-          console.log('🔥 ERROR HANDLER CALLED - Returning 500 error'); // Debug log
+          console.log('🔥 ERROR HANDLER CALLED - Returning 500 error');
           return HttpResponse.json(
             { error: "Internal Server Error" }, 
             { status: 500 }
@@ -213,12 +218,6 @@ describe("usePaceTracker Hook", () => {
       );
 
       await waitFor(() => {
-        console.log('🔍 API ERROR TEST - Current hook state:', {
-          isError: result.current.isError,
-          error: result.current.error?.message,
-          isLoading: result.current.isLoading,
-          paceData: result.current.paceData
-        });
         expect(result.current.isError).toBe(true);
       }, { timeout: 5000 });
 
@@ -226,11 +225,10 @@ describe("usePaceTracker Hook", () => {
     });
 
     it("should handle network failures gracefully", async () => {
-      // EXPLICIT: This test expects network failure, so ONLY register the network error handler
-      server.resetHandlers(); // Extra safety reset
-      server.use(
+      // 🏆 VICTORY: PREPEND the network error handler to ensure it's matched first
+      prependHandler(
         http.get('http://localhost:3001/api/v1/pace/:userId', () => {
-          console.log('🌐 NETWORK ERROR HANDLER CALLED'); // Debug log
+          console.log('🌐 NETWORK ERROR HANDLER CALLED');
           return HttpResponse.error();
         })
       );
@@ -337,12 +335,10 @@ describe("usePaceTracker Hook", () => {
     });
 
     it("should handle update errors", async () => {
-      // EXPLICIT: This test expects successful GET but failed PUT
-      server.resetHandlers(); // Extra safety reset
-      server.use(
-        // Need successful GET for initial load
+      // 🏆 VICTORY: PREPEND both GET and PUT handlers to ensure they're matched first
+      prependHandler(
         http.get('http://localhost:3001/api/v1/pace/:userId', ({ params, request }) => {
-          console.log('✅ UPDATE ERROR TEST - GET HANDLER CALLED'); // Debug log
+          console.log('✅ UPDATE ERROR TEST - GET HANDLER CALLED');
           const url = new URL(request.url);
           const completedLessons = parseInt(url.searchParams.get('completedLessons') || '35', 10);
           const totalLessons = parseInt(url.searchParams.get('totalLessons') || '89', 10);
@@ -373,10 +369,11 @@ describe("usePaceTracker Hook", () => {
               aheadLessons: 1.2
             }
           });
-        }),
-        // But failed PUT for update
+        })
+      );
+      prependHandler(
         http.put('http://localhost:3001/api/v1/pace/:userId', () => {
-          console.log('❌ UPDATE ERROR TEST - PUT HANDLER CALLED'); // Debug log
+          console.log('❌ UPDATE ERROR TEST - PUT HANDLER CALLED');
           return HttpResponse.json(
             { error: "Bad Request" }, 
             { status: 400 }
@@ -463,11 +460,10 @@ describe("usePaceTracker Hook", () => {
     });
 
     it("should detect overdue deadlines", async () => {
-      // EXPLICIT: This test expects overdue deadline (past date)
-      server.resetHandlers(); // Extra safety reset
-      server.use(
+      // 🏆 VICTORY: PREPEND the overdue handler to ensure it's matched first
+      prependHandler(
         http.get('http://localhost:3001/api/v1/pace/:userId', ({ params, request }) => {
-          console.log('⏰ OVERDUE TEST - HANDLER CALLED'); // Debug log
+          console.log('⏰ OVERDUE TEST - HANDLER CALLED');
           const url = new URL(request.url);
           const completedLessons = parseInt(url.searchParams.get('completedLessons') || '35', 10);
           const totalLessons = parseInt(url.searchParams.get('totalLessons') || '89', 10);
@@ -507,13 +503,6 @@ describe("usePaceTracker Hook", () => {
       );
 
       await waitFor(() => {
-        console.log('🔍 OVERDUE TEST - Current hook state:', {
-          isOverdue: result.current.isOverdue,
-          currentDeadline: result.current.currentDeadline?.toISOString(),
-          hoursUntilDeadline: result.current.hoursUntilDeadline,
-          isLoading: result.current.isLoading,
-          paceData: result.current.paceData?.currentDeadline
-        });
         expect(result.current.isOverdue).toBe(true);
       }, { timeout: 5000 });
 

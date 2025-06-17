@@ -64,7 +64,7 @@ export function calculatePaceMetrics(
   // Initialize defaults
   let targetLessonsPerDay = 0;
   let targetHoursPerDay = 0;
-  let lessonsPerDay = 0;
+  const lessonsPerDay = 0;
   let hoursPerLesson = 0;
   let isOnTrack = true;
   let paceStatus: "ahead" | "on-track" | "behind" | "unknown" = "unknown";
