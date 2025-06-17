@@ -41,25 +41,39 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   // Load user from localStorage on mount
   useEffect(() => {
-    const savedUser = localStorage.getItem("apstat-user");
-    if (savedUser) {
-      try {
-        const user = JSON.parse(savedUser);
-        setAuthState({
-          user,
-          isLoading: false,
-          isAuthenticated: true,
-        });
-      } catch (error) {
-        console.error("Failed to parse saved user:", error);
-        localStorage.removeItem("apstat-user");
+    try {
+      const savedUser = localStorage.getItem("apstat-user");
+      if (savedUser) {
+        try {
+          const user = JSON.parse(savedUser);
+          setAuthState({
+            user,
+            isLoading: false,
+            isAuthenticated: true,
+          });
+        } catch (error) {
+          console.error("Failed to parse saved user:", error);
+          try {
+            localStorage.removeItem("apstat-user");
+          } catch {
+            // Ignore localStorage removal errors
+          }
+          setAuthState({
+            user: null,
+            isLoading: false,
+            isAuthenticated: false,
+          });
+        }
+      } else {
         setAuthState({
           user: null,
           isLoading: false,
           isAuthenticated: false,
         });
       }
-    } else {
+    } catch (error) {
+      // Handle localStorage access errors (e.g., in CI environments)
+      console.warn("localStorage access denied, using default auth state:", error);
       setAuthState({
         user: null,
         isLoading: false,
@@ -130,7 +144,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
 
       // Save to localStorage
-      localStorage.setItem("apstat-user", JSON.stringify(user));
+      try {
+        localStorage.setItem("apstat-user", JSON.stringify(user));
+      } catch (error) {
+        console.warn("Failed to save user to localStorage:", error);
+      }
 
       console.log("Setting authenticated state to true");
       setAuthState({
@@ -150,7 +168,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   const logout = (): void => {
-    localStorage.removeItem("apstat-user");
+    try {
+      localStorage.removeItem("apstat-user");
+    } catch (error) {
+      console.warn("Failed to remove user from localStorage:", error);
+    }
     setAuthState({
       user: null,
       isLoading: false,

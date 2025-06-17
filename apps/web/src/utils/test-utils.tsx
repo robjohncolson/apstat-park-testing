@@ -39,12 +39,17 @@ export const setupMocks = () => {
   Object.defineProperty(window, "localStorage", {
     value: mockLocalStorage,
     writable: true,
+    configurable: true,
   });
 
   // Reset fetch mock
   mockFetch.mockClear();
   global.fetch = mockFetch as unknown as typeof fetch;
 };
+
+// Automatically set up mocks when this module is loaded
+// This ensures localStorage is always available in test environments
+setupMocks();
 
 // Custom render function that includes providers
 interface CustomRenderOptions extends Omit<RenderOptions, "wrapper"> {
