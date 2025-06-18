@@ -258,9 +258,30 @@ export const handlers = [
   }),
 
   // --- Bookmark endpoints ---
+  http.get("/api/users/:userId/bookmarks", () => {
+    console.log("MSW: Intercepted GET bookmarks (relative URL)");
+    return HttpResponse.json({ bookmarks: [] });
+  }),
+
   http.get(`${API_BASE_URL_3000}/users/:userId/bookmarks`, () => {
     console.log("MSW: Intercepted GET bookmarks (3000)");
     return HttpResponse.json({ bookmarks: [] });
+  }),
+
+  http.get(`${API_BASE_URL_3001}/users/:userId/bookmarks`, () => {
+    console.log("MSW: Intercepted GET bookmarks (3001)");
+    return HttpResponse.json({ bookmarks: [] });
+  }),
+
+  http.get(`${RAILWAY_API_URL}/users/:userId/bookmarks`, () => {
+    console.log("MSW: Intercepted GET bookmarks (Railway)");
+    return HttpResponse.json({ bookmarks: [] });
+  }),
+
+  http.post("/api/users/:userId/bookmarks", async ({ request }) => {
+    console.log("MSW: Intercepted POST bookmarks (relative URL)");
+    const newBookmark = await request.json();
+    return HttpResponse.json(newBookmark, { status: 201 });
   }),
 
   http.post(`${API_BASE_URL_3000}/users/:userId/bookmarks`, async ({ request }) => {
@@ -269,9 +290,44 @@ export const handlers = [
     return HttpResponse.json(newBookmark, { status: 201 });
   }),
 
+  http.post(`${API_BASE_URL_3001}/users/:userId/bookmarks`, async ({ request }) => {
+    console.log("MSW: Intercepted POST bookmarks (3001)");
+    const newBookmark = await request.json();
+    return HttpResponse.json(newBookmark, { status: 201 });
+  }),
+
+  http.post(`${RAILWAY_API_URL}/users/:userId/bookmarks`, async ({ request }) => {
+    console.log("MSW: Intercepted POST bookmarks (Railway)");
+    const newBookmark = await request.json();
+    return HttpResponse.json(newBookmark, { status: 201 });
+  }),
+
+  http.post("/api/users/:userId/bookmarks/sync", async ({ request }) => {
+    console.log("MSW: Intercepted POST bookmarks/sync (relative URL)");
+    await request.json();
+    return HttpResponse.json({ success: true }, { status: 200 });
+  }),
+
   http.post(`${API_BASE_URL_3000}/users/:userId/bookmarks/sync`, async ({ request }) => {
     console.log("MSW: Intercepted POST bookmarks/sync (3000)");
     await request.json();
+    return HttpResponse.json({ success: true }, { status: 200 });
+  }),
+
+  http.post(`${API_BASE_URL_3001}/users/:userId/bookmarks/sync`, async ({ request }) => {
+    console.log("MSW: Intercepted POST bookmarks/sync (3001)");
+    await request.json();
+    return HttpResponse.json({ success: true }, { status: 200 });
+  }),
+
+  http.post(`${RAILWAY_API_URL}/users/:userId/bookmarks/sync`, async ({ request }) => {
+    console.log("MSW: Intercepted POST bookmarks/sync (Railway)");
+    await request.json();
+    return HttpResponse.json({ success: true }, { status: 200 });
+  }),
+
+  http.delete("/api/users/:userId/bookmarks/:bookmarkId", () => {
+    console.log("MSW: Intercepted DELETE bookmark (relative URL)");
     return HttpResponse.json({ success: true }, { status: 200 });
   }),
 
@@ -280,7 +336,26 @@ export const handlers = [
     return HttpResponse.json({ success: true }, { status: 200 });
   }),
 
+  http.delete(`${API_BASE_URL_3001}/users/:userId/bookmarks/:bookmarkId`, () => {
+    console.log("MSW: Intercepted DELETE bookmark (3001)");
+    return HttpResponse.json({ success: true }, { status: 200 });
+  }),
+
+  http.delete(`${RAILWAY_API_URL}/users/:userId/bookmarks/:bookmarkId`, () => {
+    console.log("MSW: Intercepted DELETE bookmark (Railway)");
+    return HttpResponse.json({ success: true }, { status: 200 });
+  }),
+
   // --- Progress endpoint ---
+  http.get("/api/users/:userId/progress", () => {
+    console.log("MSW: Intercepted GET progress (relative URL)");
+    const mockProgress = [
+      { lesson_id: "1-1", videos_watched: [1], quizzes_completed: [1] },
+      { lesson_id: "1-2", videos_watched: [1], quizzes_completed: [] },
+    ];
+    return HttpResponse.json(mockProgress);
+  }),
+
   http.get(`${API_BASE_URL_3000}/users/:userId/progress`, () => {
     console.log("MSW: Intercepted GET progress (3000)");
     const mockProgress = [
@@ -288,6 +363,48 @@ export const handlers = [
       { lesson_id: "1-2", videos_watched: [1], quizzes_completed: [] },
     ];
     return HttpResponse.json(mockProgress);
+  }),
+
+  http.get(`${API_BASE_URL_3001}/users/:userId/progress`, () => {
+    console.log("MSW: Intercepted GET progress (3001)");
+    const mockProgress = [
+      { lesson_id: "1-1", videos_watched: [1], quizzes_completed: [1] },
+      { lesson_id: "1-2", videos_watched: [1], quizzes_completed: [] },
+    ];
+    return HttpResponse.json(mockProgress);
+  }),
+
+  http.get(`${RAILWAY_API_URL}/users/:userId/progress`, () => {
+    console.log("MSW: Intercepted GET progress (Railway)");
+    const mockProgress = [
+      { lesson_id: "1-1", videos_watched: [1], quizzes_completed: [1] },
+      { lesson_id: "1-2", videos_watched: [1], quizzes_completed: [] },
+    ];
+    return HttpResponse.json(mockProgress);
+  }),
+
+  http.post("/api/users/:userId/progress/update", async ({ request }) => {
+    console.log("MSW: Intercepted POST progress/update (relative URL)");
+    const updateData = await request.json();
+    return HttpResponse.json({ success: true, data: updateData });
+  }),
+
+  http.post(`${API_BASE_URL_3000}/users/:userId/progress/update`, async ({ request }) => {
+    console.log("MSW: Intercepted POST progress/update (3000)");
+    const updateData = await request.json();
+    return HttpResponse.json({ success: true, data: updateData });
+  }),
+
+  http.post(`${API_BASE_URL_3001}/users/:userId/progress/update`, async ({ request }) => {
+    console.log("MSW: Intercepted POST progress/update (3001)");
+    const updateData = await request.json();
+    return HttpResponse.json({ success: true, data: updateData });
+  }),
+
+  http.post(`${RAILWAY_API_URL}/users/:userId/progress/update`, async ({ request }) => {
+    console.log("MSW: Intercepted POST progress/update (Railway)");
+    const updateData = await request.json();
+    return HttpResponse.json({ success: true, data: updateData });
   }),
 
   // --- Pace Tracker API endpoints - All variations ---

@@ -62,8 +62,9 @@ export function BookmarkProvider({ children }: BookmarkProviderProps) {
 
     setIsLoading(true);
     try {
+      const apiUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:3001';
       const response = await fetch(
-        `http://localhost:3000/api/users/${user.id}/bookmarks`,
+        `${apiUrl}/api/users/${user.id}/bookmarks`,
       );
       if (response.ok) {
         const data = await response.json();
@@ -123,8 +124,9 @@ export function BookmarkProvider({ children }: BookmarkProviderProps) {
     setActiveBookmark(newBookmark);
 
     try {
+      const apiUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:3001';
       const response = await fetch(
-        `http://localhost:3000/api/users/${user.id}/bookmarks/sync`,
+        `${apiUrl}/api/users/${user.id}/bookmarks/sync`,
         {
           method: "POST",
           headers: {
@@ -163,8 +165,9 @@ export function BookmarkProvider({ children }: BookmarkProviderProps) {
     setActiveBookmark(null);
 
     try {
+      const apiUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:3001';
       const response = await fetch(
-        `http://localhost:3000/api/users/${user.id}/bookmarks/sync`,
+        `${apiUrl}/api/users/${user.id}/bookmarks/sync`,
         {
           method: "POST",
           headers: {

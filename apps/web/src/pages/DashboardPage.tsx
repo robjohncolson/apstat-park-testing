@@ -43,9 +43,10 @@ export function DashboardPage() {
         return;
       }
 
-      try {
-        const response = await fetch(
-          `http://localhost:3000/api/users/${user.id}/progress`,
+          try {
+      const apiUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      const response = await fetch(
+        `${apiUrl}/api/users/${user.id}/progress`,
         );
         if (response.ok) {
           const progressData = await response.json();
