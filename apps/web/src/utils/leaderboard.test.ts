@@ -59,9 +59,15 @@ describe("Leaderboard Utilities - MSW Integration", () => {
     });
 
     it("should handle API failure and return offline fallback", async () => {
-      // Override MSW to return an error
+      // Override MSW to return an error for all leaderboard endpoints
       server.use(
         http.get("/api/leaderboard", () => {
+          return new HttpResponse(null, { status: 500 });
+        }),
+        http.get("http://localhost:3001/api/leaderboard", () => {
+          return new HttpResponse(null, { status: 500 });
+        }),
+        http.get("https://apstat-park-testing-api.up.railway.app/api/leaderboard", () => {
           return new HttpResponse(null, { status: 500 });
         }),
       );
@@ -83,9 +89,15 @@ describe("Leaderboard Utilities - MSW Integration", () => {
     });
 
     it("should add current user to offline fallback when not in list", async () => {
-      // Override MSW to return an error
+      // Override MSW to return an error for all leaderboard endpoints
       server.use(
         http.get("/api/leaderboard", () => {
+          return new HttpResponse(null, { status: 500 });
+        }),
+        http.get("http://localhost:3001/api/leaderboard", () => {
+          return new HttpResponse(null, { status: 500 });
+        }),
+        http.get("https://apstat-park-testing-api.up.railway.app/api/leaderboard", () => {
           return new HttpResponse(null, { status: 500 });
         }),
       );
@@ -109,9 +121,15 @@ describe("Leaderboard Utilities - MSW Integration", () => {
     });
 
     it("should not duplicate user in offline fallback if already exists", async () => {
-      // Override MSW to return an error
+      // Override MSW to return an error for all leaderboard endpoints
       server.use(
         http.get("/api/leaderboard", () => {
+          return new HttpResponse(null, { status: 500 });
+        }),
+        http.get("http://localhost:3001/api/leaderboard", () => {
+          return new HttpResponse(null, { status: 500 });
+        }),
+        http.get("https://apstat-park-testing-api.up.railway.app/api/leaderboard", () => {
           return new HttpResponse(null, { status: 500 });
         }),
       );
@@ -129,9 +147,21 @@ describe("Leaderboard Utilities - MSW Integration", () => {
     });
 
     it("should handle malformed API response gracefully", async () => {
-      // Override MSW to return malformed data
+      // Override MSW to return malformed data for all leaderboard endpoints
       server.use(
         http.get("/api/leaderboard", () => {
+          return HttpResponse.json({
+            success: false,
+            error: "Database connection failed",
+          });
+        }),
+        http.get("http://localhost:3001/api/leaderboard", () => {
+          return HttpResponse.json({
+            success: false,
+            error: "Database connection failed",
+          });
+        }),
+        http.get("https://apstat-park-testing-api.up.railway.app/api/leaderboard", () => {
           return HttpResponse.json({
             success: false,
             error: "Database connection failed",
@@ -312,9 +342,15 @@ describe("Leaderboard Utilities - MSW Integration", () => {
       let result = await fetchLeaderboardData();
       expect(result.isOffline).toBe(false);
 
-      // Override with error response
+      // Override with error response for all leaderboard endpoints
       server.use(
         http.get("/api/leaderboard", () => {
+          return new HttpResponse(null, { status: 404 });
+        }),
+        http.get("http://localhost:3001/api/leaderboard", () => {
+          return new HttpResponse(null, { status: 404 });
+        }),
+        http.get("https://apstat-park-testing-api.up.railway.app/api/leaderboard", () => {
           return new HttpResponse(null, { status: 404 });
         }),
       );
@@ -322,9 +358,37 @@ describe("Leaderboard Utilities - MSW Integration", () => {
       result = await fetchLeaderboardData();
       expect(result.isOffline).toBe(true);
 
-      // Override with different success response
+      // Override with different success response for all leaderboard endpoints
       server.use(
         http.get("/api/leaderboard", () => {
+          return HttpResponse.json({
+            success: true,
+            leaderboard: [
+              {
+                rank: 1,
+                username: "DynamicMockUser",
+                completed_videos: 20,
+                completed_quizzes: 15,
+                total_completed: 35,
+              },
+            ],
+          });
+        }),
+        http.get("http://localhost:3001/api/leaderboard", () => {
+          return HttpResponse.json({
+            success: true,
+            leaderboard: [
+              {
+                rank: 1,
+                username: "DynamicMockUser",
+                completed_videos: 20,
+                completed_quizzes: 15,
+                total_completed: 35,
+              },
+            ],
+          });
+        }),
+        http.get("https://apstat-park-testing-api.up.railway.app/api/leaderboard", () => {
           return HttpResponse.json({
             success: true,
             leaderboard: [
