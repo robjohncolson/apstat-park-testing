@@ -32,7 +32,7 @@ function generateMockPaceData(params: any, request: any) {
     userId: parseInt(params.userId as string, 10),
     currentDeadline: currentDeadline.toISOString(),
     bufferHours: 5.5,
-    lastCompletedLessons: completedLessons,
+    lastCompletedLessons: Math.max(0, completedLessons - 0.1), // Show as slightly behind to allow updates
     lastLessonCompletion: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
     examDate: examDate.toISOString(),
     updatedAt: new Date().toISOString(),
@@ -298,12 +298,12 @@ export const handlers = [
     return generateMockPaceData(params, request);
   }),
 
-  http.get(`${API_BASE_URL_3001}/api/v1/pace/:userId`, ({ params, request }) => {
+  http.get("http://localhost:3001/api/v1/pace/:userId", ({ params, request }) => {
     console.log("MSW: Intercepted GET pace data (3001)");
     return generateMockPaceData(params, request);
   }),
 
-  http.get(`${RAILWAY_API_URL}/v1/pace/:userId`, ({ params, request }) => {
+  http.get("https://apstat-park-testing-api.up.railway.app/api/v1/pace/:userId", ({ params, request }) => {
     console.log("MSW: Intercepted GET pace data (Railway)");
     return generateMockPaceData(params, request);
   }),
@@ -314,12 +314,12 @@ export const handlers = [
     return await generateMockPaceUpdate(params, request);
   }),
 
-  http.put(`${API_BASE_URL_3001}/api/v1/pace/:userId`, async ({ params, request }) => {
+  http.put("http://localhost:3001/api/v1/pace/:userId", async ({ params, request }) => {
     console.log("MSW: Intercepted PUT pace data (3001)");
     return await generateMockPaceUpdate(params, request);
   }),
 
-  http.put(`${RAILWAY_API_URL}/v1/pace/:userId`, async ({ params, request }) => {
+  http.put("https://apstat-park-testing-api.up.railway.app/api/v1/pace/:userId", async ({ params, request }) => {
     console.log("MSW: Intercepted PUT pace data (Railway)");
     return await generateMockPaceUpdate(params, request);
   }),

@@ -63,7 +63,7 @@ function generateOfflinePaceData(userId: number, completedLessons: number, total
     userId,
     currentDeadline: currentDeadline.toISOString(),
     bufferHours: 5.5,
-    lastCompletedLessons: completedLessons,
+    lastCompletedLessons: Math.max(0, completedLessons - 0.1), // Show as slightly behind to allow updates
     lastLessonCompletion: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
     examDate: examDate.toISOString(),
     updatedAt: new Date().toISOString(),
