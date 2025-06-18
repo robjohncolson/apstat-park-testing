@@ -3,6 +3,7 @@ import { http, HttpResponse } from "msw";
 
 const API_BASE_URL_3000 = "http://localhost:3000/api";
 const API_BASE_URL_3001 = "http://localhost:3001/api";
+const RAILWAY_API_URL = "https://apstat-park-api.up.railway.app/api";
 
 export const handlers = [
   // Mock for generating a username - try both ports and relative URLs
@@ -19,6 +20,11 @@ export const handlers = [
   http.get("/api/generate-username", () => {
     console.log("MSW: Intercepted generate-username request (relative URL)");
     return HttpResponse.json({ username: "mocked-user-123" });
+  }),
+
+  http.get(`${RAILWAY_API_URL}/generate-username`, () => {
+    console.log("MSW: Intercepted generate-username request (Railway)");
+    return HttpResponse.json({ username: "mocked-railway-user-123" });
   }),
 
   // Mock for getting or creating a user - try both ports and relative URLs

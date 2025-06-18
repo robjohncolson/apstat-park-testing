@@ -235,8 +235,9 @@ export function LessonPage() {
     };
 
     try {
+      const apiUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:3000';
       const response = await fetch(
-        `http://localhost:3000/api/users/${user.id}/progress/update`,
+        `${apiUrl}/api/users/${user.id}/progress/update`,
         {
           method: "POST",
           headers: {

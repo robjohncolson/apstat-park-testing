@@ -22,7 +22,7 @@ export async function fetchLeaderboardData(currentUsername?: string): Promise<{
   error: string | null;
 }> {
   try {
-    const apiUrl = import.meta.env.VITE_API_BASE_URL || '';
+    const apiUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:3001';
     const fullUrl = `${apiUrl}/api/leaderboard`;
     console.log('API Base URL:', apiUrl);
     console.log('Full API URL:', fullUrl);

@@ -1,3 +1,4 @@
+import React, { useEffect } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -13,6 +14,7 @@ import { LessonPage } from "./pages/LessonPage";
 import { LeaderboardPage } from "./pages/LeaderboardPage";
 import { PageShell } from "./components/PageShell/PageShell";
 import "./App.css";
+import { exposeRailwayTest } from "./utils/railwayTest";
 import { Spinner } from "./components/ui/Spinner";
 
 // Global Bookmark Star Component
@@ -78,6 +80,11 @@ function GlobalBookmarkStar() {
 
 function App() {
   const { isAuthenticated, isLoading } = useAuth();
+
+  // Expose Railway test function for debugging
+  useEffect(() => {
+    exposeRailwayTest();
+  }, []);
 
   if (isLoading) {
     return (

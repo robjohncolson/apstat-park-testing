@@ -37,8 +37,8 @@ interface UpdatePaceParams {
   examDate?: string;
 }
 
-// API Base URL
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+// API Base URL - prioritize VITE_API_URL, then VITE_API_BASE_URL, then localhost
+const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
 
 // API Functions
 async function fetchPaceData(userId: number, completedLessons?: number, totalLessons?: number): Promise<PaceData> {
