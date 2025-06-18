@@ -3,7 +3,7 @@
  * This utility helps verify if the Railway API is accessible
  */
 
-const RAILWAY_API_URL = 'https://apstat-park-api.up.railway.app';
+const RAILWAY_API_URL = 'https://apstat-park-testing-api.up.railway.app';
 
 export async function testRailwayConnection(): Promise<{
   success: boolean;

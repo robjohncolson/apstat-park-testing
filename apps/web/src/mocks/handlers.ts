@@ -3,7 +3,7 @@ import { http, HttpResponse } from "msw";
 
 const API_BASE_URL_3000 = "http://localhost:3000/api";
 const API_BASE_URL_3001 = "http://localhost:3001/api";
-const RAILWAY_API_URL = "https://apstat-park-api.up.railway.app/api";
+const RAILWAY_API_URL = "https://apstat-park-testing-api.up.railway.app/api";
 
 export const handlers = [
   // Mock for generating a username - try both ports and relative URLs
@@ -73,8 +73,9 @@ export const handlers = [
     return HttpResponse.json({ success: true, user: mockUser });
   }),
 
-  // Mock for leaderboard data
+  // Mock for leaderboard data - multiple endpoints
   http.get("/api/leaderboard", () => {
+    console.log("MSW: Intercepted leaderboard request (relative URL)");
     return HttpResponse.json({
       success: true,
       leaderboard: [
@@ -98,6 +99,66 @@ export const handlers = [
           completed_videos: 5,
           completed_quizzes: 4,
           total_completed: 9,
+        },
+      ],
+    });
+  }),
+
+  http.get(`${API_BASE_URL_3001}/leaderboard`, () => {
+    console.log("MSW: Intercepted leaderboard request (3001)");
+    return HttpResponse.json({
+      success: true,
+      leaderboard: [
+        {
+          rank: 1,
+          username: "MSW-Champion",
+          completed_videos: 15,
+          completed_quizzes: 12,
+          total_completed: 27,
+        },
+        {
+          rank: 2,
+          username: "TestMaster",
+          completed_videos: 10,
+          completed_quizzes: 8,
+          total_completed: 18,
+        },
+        {
+          rank: 3,
+          username: "mocked-user-123",
+          completed_videos: 5,
+          completed_quizzes: 4,
+          total_completed: 9,
+        },
+      ],
+    });
+  }),
+
+  http.get(`${RAILWAY_API_URL}/leaderboard`, () => {
+    console.log("MSW: Intercepted leaderboard request (Railway)");
+    return HttpResponse.json({
+      success: true,
+      leaderboard: [
+        {
+          rank: 1,
+          username: "Railway-Champion",
+          completed_videos: 20,
+          completed_quizzes: 15,
+          total_completed: 35,
+        },
+        {
+          rank: 2,
+          username: "CloudMaster",
+          completed_videos: 18,
+          completed_quizzes: 12,
+          total_completed: 30,
+        },
+        {
+          rank: 3,
+          username: "mocked-user-123",
+          completed_videos: 10,
+          completed_quizzes: 8,
+          total_completed: 18,
         },
       ],
     });

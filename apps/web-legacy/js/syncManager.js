@@ -3,8 +3,8 @@
 
 class SyncManager {
   constructor() {
-    this.apiBaseUrl = "https://apstat-park-api.up.railway.app/api";
-    this.wsBaseUrl = "https://apstat-park-api.up.railway.app"; // WebSocket connection
+    this.apiBaseUrl = "https://apstat-park-testing-api.up.railway.app/api";
+    this.wsBaseUrl = "https://apstat-park-testing-api.up.railway.app"; // WebSocket connection
     this.currentUser = null;
     this.syncInProgress = false;
     this.offlineMode = false;
