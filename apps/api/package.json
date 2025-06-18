@@ -7,7 +7,7 @@
     "dev": "nodemon src/index.ts",
     "dev:js": "nodemon src/index.js",
     "build": "tsc",
-    "start": "node dist/index.js",
+    "start": "node dist/src/index.js",
     "start:dev": "npm run build && npm start",
     "lint": "eslint --config ../../.eslintrc.json src --ext .ts",
     "lint:fix": "eslint --config ../../.eslintrc.json src --ext .ts --fix",
