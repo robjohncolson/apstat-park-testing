@@ -1,0 +1,23 @@
+Phase 3.4: Implementing the P2P Node Engine
+Goal: This is the core of Phase 3. We will implement the node.ts file, which will contain a class that manages all peer connections and handles incoming/outgoing messages.
+Key Actions:
+Open the File: packages/chain-p2p/src/node.ts.
+Create the P2PNode Class: This class will be the main export.
+Constructor: The constructor will take the user's PublicKey as their peerId. It will initialize a new Peer instance from the peerjs library.
+start() Method:
+This method will call discoverPeers() from our bootstrap.ts module.
+It will then loop through the returned peer IDs and call this.peer.connect(peerId) for each one.
+It will set up all the core event listeners for the peer object:
+this.peer.on('open', (id) => { ... }): Fires when our node is successfully registered with the broker server.
+this.peer.on('connection', (conn) => { ... }): Fires when another peer connects to us.
+this.peer.on('error', (err) => { ... }): For logging connection errors.
+Connection Handling:
+When a new connection is established (either by us or to us), set up a data listener on the connection object: conn.on('data', (data) => { this.handleMessage(conn, data as P2PMessage); }).
+Send the initial HELLO message as defined in our protocol.
+handleMessage() Method:
+This will be a large switch statement based on the message.type.
+Each case will handle a different message type (e.g., 'HELLO', 'ANNOUNCE_CANDIDATE_BLOCK').
+It will implement the logic we defined, such as checking the protocol version and flagging incompatible peers.
+broadcast() Method:
+Create a method broadcast(message: P2PMessage) that iterates through all active, compatible connections and sends the message to each one.
+Expected Outcome: A P2PNode class that can start, discover peers using our bootstrap mechanism, connect to them, and handle basic handshake messages according to our defined protocol. We can test this by running two instances of the app in separate browser tabs and confirming they can connect and exchange HELLO messages.
