@@ -1,0 +1,29 @@
+{
+  "name": "@apstatchain/p2p",
+  "version": "1.0.0",
+  "description": "Peer-to-peer networking package for APStat Chain",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "@apstatchain/core": "file:../chain-core",
+    "peerjs": "^1.5.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0"
+  },
+  "keywords": [
+    "p2p",
+    "webrtc",
+    "networking",
+    "blockchain"
+  ],
+  "author": "",
+  "license": "ISC"
+} 

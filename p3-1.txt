@@ -1,0 +1,15 @@
+Phase 3.1: Package Scaffolding & Initial Setup
+Goal: To create the folder structure and install the dependencies for our new networking package.
+Key Actions:
+Create the Package Directory: Inside the /packages directory, create a new folder named chain-p2p.
+Initialize package.json: Create a package.json file inside chain-p2p.
+Define the package name (e.g., @apstatchain/p2p).
+Add @apstatchain/core as a local workspace dependency.
+Mark it as a module ("type": "module").
+Install Dependencies: From the project root, install the required library into the chain-p2p workspace.
+peerjs: The core library for WebRTC peer-to-peer connections.
+Create Empty Source Files: Create the initial empty source files inside packages/chain-p2p/src/:
+protocol.ts
+bootstrap.ts
+node.ts
+Expected Outcome: A packages/chain-p2p folder that is correctly configured as part of the monorepo. It should be ableto import types and functions from @apstatchain/core without issue.
