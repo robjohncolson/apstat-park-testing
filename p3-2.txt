@@ -1,0 +1,31 @@
+Phase 3.2: Defining the Communication Protocol
+Goal: To populate the protocol.ts file with definitions for all the message types that nodes will send to each other. This creates a clear and strict "language" for peer communication.
+Key Actions:
+Open the File: packages/chain-p2p/src/protocol.ts.
+Import Types: Import Block, Transaction, Signature, Hash, etc., from @apstatchain/core.
+Define Message Types: Create a discriminated union P2PMessage that encompasses all possible messages. This is crucial for type-safe message handling.
+Generated typescript
+export type P2PMessageType =
+  | 'HELLO'
+  | 'GET_MISSING_TX'
+  | 'SEND_TX'
+  | 'ANNOUNCE_CANDIDATE_BLOCK'
+  | 'SEND_ATTESTATION'
+  // etc.
+
+export interface HelloMessage {
+  type: 'HELLO';
+  payload: {
+    protocolVersion: number;
+    latestBlockHash: Hash;
+  };
+}
+
+// Define interfaces for every other message type...
+
+export type P2PMessage = HelloMessage | GetMissingTxMessage | ... ;
+Use code with caution.
+TypeScript
+Create Message Factory Functions: For each message type, create a simple, exported "factory function" to ensure messages are always created with the correct structure.
+export function createHelloMessage(version: number, hash: Hash): HelloMessage { ... }
+Expected Outcome: A protocol.ts file containing a comprehensive, type-safe definition of our entire peer-to-peer communication language.
