@@ -22,7 +22,6 @@ import {
 import MigrationRunner from "./migrations/migrationRunner";
 import { createPaceRouter } from "./routes/pace";
 import { createMockPaceRouter } from "./routes/pace-mock";
-import { createAdminRouter } from "./routes/admin";
 import knex from "./db"; // Import Knex instance to initialize it
 
 // Types
@@ -1010,7 +1009,6 @@ pool.connect(async (err, client, done) => {
   // Register pace routes after database connection check
   if (isDatabaseConnected) {
     app.use("/api/v1/pace", createPaceRouter(pool));
-    app.use("/api/admin", createAdminRouter(pool));
     appLogger.info("Registered database-backed pace router");
   } else {
     app.use("/api/v1/pace", createMockPaceRouter());
