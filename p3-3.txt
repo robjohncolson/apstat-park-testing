@@ -1,0 +1,15 @@
+Phase 3.3: Implementing Peer Discovery
+Goal: To implement the logic for finding initial peers using our DNS Seed strategy.
+Key Actions:
+Open the File: packages/chain-p2p/src/bootstrap.ts.
+Define Constants: At the top of the file, define a const array of DNS_SEED_URLS. For now, we can use a placeholder or a free DNS-over-HTTPS provider like Cloudflare.
+const DNS_SEED_URLS = ['https://cloudflare-dns.com/dns-query?name=seed.apstatchain.com&type=TXT'];
+Implement discoverPeers function:
+Signature: export async function discoverPeers(): Promise<string[]> (returns an array of peer IDs/IPs).
+Logic:
+The function will iterate through the DNS_SEED_URLS.
+It will use the fetch API to make a GET request to each URL.
+It will parse the JSON response to extract the list of peer addresses from the TXT record.
+It will aggregate the results from all seeds, remove duplicates, and return the final list.
+Wrap the logic in a try...catch block to handle network errors gracefully.
+Expected Outcome: A bootstrap.ts module with a single function that can successfully query a DNS record and return a list of peer addresses.
