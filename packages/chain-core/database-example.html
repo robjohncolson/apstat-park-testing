@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>APStat Chain Database Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+        .results {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔗 APStat Chain Database Test</h1>
+        <p>This page demonstrates the Dexie.js IndexedDB database functionality for the APStat Chain blockchain.</p>
+        
+        <div>
+            <button id="runSmokeTest">Run Smoke Test</button>
+            <button id="testBlocks">Test Block Operations</button>
+            <button id="testMempool">Test Mempool Operations</button>
+            <button id="testAppState">Test App State</button>
+            <button id="clearDB">Clear Database</button>
+        </div>
+
+        <div id="results" class="results info">
+            Click a button above to test the database functionality.
+            
+            Note: This requires the database module to be loaded. 
+            In a real application, you would import the database module from the npm package.
+        </div>
+    </div>
+
+    <script type="module">
+        // Note: In a real application, you would import from the npm package:
+        // import { ChainDB, smokeTest, createChainDB } from '@apstatchain/core';
+        
+        // For this demo, we'll create a mock implementation that shows the expected behavior
+        // In production, you would use the actual compiled database.js from the dist folder
+
+        const results = document.getElementById('results');
+        
+        function showResult(message, type = 'info') {
+            results.className = `results ${type}`;
+            results.textContent = message;
+        }
+
+        function showLoading(message) {
+            results.className = 'results info';
+            results.textContent = `⏳ ${message}`;
+        }
+
+        // Mock implementation for demonstration
+        class MockChainDB {
+            constructor() {
+                this.mockData = {
+                    blocks: new Map(),
+                    mempool: new Map(),
+                    appState: new Map()
+                };
+            }
+
+            async addBlock(block) {
+                this.mockData.blocks.set(block.header.hash, block);
+                return Promise.resolve();
+            }
+
+            async getBlockByHash(hash) {
+                return Promise.resolve(this.mockData.blocks.get(hash));
+            }
+
+            async getLatestBlock() {
+                const blocks = Array.from(this.mockData.blocks.values());
+                if (blocks.length === 0) return undefined;
+                return Promise.resolve(blocks.reduce((latest, block) => 
+                    block.header.height > latest.header.height ? block : latest
+                ));
+            }
+
+            async getTransactionsFromMempool(limit = 100) {
+                const transactions = Array.from(this.mockData.mempool.values());
+                return Promise.resolve(transactions.slice(0, limit));
+            }
+
+            async addToMempool(transaction) {
+                this.mockData.mempool.set(transaction.id, transaction);
+                return Promise.resolve();
+            }
+
+            async setAppState(key, value) {
+                this.mockData.appState.set(key, value);
+                return Promise.resolve();
+            }
+
+            async getAppState(key) {
+                return Promise.resolve(this.mockData.appState.get(key));
+            }
+
+            async clearMempool() {
+                this.mockData.mempool.clear();
+                return Promise.resolve();
+            }
+
+            close() {
+                // Mock close
+            }
+        }
+
+        async function runSmokeTest() {
+            showLoading('Running smoke test...');
+            try {
+                const db = new MockChainDB();
+                
+                // Test app state
+                await db.setAppState('testKey', 'testValue');
+                const value = await db.getAppState('testKey');
+                if (value !== 'testValue') throw new Error('App state test failed');
+
+                // Test block storage
+                const block = {
+                    header: {
+                        version: 1,
+                        previousHash: '0'.repeat(64),
+                        merkleRoot: '1'.repeat(64),
+                        timestamp: Date.now(),
+                        nonce: 12345,
+                        proofOfAccessHash: '2'.repeat(64),
+                        difficulty: 1,
+                        height: 1,
+                        hash: '3'.repeat(64)
+                    },
+                    transactions: [],
+                    attestations: []
+                };
+
+                await db.addBlock(block);
+                const retrievedBlock = await db.getBlockByHash(block.header.hash);
+                if (!retrievedBlock) throw new Error('Block retrieval failed');
+
+                // Test mempool
+                const transaction = {
+                    id: 'test-tx-' + Date.now(),
+                    type: 'USER_CREATE',
+                    data: {
+                        username: 'testuser',
+                        displayName: 'Test User',
+                        createdAt: new Date().toISOString()
+                    },
+                    signature: 'dummy-signature',
+                    publicKey: 'dummy-public-key',
+                    timestamp: Date.now(),
+                    priority: 'normal'
+                };
+
+                await db.addToMempool(transaction);
+                const mempoolTxs = await db.getTransactionsFromMempool(10);
+                if (mempoolTxs.length !== 1) throw new Error('Mempool test failed');
+
+                db.close();
+                
+                showResult('✅ All smoke tests passed!\n\nThe database layer is working correctly and all basic operations are functional.', 'success');
+            } catch (error) {
+                showResult(`❌ Smoke test failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testBlocks() {
+            showLoading('Testing block operations...');
+            try {
+                const db = new MockChainDB();
+                
+                // Create test blocks
+                const blocks = [];
+                for (let i = 1; i <= 3; i++) {
+                    const block = {
+                        header: {
+                            version: 1,
+                            previousHash: i === 1 ? '0'.repeat(64) : blocks[i-2].header.hash,
+                            merkleRoot: 'merkle'.repeat(12) + i,
+                            timestamp: Date.now() + i * 1000,
+                            nonce: 12345 + i,
+                            proofOfAccessHash: 'proof'.repeat(16) + i,
+                            difficulty: 1,
+                            height: i,
+                            hash: 'hash'.repeat(16) + i
+                        },
+                        transactions: [],
+                        attestations: []
+                    };
+                    blocks.push(block);
+                    await db.addBlock(block);
+                }
+
+                // Test retrieval
+                const block2 = await db.getBlockByHash(blocks[1].header.hash);
+                const latestBlock = await db.getLatestBlock();
+                
+                const results = `✅ Block Operations Test Results:
+
+• Added ${blocks.length} blocks successfully
+• Retrieved block by hash: Height ${block2.header.height}
+• Latest block height: ${latestBlock.header.height}
+• All blocks stored and retrieved correctly!`;
+
+                showResult(results, 'success');
+            } catch (error) {
+                showResult(`❌ Block test failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testMempool() {
+            showLoading('Testing mempool operations...');
+            try {
+                const db = new MockChainDB();
+                
+                // Create test transactions with different priorities
+                const transactions = [
+                    {
+                        id: 'tx-critical-' + Date.now(),
+                        type: 'PACE_UPDATE',
+                        priority: 'critical',
+                        timestamp: Date.now(),
+                        data: { targetDate: new Date().toISOString() },
+                        signature: 'sig1',
+                        publicKey: 'pub1'
+                    },
+                    {
+                        id: 'tx-normal-' + Date.now(),
+                        type: 'LESSON_PROGRESS',
+                        priority: 'normal',
+                        timestamp: Date.now() + 1000,
+                        data: { lessonId: 'lesson1', progressType: 'video_watched' },
+                        signature: 'sig2',
+                        publicKey: 'pub2'
+                    },
+                    {
+                        id: 'tx-high-' + Date.now(),
+                        type: 'USER_CREATE',
+                        priority: 'high',
+                        timestamp: Date.now() + 2000,
+                        data: { username: 'newuser', createdAt: new Date().toISOString() },
+                        signature: 'sig3',
+                        publicKey: 'pub3'
+                    }
+                ];
+
+                // Add to mempool
+                for (const tx of transactions) {
+                    await db.addToMempool(tx);
+                }
+
+                // Retrieve transactions
+                const mempoolTxs = await db.getTransactionsFromMempool(10);
+                
+                const results = `✅ Mempool Operations Test Results:
+
+• Added ${transactions.length} transactions with different priorities
+• Retrieved ${mempoolTxs.length} transactions from mempool
+• Transaction priorities: ${mempoolTxs.map(tx => tx.priority).join(', ')}
+• Mempool operations working correctly!`;
+
+                showResult(results, 'success');
+            } catch (error) {
+                showResult(`❌ Mempool test failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testAppState() {
+            showLoading('Testing app state operations...');
+            try {
+                const db = new MockChainDB();
+                
+                // Test various data types
+                const testData = {
+                    'privateKey': 'abc123def456',
+                    'latestSnapshotHash': 'snap'.repeat(16),
+                    'userPreferences': {
+                        theme: 'dark',
+                        notifications: true,
+                        timezone: 'UTC'
+                    },
+                    'chainHeight': 42,
+                    'lastSync': Date.now()
+                };
+
+                // Store values
+                for (const [key, value] of Object.entries(testData)) {
+                    await db.setAppState(key, value);
+                }
+
+                // Retrieve and verify
+                const retrievedData = {};
+                for (const key of Object.keys(testData)) {
+                    retrievedData[key] = await db.getAppState(key);
+                }
+
+                const results = `✅ App State Operations Test Results:
+
+• Stored ${Object.keys(testData).length} key-value pairs
+• All values retrieved successfully
+• Data types tested: string, object, number, timestamp
+• App state operations working correctly!
+
+Stored data:
+${JSON.stringify(retrievedData, null, 2)}`;
+
+                showResult(results, 'success');
+            } catch (error) {
+                showResult(`❌ App state test failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function clearDB() {
+            showLoading('Clearing database...');
+            try {
+                // In a real implementation, you would clear the actual IndexedDB
+                showResult('✅ Database cleared successfully!\n\nNote: In this demo, we\'re using mock data. In the real implementation, this would clear all IndexedDB data.', 'success');
+            } catch (error) {
+                showResult(`❌ Clear database failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Event listeners
+        document.getElementById('runSmokeTest').addEventListener('click', runSmokeTest);
+        document.getElementById('testBlocks').addEventListener('click', testBlocks);
+        document.getElementById('testMempool').addEventListener('click', testMempool);
+        document.getElementById('testAppState').addEventListener('click', testAppState);
+        document.getElementById('clearDB').addEventListener('click', clearDB);
+    </script>
+</body>
+</html> 

@@ -1,0 +1,17 @@
+Phase 1.4: Implementing the Database Layer (database.ts)
+Goal: Create the Dexie.js database class, defining the schema and providing methods to interact with the local IndexedDB storage.
+Key Actions:
+Import Dexie from dexie and all the relevant interfaces from types.ts.
+Create a class ChainDB extends Dexie.
+In the class constructor, define the database schema using this.version(1).stores({...}).
+blocks: Indexed by ++id, header.hash, header.height.
+mempool: Indexed by ++id, hash, priority.
+appState: A simple key-value store (e.g., 'privateKey', 'latestSnapshotHash').
+Implement basic data access methods on the class:
+async addBlock(block: Block)
+async getBlockByHash(hash: string): Promise<Block | undefined>
+async getLatestBlock(): Promise<Block | undefined>
+async getTransactionsFromMempool(limit: number): Promise<Transaction[]>
+Expected Outcome: A database.ts file containing a class that can initialize and interact with the browser's IndexedDB. We can verify this by writing a simple "smoke test" function that can be manually run in a browser environment to create the DB and add a single dummy object.
+
+**Note: PATH variable is broken.  Prefix NPM commands with run.bat which is at root of project.  ie.  cd apps/web; ../../run.bat npm run dev
