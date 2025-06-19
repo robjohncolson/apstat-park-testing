@@ -1,0 +1,6 @@
+**PROJECT ENVIRONMENT CONFIGURATION:**
+- PATH variable is not properly configured
+- All NPM commands must be prefixed with run.bat from project root
+- Format: cd [directory]/[subdirectory]; ../../run.bat [npm command]
+- Example: cd apps/web; ../../run.bat npm run dev
+- This is required for ALL npm/yarn/node commands to function properly
