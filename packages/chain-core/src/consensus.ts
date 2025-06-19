@@ -257,5 +257,47 @@ export async function verifyPuzzleSolutionWithContext(
   }
 }
 
+/**
+ * Handle a failed block proposal by applying penalties and returning transactions to mempool
+ * @param block - The failed block that was rejected
+ * @param proposerPublicKey - The public key of the user who proposed the failed block
+ * @param db - The ChainDB instance for database operations
+ * @returns Promise that resolves when penalty has been applied and transactions returned
+ */
+export async function handleFailedBlock(
+  block: Block, 
+  proposerPublicKey: PublicKey, 
+  db: ChainDB
+): Promise<void> {
+  try {
+    // Apply penalty to the block proposer
+    // Set scoreMultiplier to 0.5 (50% penalty) and expiry to 1 hour from now
+    const penaltyEntry = {
+      publicKey: proposerPublicKey,
+      scoreMultiplier: 0.5,
+      expiryTimestamp: Date.now() + 3600 * 1000 // 1 hour from now
+    };
+
+    // Add or update the penalty entry in the penalty box
+    await db.penaltyBox.put(penaltyEntry);
+
+    // Return all transactions from the failed block back to the mempool
+    for (const transaction of block.transactions) {
+      try {
+        await db.addToMempool(transaction);
+      } catch (error) {
+        // Log the error but continue processing other transactions
+        // This could happen if the transaction is already in the mempool
+        console.warn(`Failed to return transaction ${transaction.id} to mempool:`, error);
+      }
+    }
+
+    console.log(`Applied penalty to proposer ${proposerPublicKey} and returned ${block.transactions.length} transactions to mempool`);
+  } catch (error) {
+    console.error('Error handling failed block:', error);
+    throw error;
+  }
+}
+
 // Placeholder export to make this a valid ES module
 export {}; 

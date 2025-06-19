@@ -33,6 +33,15 @@ export interface AppStateEntry {
 }
 
 /**
+ * Interface for penalty box entries stored in IndexedDB
+ */
+export interface PenaltyBoxEntry {
+  publicKey: string; // Primary key - the public key of the penalized user
+  scoreMultiplier: number; // Penalty multiplier applied to scores (e.g., 0.5 for 50% penalty)
+  expiryTimestamp: number; // Unix timestamp when the penalty expires
+}
+
+/**
  * Interface for block entries stored in IndexedDB
  */
 export interface BlockEntry {
@@ -53,6 +62,7 @@ export class ChainDB extends Dexie {
   blocks!: Table<BlockEntry>;
   mempool!: Table<MempoolEntry>;
   appState!: Table<AppStateEntry>;
+  penaltyBox!: Table<PenaltyBoxEntry>;
 
   constructor() {
     super('APStatChainDB');
@@ -66,7 +76,10 @@ export class ChainDB extends Dexie {
       mempool: '++id, hash, priority, addedAt',
       
       // App state table: simple key-value store
-      appState: 'key, updatedAt'
+      appState: 'key, updatedAt',
+      
+      // Penalty box table: indexed by publicKey (primary), scoreMultiplier, and expiryTimestamp
+      penaltyBox: 'publicKey, scoreMultiplier, expiryTimestamp'
     });
   }
 
@@ -241,6 +254,79 @@ export class ChainDB extends Dexie {
   async getMempoolCount(): Promise<number> {
     return await this.mempool.count();
   }
+
+  /**
+   * Get active penalty for a specific user
+   * @param publicKey - The user's public key
+   * @returns Promise that resolves to the penalty entry or undefined if no active penalty
+   */
+  async getActivePenalty(publicKey: string): Promise<PenaltyBoxEntry | undefined> {
+    const penalty = await this.penaltyBox.get(publicKey);
+    
+    // Check if penalty exists and hasn't expired
+    if (penalty && penalty.expiryTimestamp > Date.now()) {
+      return penalty;
+    }
+    
+    // If penalty exists but has expired, remove it
+    if (penalty && penalty.expiryTimestamp <= Date.now()) {
+      await this.penaltyBox.delete(publicKey);
+    }
+    
+    return undefined;
+  }
+
+  /**
+   * Check if a user is currently penalized
+   * @param publicKey - The user's public key
+   * @returns Promise that resolves to true if user has an active penalty
+   */
+  async isPenalized(publicKey: string): Promise<boolean> {
+    const activePenalty = await this.getActivePenalty(publicKey);
+    return activePenalty !== undefined;
+  }
+
+  /**
+   * Get the current score multiplier for a user (considering penalties)
+   * @param publicKey - The user's public key
+   * @returns Promise that resolves to the score multiplier (1.0 if no penalty, or penalty value if penalized)
+   */
+  async getScoreMultiplier(publicKey: string): Promise<number> {
+    const activePenalty = await this.getActivePenalty(publicKey);
+    return activePenalty ? activePenalty.scoreMultiplier : 1.0;
+  }
+
+  /**
+   * Clean up expired penalties from the penalty box
+   * @returns Promise that resolves to the number of expired penalties removed
+   */
+  async cleanupExpiredPenalties(): Promise<number> {
+    const currentTime = Date.now();
+    const expiredPenalties = await this.penaltyBox
+      .where('expiryTimestamp')
+      .below(currentTime)
+      .toArray();
+    
+    // Remove expired penalties
+    const expiredKeys = expiredPenalties.map(p => p.publicKey);
+    if (expiredKeys.length > 0) {
+      await this.penaltyBox.where('publicKey').anyOf(expiredKeys).delete();
+    }
+    
+    return expiredKeys.length;
+  }
+
+  /**
+   * Get all currently active penalties
+   * @returns Promise that resolves to array of active penalty entries
+   */
+  async getActivePenalties(): Promise<PenaltyBoxEntry[]> {
+    const currentTime = Date.now();
+    return await this.penaltyBox
+      .where('expiryTimestamp')
+      .above(currentTime)
+      .toArray();
+  }
 }
 
 /**
@@ -331,12 +417,55 @@ export async function smokeTest(): Promise<{ success: boolean; message: string }
     await db.removeFromMempool(dummyTransaction.id);
     await db.removeAppState('testKey');
 
+    // Test penalty box operations
+    const testPublicKey = 'test-public-key-123';
+    
+    // Test adding a penalty
+    await db.penaltyBox.put({
+      publicKey: testPublicKey,
+      scoreMultiplier: 0.5,
+      expiryTimestamp: Date.now() + 3600 * 1000 // 1 hour from now
+    });
+    
+    // Test getting active penalty
+    const activePenalty = await db.getActivePenalty(testPublicKey);
+    if (!activePenalty || activePenalty.scoreMultiplier !== 0.5) {
+      throw new Error('Penalty box test failed - could not retrieve active penalty');
+    }
+    
+    // Test penalty check
+    const isPenalized = await db.isPenalized(testPublicKey);
+    if (!isPenalized) {
+      throw new Error('Penalty box test failed - isPenalized check failed');
+    }
+    
+    // Test score multiplier
+    const scoreMultiplier = await db.getScoreMultiplier(testPublicKey);
+    if (scoreMultiplier !== 0.5) {
+      throw new Error('Penalty box test failed - incorrect score multiplier');
+    }
+    
+    // Test cleanup (add an expired penalty and clean it up)
+    await db.penaltyBox.put({
+      publicKey: 'expired-test-key',
+      scoreMultiplier: 0.25,
+      expiryTimestamp: Date.now() - 1000 // 1 second ago (expired)
+    });
+    
+    const cleanedUp = await db.cleanupExpiredPenalties();
+    if (cleanedUp !== 1) {
+      throw new Error('Penalty box test failed - cleanup did not remove expired penalty');
+    }
+    
+    // Clean up test penalties
+    await db.penaltyBox.delete(testPublicKey);
+
     // Close database
     db.close();
 
     return {
       success: true,
-      message: 'All database tests passed successfully!'
+      message: 'All database tests including penalty box functionality passed successfully!'
     };
 
   } catch (error) {
