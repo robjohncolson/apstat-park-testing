@@ -1,0 +1,17 @@
+Phase 2.3: Implementing the Penalty System
+Goal: To define the logic for handling invalid block proposals and to create the database structure needed to track penalties.
+Key Actions:
+Update Database Schema: In packages/chain-core/src/database.ts, add a new table to the Dexie schema.
+Name: penaltyBox.
+Schema: publicKey, scoreMultiplier, expiryTimestamp. The publicKey will be the primary key.
+Implement the handleFailedBlock function in consensus.ts:
+Signature: export async function handleFailedBlock(block: Block, proposerPublicKey: PublicKey, db: ChainDB): Promise<void>
+Logic:
+Use db.penaltyBox.put() to add or update an entry for the proposerPublicKey.
+Set scoreMultiplier to 0.5 and expiryTimestamp to Date.now() + 3600 * 1000 (1 hour from now).
+(The 10-minute timeout will be handled at a higher level service, not in this core function).
+Return the block.transactions to the db.mempool.
+Expected Outcome: The database is updated to track penalties, and the consensus logic now includes a function to apply these penalties.
+
+
+**Note: PATH variable is broken.  Prefix NPM commands with run.bat which is at root of project.  ie.  cd apps/web; ../../run.bat npm run dev

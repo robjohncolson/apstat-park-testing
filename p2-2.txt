@@ -1,0 +1,30 @@
+Phase 2.2: Implementing the Core Consensus Logic
+Goal: To fill in the consensus.ts file with the functions that create and validate blocks according to our unique protocol rules. This is the heart of the "Proof of Knowledge" system.
+Key Actions:
+Open the File: packages/chain-core/src/consensus.ts.
+Import Dependencies: Import necessary types from types.ts, the ChainDB class from database.ts, and the QUIZ_BANK from QuizBank.ts.
+Implement the selectPuzzleForUser function:
+Signature: export async function selectPuzzleForUser(userId: PublicKey, db: ChainDB): Promise<{ puzzle: QuizQuestion, proofOfAccessHash: Hash } | null>
+Logic:
+Query the db.blocks table to find the most recent LESSON_PROGRESS transaction for the given userId. This may involve iterating backwards from the latest block.
+From that transaction, determine the user's "most advanced" lessonId.
+Filter the QUIZ_BANK to find all questions for that lessonId.
+Select one question at random.
+Return the QuizQuestion object and the hash of the transaction that was used as proof. If no progress is found, return null.
+Implement the proposeBlock function:
+Signature: export function proposeBlock(transactions: Transaction[], lastBlock: Block, puzzleSolution: PuzzleSolution, proofOfAccessHash: Hash): Block
+Logic:
+Create the BlockHeader by filling in the version, timestamp, previousHash (from lastBlock.hash), etc.
+Set the nonce to the provided puzzleSolution.
+Set the proofOfAccessHash to the provided hash.
+Calculate the merkleRoot for the given transactions.
+Construct and return the full Block object, leaving the attestations array empty for now.
+Implement the verifyPuzzleSolution function:
+Signature: export function verifyPuzzleSolution(blockHeader: BlockHeader): boolean
+Logic:
+Use the blockHeader.proofOfAccessHash to infer the lessonId of the puzzle. (This implies we need a way to look up a transaction by its hash, a function we should add to database.ts).
+Find all possible puzzles for that lessonId in the QUIZ_BANK.
+Check if the nonce (the puzzleSolution) in the header corresponds to the correctAnswerIndex of any of those valid puzzles. Return true if a match is found, otherwise false.
+Expected Outcome: A consensus.ts file with these core functions implemented. The project should still type-check correctly. This module is now ready for rigorous testing
+
+**Note: PATH variable is broken.  Prefix NPM commands with run.bat which is at root of project.  ie.  cd apps/web; ../../run.bat npm run dev

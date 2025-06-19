@@ -1,0 +1,36 @@
+Phase 2.1: Creating the "Proof of Knowledge" Puzzle Source
+Goal: To create the hardcoded data source of questions and answers that will serve as the "mining" puzzles for our protocol. This file is a simple data store with no complex logic.
+Key Actions:
+Navigate to the File: Open packages/chain-core/src/QuizBank.ts.
+Define the Data Structure: At the top of the file, define and export a TypeScript interface for a single puzzle.
+Generated typescript
+export interface QuizQuestion {
+  questionId: string; // e.g., '1-1_q1'
+  lessonId: string;   // e.g., '1-1'
+  questionText: string;
+  answers: [string, string, string, string]; // An array of exactly 4 possible answers
+  correctAnswerIndex: 0 | 1 | 2 | 3;
+}
+Use code with caution.
+TypeScript
+Create the Data Array: Create and export a const array named QUIZ_BANK of type QuizQuestion[].
+Populate with Sample Data: Fill the QUIZ_BANK with at least 5-10 sample questions covering a few different lessonIds (e.g., '1-1', '1-2', '2-1'). This is crucial for our ability to test the consensus logic later. You can add the full set of 25+ questions per lesson later.
+Example Entry:
+Generated typescript
+{
+  questionId: '1-1_q1',
+  lessonId: '1-1',
+  questionText: 'What is the definition of a categorical variable?',
+  answers: [
+    'A variable that takes numerical values.',
+    'A variable that places an individual into one of several groups or categories.',
+    'A variable that describes a characteristic of a population.',
+    'A variable that is used to predict another variable.'
+  ],
+  correctAnswerIndex: 1
+}
+Use code with caution.
+TypeScript
+Expected Outcome: A QuizBank.ts file that exports a populated array of QuizQuestion objects. This module can now be imported and used by our consensus logic.
+
+**Note: PATH variable is broken.  Prefix NPM commands with run.bat which is at root of project.  ie.  cd apps/web; ../../run.bat npm run dev
