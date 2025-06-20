@@ -5639,4 +5639,3 @@ https://apstat-park-testing-api.up.railway.app/api/v1/pace/7333?completedLessons
 **User**
 
 I can't execute that sql file on railway, I don't know how.> In supabase, there is aplace to do this, I don't see it in railway
-

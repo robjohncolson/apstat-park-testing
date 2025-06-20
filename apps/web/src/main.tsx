@@ -5,6 +5,7 @@ import "./styles/global.css";
 import "./index.css"; // legacy styles, will be phased out
 import App from "./App.tsx";
 import { AuthProvider } from "./context/AuthContext";
+import { BlockchainService } from "./services/BlockchainService";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -13,3 +14,6 @@ createRoot(document.getElementById("root")!).render(
     </AuthProvider>
   </StrictMode>,
 );
+
+// Initialize blockchain service (smoke test)
+BlockchainService.getInstance().start().catch(console.error);
