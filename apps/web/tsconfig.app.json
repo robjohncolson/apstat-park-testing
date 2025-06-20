@@ -20,7 +20,12 @@
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
+    "noUncheckedSideEffectImports": true,
+
+    "paths": {
+      "@apstatchain/core": ["../../packages/chain-core/src/index.ts"],
+      "@apstatchain/p2p": ["../../packages/chain-p2p/src/index.ts"]
+    }
   },
   "include": ["src"]
 }
