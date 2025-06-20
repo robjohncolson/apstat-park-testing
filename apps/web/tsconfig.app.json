@@ -23,8 +23,8 @@
     "noUncheckedSideEffectImports": true,
 
     "paths": {
-      "@apstatchain/core": ["../../packages/chain-core/src/index.ts"],
-      "@apstatchain/p2p": ["../../packages/chain-p2p/src/index.ts"]
+      "@apstatchain/core": ["../../packages/chain-core/dist/index.js"],
+      "@apstatchain/p2p": ["../../packages/chain-p2p/dist/index.js"]
     }
   },
   "include": ["src"]
