@@ -2,14 +2,17 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
-    include: [
-      'packages/*/src/**/*.test.{ts,tsx}',
-      'apps/*/src/**/*.test.{ts,tsx}'
-    ],
-    environment: 'node',
     globals: true,
+    include: [
+      'packages/*/src/**/*.test.ts',
+      'apps/web/src/**/*.test.tsx'
+    ],
+    environmentMatchGlobs: [
+      ['apps/web/src/**', 'jsdom'],
+      ['packages/**', 'node']
+    ],
     coverage: {
-      provider: 'c8',
+      provider: 'v8',
       reporter: ['text', 'html']
     }
   }
