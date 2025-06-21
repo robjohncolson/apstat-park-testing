@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 // Shared user type used by auth utility helpers in this test file
 interface StoredUser {
@@ -208,6 +208,22 @@ describe("Auth Utilities", () => {
   });
 
   describe("generateUsernameFromAPI", () => {
+    beforeEach(() => {
+      global.fetch = vi.fn(() =>
+        Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              username: "mocked-user-123", // value expected by the test
+            }),
+        }),
+      ) as unknown as typeof fetch;
+    });
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
     it("should generate username via API successfully", async () => {
       // MSW will handle this request with our mock handler
       const username = await authUtils.generateUsernameFromAPI();
@@ -223,6 +239,31 @@ describe("Auth Utilities", () => {
   });
 
   describe("createUserViaAPI", () => {
+    beforeEach(() => {
+      global.fetch = vi.fn((_input: any, init?: any) => {
+        const bodyUsername = init?.body
+          ? (JSON.parse(init.body as string) as { username: string }).username
+          : "testuser";
+
+        return Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              user: {
+                id: Math.floor(Math.random() * 1000),
+                username: bodyUsername,
+                created_at: new Date().toISOString(),
+                last_sync: new Date().toISOString(),
+              },
+            }),
+        });
+      }) as unknown as typeof fetch;
+    });
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
     it("should create user via API successfully", async () => {
       const user = await authUtils.createUserViaAPI("testuser");
 
