@@ -11,11 +11,23 @@ export default defineConfig({
     global: "globalThis",
   },
   resolve: {
-    alias: {
+    alias: (() => {
       // Force Vitest/Vite to always resolve React from the monorepo root to avoid duplicate instances
-      'react': path.resolve(__dirname, '../../node_modules/react'),
-      'react-dom': path.resolve(__dirname, '../../node_modules/react-dom'),
-    },
+      const baseAliases: Record<string, string> = {
+        react: path.resolve(__dirname, "../../node_modules/react"),
+        "react-dom": path.resolve(__dirname, "../../node_modules/react-dom"),
+      };
+
+      // When running under Vitest (process.env.VITEST set), alias blockchain libs to mocks
+      if (process.env.VITEST) {
+        Object.assign(baseAliases, {
+          "@apstatchain/core": path.resolve(__dirname, "./src/__mocks__/apstatchain-core.ts"),
+          "@apstatchain/p2p": path.resolve(__dirname, "./src/__mocks__/apstatchain-p2p.ts"),
+        });
+      }
+
+      return baseAliases;
+    })(),
   },
   test: {
     globals: true,
