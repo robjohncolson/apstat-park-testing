@@ -216,8 +216,8 @@ export class BlockchainService {
   /**
    * Public wrapper to submit puzzle solution and mine a block.
    */
-  async submitPuzzleSolution(solution: PuzzleSolution): Promise<Block> {
-    return this.proposeNewBlock(solution);
+  async submitPuzzleSolution(solution: PuzzleSolution): Promise<void> {
+    await this.proposeNewBlock(solution);
   }
 
   // --------------------------------------------------------------------------
