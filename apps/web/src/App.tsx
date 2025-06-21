@@ -16,6 +16,8 @@ import { PageShell } from "./components/PageShell/PageShell";
 import "./App.css";
 import { exposeRailwayTest } from "./utils/railwayTest";
 import { Spinner } from "./components/ui/Spinner";
+import { MiningPuzzleModal } from "./components/MiningPuzzleModal/MiningPuzzleModal";
+import { useBlockchain } from "./context/BlockchainProvider";
 
 // Global Bookmark Star Component
 function GlobalBookmarkStar() {
@@ -80,6 +82,7 @@ function GlobalBookmarkStar() {
 
 function App() {
   const { isAuthenticated, isLoading } = useAuth();
+  const { isProposalRequired, puzzleData, submitPuzzleSolution } = useBlockchain();
 
   // Expose Railway test function for debugging
   useEffect(() => {
@@ -103,6 +106,11 @@ function App() {
       <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <div className="app">
           {isAuthenticated && <GlobalBookmarkStar />}
+          <MiningPuzzleModal
+            isOpen={isProposalRequired}
+            puzzle={puzzleData}
+            onSubmit={submitPuzzleSolution}
+          />
           <Routes>
             <Route
               path="/"

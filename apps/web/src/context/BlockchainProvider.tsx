@@ -12,8 +12,8 @@ import {
   type LessonProgressPayload,
   type SyncStatus,
 } from "../services/BlockchainService";
-import type { Block, PuzzleSolution } from "@apstatchain/core";
 import type { LeaderboardEntry } from "../utils/leaderboard";
+import type { QuizQuestion } from "@apstatchain/core";
 
 // -----------------------------------------------------------------------------
 // Blockchain Context Types
@@ -25,11 +25,14 @@ interface BlockchainContextType {
   peerCount: number;
   leaderboardData: LeaderboardEntry[];
   isProposalRequired: boolean;
+  /** The currently assigned mining puzzle, or null if none */
+  puzzleData: QuizQuestion | null;
 
   // Service API methods
   start: () => Promise<void>;
   submitLessonProgress: (payload: LessonProgressPayload) => Promise<void>;
-  proposeNewBlock: (puzzleSolution: PuzzleSolution) => Promise<Block>;
+  /** Submit the selected answer index for the current mining puzzle */
+  submitPuzzleSolution: (solutionIndex: number) => Promise<void>;
 }
 
 const BlockchainContext = createContext<BlockchainContextType | undefined>(undefined);
@@ -61,7 +64,7 @@ export function BlockchainProvider({ children }: BlockchainProviderProps) {
     ...serviceState,
     start: () => serviceRef.current.start(),
     submitLessonProgress: (payload) => serviceRef.current.submitLessonProgress(payload),
-    proposeNewBlock: (solution) => serviceRef.current.proposeNewBlock(solution),
+    submitPuzzleSolution: (solution) => serviceRef.current.submitPuzzleSolution(solution),
   };
 
   return (

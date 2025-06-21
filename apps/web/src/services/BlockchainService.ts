@@ -9,6 +9,9 @@ import {
   type LessonProgressData,
   type Block,
   type PuzzleSolution,
+  selectPuzzleForUser,
+  type QuizQuestion,
+  type Hash,
 } from "@apstatchain/core";
 import { P2PNode, createTxBroadcastMessage, createBlockProposalMessage, type P2PMessage } from "@apstatchain/p2p";
 import type { LeaderboardEntry } from "../utils/leaderboard";
@@ -26,6 +29,8 @@ interface ServiceState {
   peerCount: number;
   leaderboardData: LeaderboardEntry[];
   isProposalRequired: boolean;
+  /** Current mining puzzle, if the user is required to propose a block */
+  puzzleData: QuizQuestion | null;
 }
 
 // ----------------------------------------------------------------------------
@@ -57,7 +62,10 @@ export class BlockchainService {
     peerCount: 0,
     leaderboardData: [],
     isProposalRequired: false,
+    puzzleData: null,
   };
+
+  private pendingProofOfAccessHash?: Hash;
 
   private constructor() {
     // Private constructor enforces singleton
@@ -154,6 +162,9 @@ export class BlockchainService {
     this.p2pNode.broadcast(broadcastMsg as P2PMessage);
 
     console.info("📤 Lesson progress transaction broadcasted", tx);
+
+    // After successfully submitting progress, check if a puzzle can be offered.
+    await this.selectPuzzleIfNeeded();
   }
 
   /**
@@ -165,8 +176,8 @@ export class BlockchainService {
 
     const prevBlock = (await this.db.getLatestBlock()) ?? (await this.createGenesisBlock());
 
-    // TODO: Obtain proofOfAccessHash. For now stub with zeros.
-    const proofOfAccessHash = hash("proof-placeholder");
+    // Use stored proofOfAccessHash if available, otherwise stub
+    const proofOfAccessHash = this.pendingProofOfAccessHash ?? hash("proof-placeholder");
 
     const newBlock = proposeBlock(transactions, prevBlock, puzzleSolution, proofOfAccessHash);
 
@@ -195,7 +206,18 @@ export class BlockchainService {
     // Refresh leaderboard (placeholder)
     await this.recalculateLeaderboard();
 
+    // Clear pending puzzle state
+    this.pendingProofOfAccessHash = undefined;
+    this.updateState({ isProposalRequired: false, puzzleData: null });
+
     return newBlock;
+  }
+
+  /**
+   * Public wrapper to submit puzzle solution and mine a block.
+   */
+  async submitPuzzleSolution(solution: PuzzleSolution): Promise<Block> {
+    return this.proposeNewBlock(solution);
   }
 
   // --------------------------------------------------------------------------
@@ -270,5 +292,25 @@ export class BlockchainService {
 
     await this.db.addBlock(genesis);
     return genesis;
+  }
+
+  /**
+   * Select a mining puzzle for the current user if conditions allow.
+   * Sets state.isProposalRequired and puzzleData when a puzzle is available.
+   */
+  private async selectPuzzleIfNeeded(): Promise<void> {
+    if (this.state.isProposalRequired) return; // Already have a puzzle pending
+    if (!this.db) return; // DB not initialised yet
+
+    try {
+      const result = await selectPuzzleForUser(this.keyPair.publicKey, this.db);
+      if (result) {
+        const { puzzle, proofOfAccessHash } = result;
+        this.pendingProofOfAccessHash = proofOfAccessHash;
+        this.updateState({ isProposalRequired: true, puzzleData: puzzle });
+      }
+    } catch (err) {
+      console.error("Failed to select puzzle", err);
+    }
   }
 } 
