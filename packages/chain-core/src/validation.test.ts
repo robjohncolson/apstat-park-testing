@@ -5,7 +5,7 @@
  * and provides comprehensive coverage of validation rules.
  */
 
-import { describe, it } from 'node:test';
+import { describe, it, beforeEach } from 'node:test';
 import assert from 'node:assert';
 import { generateKeyPair, sign, hash } from './crypto.js';
 import { 
@@ -426,11 +426,4 @@ describe('Validation Module', () => {
       assert.strictEqual(isValid, false, 'Malformed block should be invalid');
     });
   });
-});
-
-// Helper function for beforeEach (compatible with Node.js test runner)
-function beforeEach(fn: () => void) {
-  // Node.js test runner doesn't have built-in beforeEach, 
-  // so we'll call the setup at the start of each test
-  // This is a simple implementation - in practice you might use a more sophisticated approach
-} 
+}); 
