@@ -1,0 +1,15 @@
+Phase 4.3: Integrating Core UI Components
+Goal: To connect our existing and new UI components to the BlockchainProvider to display data and trigger actions.
+Key Actions:
+SyncStatus.tsx Component:
+Create a small component, perhaps in the header or footer.
+It will call useBlockchain() to get the syncStatus and peerCount.
+It will render a different icon or text based on the status (e.g., a green checkmark for 'synced', a loading spinner for 'syncing', a red 'X' for 'disconnected').
+Leaderboard.tsx Component:
+Refactor your existing leaderboard component.
+It will now get its data directly from const { leaderboardData } = useBlockchain();.
+The component will automatically re-render whenever a new block is finalized and the leaderboardData state is updated by the service.
+LessonPage.tsx Component:
+Find the place where progress is currently saved (e.g., handleVideoWatched).
+In addition to any existing logic, it will now also call const { submitLessonProgress } = useBlockchain();.
+It will then call submitLessonProgress({ ...payload }) to create and broadcast the transaction.

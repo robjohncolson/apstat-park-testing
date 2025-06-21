@@ -1,0 +1,19 @@
+Phase 4.4: Implementing the Interactive Mining Component
+Goal: To build the final piece of the interactive puzzle: the modal that allows a user to "mine" a new block.
+Key Actions:
+Create MiningPuzzleModal.tsx: This will be a modal component (using a library like Material-UI, Chakra, or a custom one).
+Triggering the Modal: In your main App.tsx, use the useBlockchain() hook.
+Generated typescript
+const { isProposalRequired, puzzleData, submitPuzzleSolution } = useBlockchain();
+// ...
+<MiningPuzzleModal
+  isOpen={isProposalRequired}
+  puzzle={puzzleData}
+  onSubmit={submitPuzzleSolution}
+/>
+Use code with caution.
+TypeScript
+Modal Logic:
+The modal will display the puzzle.questionText and map over the puzzle.answers to render the multiple-choice options.
+When the user selects an answer and clicks "Submit," the modal's onSubmit function is called with the selected answer index. This will call the submitPuzzleSolution function from the service, which in turn calls the core proposeNewBlock function.
+Expected Outcome: A fully integrated application. A user can complete a lesson, see their transaction pending, be prompted to mine a block when conditions are met, solve the puzzle, and then see the leaderboard update for everyone on the network. The system is now complete.

@@ -1,0 +1,22 @@
+.statusWrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+}
+
+.synced {
+  color: #28a745; /* green */
+}
+
+.syncing {
+  color: #ffc107; /* yellow */
+}
+
+.disconnected {
+  color: #dc3545; /* red */
+}
+
+.peerCount {
+  opacity: 0.7;
+} 

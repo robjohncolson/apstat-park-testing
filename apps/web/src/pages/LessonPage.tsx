@@ -2,6 +2,7 @@ import { useParams, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useBookmark } from "../context/BookmarkContext";
+import { useBlockchain } from "../context/BlockchainProvider";
 import {
   findTopicById,
   findUnitById,
@@ -43,6 +44,7 @@ export function LessonPage() {
   }>();
   const { user } = useAuth();
   const { setBookmark, isItemBookmarked } = useBookmark();
+  const { submitLessonProgress } = useBlockchain();
   const [topic, setTopic] = useState<Topic | null>(null);
   const [unit, setUnit] = useState<Unit | null>(null);
   const [progress, setProgress] = useState<LessonProgress | null>(null);
@@ -227,13 +229,43 @@ export function LessonPage() {
 
     setProgress(newProgress);
 
-    // Prepare API payload
+    // Prepare API payload (existing backend)
     const payload = {
       lesson_id: lessonId,
       item_type: itemType,
       item_index: itemIndex,
       completed,
     };
+
+    // ------------------------------------------------------------------
+    // Broadcast progress to blockchain – converted to on-chain schema
+    // ------------------------------------------------------------------
+    try {
+      const chainPayload = {
+        lessonId: lessonId!,
+        progressType:
+          itemType === "video"
+            ? "video_watched"
+            : itemType === "quiz"
+              ? "quiz_completed"
+              : "lesson_completed",
+        itemId: itemIndex !== undefined ? String(itemIndex) : undefined,
+        status: completed ? (itemType === "video" ? "watched" : "completed") : "in_progress",
+        metadata: {
+          // Pass through original payload for additional context
+          item_type: itemType,
+          item_index: itemIndex,
+          completed,
+        },
+      } as const;
+
+      // Fire and forget – any errors are logged but do not disrupt UX
+      submitLessonProgress(chainPayload as any).catch((err) =>
+        console.error("Failed to submit lesson progress to blockchain", err),
+      );
+    } catch (err) {
+      console.error("submitLessonProgress failed", err);
+    }
 
     try {
       const apiUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:3001';
