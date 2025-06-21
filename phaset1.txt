@@ -1,0 +1,16 @@
+Test Suite Implementation Plan
+Overall Goal:
+To create an automated, multi-layered test suite that verifies the "APStatChain" application complies with our architectural blueprint. This involves writing unit tests for core logic, integration tests for package interactions, and end-to-end tests for user flows.
+Phase T1: Setting Up the Testing Foundation
+Goal: To install and configure the necessary testing frameworks and tools within the monorepo. This provides the infrastructure for all subsequent testing phases.
+Key Actions:
+Choose and Install a Test Runner: We need a modern test runner that works well with monorepos and TypeScript/ESM. Vitest is the ideal choice.
+From the project root, run npm install -D vitest.
+Configure Vitest: Create a vitest.config.ts file in the project root. Configure it to find test files across all workspaces (e.g., in packages/*/src/**/*.test.ts and apps/web/src/**/*.test.tsx).
+Add Test Scripts: In the root package.json, add scripts to make running tests easy:
+"test": "vitest"
+"test:watch": "vitest --watch"
+"test:ui": "vitest --ui" (for Vitest's excellent visual interface)
+Install E2E Testing Framework: We need a tool to control a real browser. Playwright is a powerful choice.
+From the project root, run npm init playwright@latest. This will install Playwright and create its configuration file (playwright.config.ts) and a sample tests directory at the root.
+Expected Outcome: You can run npm test from the root of your project, and the test runner will execute (finding no tests yet, but running without errors). The project is now fully equipped for all types of testing.
