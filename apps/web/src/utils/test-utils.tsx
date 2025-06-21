@@ -5,6 +5,7 @@ import { BrowserRouter } from "react-router-dom";
 import { vi } from "vitest";
 import { AuthProvider } from "../context/AuthContext";
 import { BookmarkProvider } from "../context/BookmarkContext";
+import { BlockchainProvider } from "../context/BlockchainProvider";
 
 // Mock localStorage for tests
 const mockLocalStorage = (() => {
@@ -83,6 +84,9 @@ function AllTheProviders({
   if (!skipAuth) {
     component = <AuthProvider>{component}</AuthProvider>;
   }
+
+  // Always include BlockchainProvider (does not depend on auth)
+  component = <BlockchainProvider>{component}</BlockchainProvider>;
 
   // Wrap with Router
   if (!skipRouter) {
