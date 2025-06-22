@@ -27,6 +27,7 @@ import type {
   TransactionType,
   TransactionData,
   PaceUpdateData,
+  SetBookmarkData,
 } from "@apstatchain/core";
 import { P2PNode, createTxBroadcastMessage, createBlockProposalMessage, type P2PMessage } from "@apstatchain/p2p";
 import type { LeaderboardEntry as UiLeaderboardEntry } from "../utils/leaderboard";
@@ -436,6 +437,15 @@ export class BlockchainService {
    */
   async submitPaceUpdate(data: PaceUpdateData): Promise<void> {
     await this.submitTransaction("PACE_UPDATE", data);
+  }
+
+  /**
+   * Convenience helper that maps directly to submitTransaction for the
+   * SET_BOOKMARK transaction type. Accepts an approved SetBookmarkData
+   * payload.
+   */
+  async submitBookmark(data: SetBookmarkData): Promise<void> {
+    await this.submitTransaction('SET_BOOKMARK', data);
   }
 
   // --------------------------------------------------------------------------
