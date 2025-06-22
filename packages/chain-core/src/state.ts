@@ -7,7 +7,6 @@
 
 import type {
   Block,
-  Transaction,
   CreateUserData,
   SetBookmarkData,
   AwardStarData,

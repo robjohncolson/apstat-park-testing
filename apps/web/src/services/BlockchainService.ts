@@ -385,7 +385,7 @@ export class BlockchainService {
 
     // 2) Always load blocks from DB (fast)
     const blockEntries = await this.db.blocks.orderBy("height").toArray();
-    const blocks = blockEntries.map((be) => be.block);
+    const blocks = blockEntries.map((be: any) => be.block);
 
     // 3) Decide whether to recompute – naive strategy: if no cached state, recompute.
     let latestState: AppState;
@@ -507,7 +507,7 @@ export class BlockchainService {
       }
 
       // Recompute application state
-      const allBlocks = (await this.db.blocks.orderBy("height").toArray()).map((be) => be.block);
+      const allBlocks = (await this.db.blocks.orderBy("height").toArray()).map((be: any) => be.block);
       this.state = recomputeState(allBlocks);
       await saveAppState(this.state);
 
