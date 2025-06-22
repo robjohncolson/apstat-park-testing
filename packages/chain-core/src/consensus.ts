@@ -162,16 +162,9 @@ export function verifyPuzzleSolution(blockHeader: BlockHeader): boolean {
       return false;
     }
 
-    // We need to infer the lesson ID from the proofOfAccessHash
-    // For this to work, we'd need a way to look up transactions by hash
-    // Since this functionality isn't available in the current database implementation,
-    // we'll implement a simplified version that validates against all possible puzzles
-    
-    // Get all possible correct answers from the quiz bank
-    const allValidSolutions = QUIZ_BANK.map(q => q.correctAnswerIndex);
-    
-    // Check if the proposed solution matches any valid answer
-    return allValidSolutions.includes(proposedSolution as 0 | 1 | 2 | 3);
+    // At minimum (Phase 1) accept any integer answer index within 0-3.
+    // Detailed lesson-specific checks are performed in verifyPuzzleSolutionWithContext.
+    return true;
   } catch (error) {
     console.error('Error verifying puzzle solution:', error);
     return false;

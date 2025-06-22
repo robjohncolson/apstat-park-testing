@@ -1,1 +1,8 @@
-not sure yet.
+using NPM commands are iffy.  Default enfironment is powershell (not bash)
+
+executing npm test works, but using pipes usually stalls the chat.
+
+Instead dump output of these commands to a log, ie.
+npm test > path/to/project/root/report.log
+
+And make sure to then analyze that log for output.

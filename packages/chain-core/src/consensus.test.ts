@@ -5,7 +5,7 @@
  * for the Proof of Knowledge blockchain system.
  */
 
-import { describe, it, beforeEach } from 'node:test';
+import { describe, it, beforeEach } from 'vitest';
 import assert from 'node:assert';
 import { 
   selectPuzzleForUser, 

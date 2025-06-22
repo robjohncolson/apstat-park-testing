@@ -5,7 +5,7 @@
  * and provides comprehensive coverage of validation rules.
  */
 
-import { describe, it, beforeEach } from 'node:test';
+import { describe, it, beforeEach } from 'vitest';
 import assert from 'node:assert';
 import { generateKeyPair, sign, hash } from './crypto.js';
 import { 
@@ -34,29 +34,38 @@ describe('Validation Module', () => {
       timeSpent: 1800 // 30 minutes
     };
 
-    const baseTransaction = {
-      type: 'LESSON_PROGRESS' as const,
+    // Build the transaction fields, allowing overrides from the caller
+    const txFields: Omit<Transaction, 'id' | 'signature'> = {
+      type: 'LESSON_PROGRESS',
       data: progressData as TransactionData,
       publicKey: keyPair.publicKey,
       timestamp: Date.now(),
-      priority: 'normal' as const
-    };
+      priority: 'normal',
+      nonce: 1,
+      gas: { limit: 21_000, price: 1 },
+      ...overrides,
+    } as any;
 
-    // Generate ID based on transaction data
-    const id = hash(baseTransaction);
-    
-    // Sign the transaction
-    const signData = { ...baseTransaction, id };
+    // Generate the canonical transaction ID exactly how the validator does
+    const id = hash({
+      type: txFields.type,
+      data: txFields.data,
+      publicKey: txFields.publicKey,
+      timestamp: txFields.timestamp,
+      priority: txFields.priority,
+      nonce: txFields.nonce,
+      gas: txFields.gas,
+    });
+
+    // Sign the transaction payload (including the freshly computed id)
+    const signData = { id, ...txFields };
     const signature = sign(signData, keyPair.privateKey);
 
-    const transaction: Transaction = {
+    return {
       id,
-      ...baseTransaction,
+      ...txFields,
       signature,
-      ...overrides
-    };
-
-    return transaction;
+    } as Transaction;
   }
 
   // Helper function to create a valid mock block

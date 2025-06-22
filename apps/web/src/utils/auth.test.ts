@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach, beforeAll, afterAll } from "vitest";
 
 // Shared user type used by auth utility helpers in this test file
 interface StoredUser {
@@ -98,6 +98,22 @@ export const authUtils = {
     return data.user;
   },
 };
+
+// ------------------------------------------------------
+// Global fetch mock setup
+// ------------------------------------------------------
+
+// Use a single mock instance across the entire suite so that individual
+// tests can customise the implementation via mockResolvedValueOnce etc.
+const fetchMock = vi.fn();
+
+beforeAll(() => {
+  global.fetch = fetchMock as unknown as typeof fetch;
+});
+
+afterAll(() => {
+  vi.restoreAllMocks();
+});
 
 describe("Auth Utilities", () => {
   beforeEach(() => {

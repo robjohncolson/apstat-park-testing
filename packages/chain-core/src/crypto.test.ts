@@ -5,9 +5,10 @@
  * and provides high confidence in our cryptographic foundation.
  */
 
-import { describe, it } from 'node:test';
+import { describe, it } from 'vitest';
 import assert from 'node:assert';
-import { generateKeyPair, sign, verify, hash, type KeyPair } from './crypto.js';
+import { generateKeyPair, sign, verify, hash } from './crypto.js';
+import type { KeyPair } from './types.js';
 
 describe('Crypto Module', () => {
   describe('generateKeyPair', () => {
