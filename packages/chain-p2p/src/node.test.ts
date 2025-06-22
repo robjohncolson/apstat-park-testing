@@ -1,62 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { EventEmitter } from 'events';
 
-// ---------------------------------------------------------------------------
-// PeerJS mocks – we do not want to rely on real WebRTC network connections in
-// unit tests, so we stub out the minimal behaviour that P2PNode expects.
-// ---------------------------------------------------------------------------
+// Bring the mock classes into scope for use within the tests.
+import { PeerMock, DataConnectionMock } from './__mocks__/peerjs';
 
-class DataConnectionMock extends EventEmitter {
-  public peer: string;
-  public open = true;
-  public metadata: any;
-
-  // Vitest spies allow us to assert that messages were sent if desired.
-  public send = vi.fn();
-  public close = vi.fn();
-
-  constructor(peerId: string, metadata: any = {}) {
-    super();
-    this.peer = peerId;
-    this.metadata = metadata;
-  }
-}
-
-class PeerMock extends EventEmitter {
-  public id: string;
-  public destroyed = false;
-  public open = true;
-
-  constructor(id: string, _options?: any) {
-    super();
-    this.id = id;
-  }
-
-  /**
-   * Outbound connection initiated by our node. We immediately emit an "open"
-   * event on the returned DataConnectionMock for simplicity.
-   */
-  connect(peerId: string, options?: any) {
-    const conn = new DataConnectionMock(peerId, options?.metadata ?? {});
-    // Simulate asynchronous "open".
-    setTimeout(() => conn.emit('open'), 0);
-    return conn;
-  }
-
-  reconnect() {
-    /* no-op for tests */
-  }
-
-  destroy() {
-    this.destroyed = true;
-  }
-}
-
-// Tell Vitest to replace the real "peerjs" module with our mock implementation
-vi.mock('peerjs', () => ({
-  Peer: PeerMock,
-  DataConnection: DataConnectionMock
-}));
+// Ensure Vitest replaces the real "peerjs" package with our stub before the
+// code under test is imported. Using a dynamic `import()` avoids the hoisting
+// issue where references to the mocks would otherwise be undefined.
+vi.mock('peerjs', () => import('./__mocks__/peerjs'));
 
 // ---------------------------------------------------------------------------
 // Tests for P2PNode
