@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { usePaceTracker } from "../hooks/usePaceTracker";
 import { CountdownTimer } from "./ui/CountdownTimer";
@@ -35,7 +35,7 @@ function PaceTrackerContent({
     isDisabled,
     currentDeadline,
     bufferHours,
-    hoursUntilDeadline,
+    // hoursUntilDeadline, // Unused variable
     isOverdue,
   } = usePaceTracker({
     completedLessons,

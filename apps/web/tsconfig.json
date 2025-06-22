@@ -1,9 +1,10 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "types": ["vite/client"]
+    "types": ["vite/client"],
+    "lib": ["ES2020", "DOM", "DOM.Iterable"]
   },
-  "include": ["src"],
+  "include": ["src", "vite-env.d.ts"],
   "references": [
     { "path": "../../packages/chain-core" },
     { "path": "../../packages/chain-p2p" }

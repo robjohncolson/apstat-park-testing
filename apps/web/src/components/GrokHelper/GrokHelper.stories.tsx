@@ -1,5 +1,4 @@
 // @ts-nocheck
-import React from 'react';
 import { Meta, StoryObj } from '@storybook/react';
 import GrokHelper from './GrokHelper';
 

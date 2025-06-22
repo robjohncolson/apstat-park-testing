@@ -1,12 +1,12 @@
+import { ReactNode } from "react";
 import styles from "./Badge.module.css";
-import React from "react";
 
 type Variant = "success" | "info" | "warning";
 
 interface BadgeProps {
   variant?: Variant;
   className?: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 export function Badge({ variant = "info", className = "", children }: BadgeProps) {

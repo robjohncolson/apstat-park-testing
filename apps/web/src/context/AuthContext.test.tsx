@@ -1,10 +1,10 @@
-import React from "react";
+import { ReactNode } from "react";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
 import { AuthProvider, useAuth } from "./AuthContext";
 
 // Helper to wrap components with the AuthProvider
-const wrapper = ({ children }: { children: React.ReactNode }) => (
+const wrapper = ({ children }: { children: ReactNode }) => (
   <AuthProvider>{children}</AuthProvider>
 );
 

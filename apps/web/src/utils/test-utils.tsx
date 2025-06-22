@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import React from "react";
+import { ReactNode, ReactElement } from "react";
 import { render, type RenderOptions } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
 import { vi } from "vitest";
@@ -68,7 +68,7 @@ function AllTheProviders({
   skipBookmarks = false,
   skipRouter = false,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
   skipAuth?: boolean;
   skipBookmarks?: boolean;
   skipRouter?: boolean;
@@ -97,7 +97,7 @@ function AllTheProviders({
 }
 
 export function renderWithProviders(
-  ui: React.ReactElement,
+  ui: ReactElement,
   {
     initialRoute = "/",
     skipAuth = false,

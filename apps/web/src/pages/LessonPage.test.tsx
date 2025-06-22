@@ -1,4 +1,4 @@
-import React from "react";
+import { ReactNode } from "react";
 import { screen, waitFor, fireEvent } from "@testing-library/react";
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { Routes, Route } from "react-router-dom";
@@ -37,7 +37,7 @@ afterEach(() => {
 
 // Mock react-modal to render children when isOpen is true
 vi.mock("react-modal", () => {
-  const Modal = ({ isOpen, children }: { isOpen: boolean; children: React.ReactNode }) =>
+  const Modal = ({ isOpen, children }: { isOpen: boolean; children: ReactNode }) =>
     isOpen ? <div data-testid="mock-modal">{children}</div> : null;
   Modal.setAppElement = () => null;
   return { __esModule: true, default: Modal };

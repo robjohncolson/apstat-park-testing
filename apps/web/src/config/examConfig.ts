@@ -1,7 +1,7 @@
 // Exam Configuration
 // This file contains configurable settings for AP Statistics exam scheduling
 
-import { calculateNextExamDate } from '../utils/dateUtils';
+// import { calculateNextExamDate } from '../utils/dateUtils'; // Unused import
 
 export interface ExamConfig {
   examDate: string; // ISO date string

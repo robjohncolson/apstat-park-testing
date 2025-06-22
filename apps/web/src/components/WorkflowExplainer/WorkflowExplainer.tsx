@@ -1,6 +1,6 @@
-import React from "react";
+import { FC } from "react";
 
-const WorkflowExplainer: React.FC = () => {
+const WorkflowExplainer: FC = () => {
   return (
     <div className="workflow-explainer" style={{ maxHeight: "70vh", overflowY: "auto" }}>
       <h2 style={{ textAlign: "center", marginBottom: "1rem" }}>

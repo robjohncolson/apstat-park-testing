@@ -1,11 +1,11 @@
-import React from "react";
+import { ReactNode } from "react";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import { AuthProvider } from "./AuthContext";
 import { BookmarkProvider, useBookmark } from "./BookmarkContext";
 
 // Helper: wrap providers
-const Providers = ({ children }: { children: React.ReactNode }) => (
+const Providers = ({ children }: { children: ReactNode }) => (
   <AuthProvider>
     <BookmarkProvider>{children}</BookmarkProvider>
   </AuthProvider>

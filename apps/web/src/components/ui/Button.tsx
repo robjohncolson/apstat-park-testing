@@ -1,26 +1,26 @@
 import { Link } from "react-router-dom";
+import { ReactNode, AnchorHTMLAttributes, ButtonHTMLAttributes } from "react";
 import styles from "./Button.module.css";
-import React from "react";
 
 type BaseProps = {
   variant?: "primary" | "secondary" | "ghost" | "danger" | "linkLight";
   className?: string;
-  children: React.ReactNode;
+  children: ReactNode;
 };
 
 type ButtonRouterLink = BaseProps & {
   to: string;
   href?: never;
-} & React.AnchorHTMLAttributes<HTMLAnchorElement>;
+} & AnchorHTMLAttributes<HTMLAnchorElement>;
 
 type ButtonExternalLink = BaseProps & {
   href: string;
   target?: string;
   rel?: string;
   to?: never;
-} & React.AnchorHTMLAttributes<HTMLAnchorElement>;
+} & AnchorHTMLAttributes<HTMLAnchorElement>;
 
-type ButtonAsButton = BaseProps & React.ButtonHTMLAttributes<HTMLButtonElement> & {
+type ButtonAsButton = BaseProps & ButtonHTMLAttributes<HTMLButtonElement> & {
   to?: undefined;
   href?: undefined;
 };
@@ -57,7 +57,7 @@ export function Button(props: ButtonProps) {
   }
 
   return (
-    <button className={classes} {...(rest as React.ButtonHTMLAttributes<HTMLButtonElement>)}>
+    <button className={classes} {...(rest as ButtonHTMLAttributes<HTMLButtonElement>)}>
       {children}
     </button>
   );

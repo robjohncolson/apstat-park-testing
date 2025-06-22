@@ -160,7 +160,7 @@ export function usePaceTracker(options: UsePaceTrackerOptions): UsePaceTrackerRe
   const {
     completedLessons,
     totalLessons,
-    examDate,
+    // examDate, // Currently unused in the hook implementation
     enabled = true,
   } = options;
 
@@ -244,6 +244,8 @@ export function usePaceTracker(options: UsePaceTrackerOptions): UsePaceTrackerRe
   const hoursUntilDeadline = currentDeadline 
     ? Math.max(0, (currentDeadline.getTime() - Date.now()) / (1000 * 60 * 60))
     : 0;
+    
+  // const examDate = paceData?.examDate; // Unused variable - commented out
     
   const isOverdue = currentDeadline ? Date.now() > currentDeadline.getTime() : false;
 

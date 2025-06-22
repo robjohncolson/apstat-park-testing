@@ -1,5 +1,5 @@
-import React from "react";
-import { screen, waitFor, fireEvent } from "@testing-library/react";
+import { ReactNode } from "react";
+import { screen, waitFor } from "@testing-library/react";
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import { DashboardPage } from "./DashboardPage";
 import { renderWithProviders } from "../utils/test-utils";
@@ -32,7 +32,7 @@ const mockFetchOnce = (data: unknown, ok = true, status = 200) => {
 
 // Mock react-modal to simplify DOM interactions during tests
 vi.mock("react-modal", () => {
-  const Modal = ({ isOpen, children }: { isOpen: boolean; children: React.ReactNode }) =>
+  const Modal = ({ isOpen, children }: { isOpen: boolean; children: ReactNode }) =>
     isOpen ? <div data-testid="mock-modal">{children}</div> : null;
   Modal.setAppElement = () => null;
   return { __esModule: true, default: Modal };

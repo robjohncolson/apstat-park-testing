@@ -1,4 +1,4 @@
-import React from "react";
+import { FC, ReactNode } from "react";
 import styles from "./PageShell.module.css";
 import { AppHeader } from "../AppHeader/AppHeader";
 import { AppFooter } from "../AppFooter/AppFooter";
@@ -12,10 +12,10 @@ interface PageShellProps {
    * Optional extra CSS classes.
    */
   className?: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
-export const PageShell: React.FC<PageShellProps> = ({
+export const PageShell: FC<PageShellProps> = ({
   fluid = false,
   className = "",
   children,

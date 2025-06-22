@@ -1,8 +1,8 @@
-import React from "react";
+import { HTMLAttributes, ReactNode } from "react";
 import styles from "./Spinner.module.css";
 
-interface SpinnerProps extends React.HTMLAttributes<HTMLDivElement> {
-  children?: React.ReactNode;
+interface SpinnerProps extends HTMLAttributes<HTMLDivElement> {
+  children?: ReactNode;
   className?: string;
 }
 
