@@ -13,7 +13,7 @@ import {
   type SyncStatus,
 } from "../services/BlockchainService";
 import type { LeaderboardEntry } from "../utils/leaderboard";
-import type { QuizQuestion } from "@apstatchain/core";
+import type { QuizQuestion, AppState } from "@apstatchain/core";
 
 // -----------------------------------------------------------------------------
 // Blockchain Context Types
@@ -28,7 +28,12 @@ interface BlockchainContextType {
   /** The currently assigned mining puzzle, or null if none */
   puzzleData: QuizQuestion | null;
 
+  // Projected blockchain state
+  appState: AppState;
+
   // Service API methods
+  initialize: () => Promise<void>;
+  /** Backwards compat alias – will call initialize() internally */
   start: () => Promise<void>;
   submitLessonProgress: (payload: LessonProgressPayload) => Promise<void>;
   /** Submit the selected answer index for the current mining puzzle */
@@ -47,6 +52,7 @@ export function BlockchainProvider({ children }: BlockchainProviderProps) {
 
   // Local state mirrors the internal service state via the subscribe helper.
   const [serviceState, setServiceState] = useState(() => serviceRef.current.getState());
+  const [, forceRender] = useState({}); // dummy state to force refresh when appState updates
 
   // Subscribe to service updates ONCE.
   useEffect(() => {
@@ -54,15 +60,26 @@ export function BlockchainProvider({ children }: BlockchainProviderProps) {
 
     // Kick-off the service. Errors are logged but not thrown so UI remains usable.
     serviceRef.current
-      .start()
+      .initialize()
       .catch((err) => console.error("Failed to start BlockchainService", err));
 
-    return unsubscribe; // Cleanup subscription on unmount.
+    // Listen once appState changes (rudimentary – mutate detection)
+    const interval = setInterval(() => {
+      // Trigger re-render when appState reference changes
+      forceRender({});
+    }, 1000);
+
+    return () => {
+      clearInterval(interval);
+      unsubscribe();
+    }; // Cleanup subscription on unmount.
   }, []);
 
   const contextValue: BlockchainContextType = {
     ...serviceState,
-    start: () => serviceRef.current.start(),
+    appState: serviceRef.current.state,
+    initialize: () => serviceRef.current.initialize(),
+    start: () => serviceRef.current.initialize(),
     submitLessonProgress: (payload) => serviceRef.current.submitLessonProgress(payload),
     submitPuzzleSolution: (solution) => serviceRef.current.submitPuzzleSolution(solution),
   };

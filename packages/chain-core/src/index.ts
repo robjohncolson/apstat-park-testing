@@ -23,5 +23,8 @@ export * from './consensus';
 // Export QuizBank functionality
 export * from './QuizBank';
 
+// Export state projection and related types
+export * from './state';
+
 // Package version
 export const VERSION = '0.1.0'; 

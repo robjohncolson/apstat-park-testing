@@ -5,16 +5,28 @@ import {
   sign,
   hash,
   proposeBlock,
-  type Transaction,
-  type LessonProgressData,
-  type Block,
-  type PuzzleSolution,
+  recomputeState,
+  saveAppState,
+  loadAppState,
   selectPuzzleForUser,
-  type QuizQuestion,
-  type Hash,
+} from "@apstatchain/core";
+
+import type {
+  Transaction,
+  LessonProgressData,
+  Block,
+  PuzzleSolution,
+  QuizQuestion,
+  Hash,
+  AppState,
+  BookmarkState,
+  PaceState,
+  LeaderboardEntry as ProjectedLeaderboardEntry,
+  TransactionType,
+  TransactionData,
 } from "@apstatchain/core";
 import { P2PNode, createTxBroadcastMessage, createBlockProposalMessage, type P2PMessage } from "@apstatchain/p2p";
-import type { LeaderboardEntry } from "../utils/leaderboard";
+import type { LeaderboardEntry as UiLeaderboardEntry } from "../utils/leaderboard";
 
 // ----------------------------------------------------------------------------
 // Type Definitions
@@ -27,7 +39,7 @@ export interface LessonProgressPayload extends LessonProgressData {}
 interface ServiceState {
   syncStatus: SyncStatus;
   peerCount: number;
-  leaderboardData: LeaderboardEntry[];
+  leaderboardData: UiLeaderboardEntry[];
   isProposalRequired: boolean;
   /** Current mining puzzle, if the user is required to propose a block */
   puzzleData: QuizQuestion | null;
@@ -57,7 +69,11 @@ export class BlockchainService {
 
   private eventTarget = new EventTarget();
 
-  private state: ServiceState = {
+  /**
+   * Internal UI-oriented state used for connection / sync feedback.
+   * This is kept separate from the immutable projected AppState above.
+   */
+  private _uiState: ServiceState = {
     syncStatus: "disconnected",
     peerCount: 0,
     leaderboardData: [],
@@ -66,6 +82,19 @@ export class BlockchainService {
   };
 
   private pendingProofOfAccessHash?: Hash;
+
+  // ------------------------------------------------------------------------
+  // Public, in-memory projection of the entire application state.
+  // ------------------------------------------------------------------------
+
+  public state: AppState = {
+    users: {},
+    bookmarks: {},
+    pace: {},
+    starCounts: {},
+    lessonProgress: {},
+    leaderboard: [],
+  };
 
   private constructor() {
     // Private constructor enforces singleton
@@ -89,12 +118,12 @@ export class BlockchainService {
     const listener = (evt: Event) => callback((evt as CustomEvent<ServiceState>).detail);
     this.eventTarget.addEventListener("state", listener);
     // Immediately emit current state so subscriber has initial value
-    callback(this.state);
+    callback(this._uiState);
     return () => this.eventTarget.removeEventListener("state", listener);
   }
 
   getState(): ServiceState {
-    return { ...this.state };
+    return { ...this._uiState };
   }
 
   // --------------------------------------------------------------------------
@@ -105,13 +134,13 @@ export class BlockchainService {
    * Starts the database & P2P networking layer, and begins chain sync.
    */
   async start(): Promise<void> {
-    if (this.state.syncStatus === "syncing" || this.state.syncStatus === "synced") {
+    if (this._uiState.syncStatus === "syncing" || this._uiState.syncStatus === "synced") {
       console.warn("BlockchainService already started");
       return;
     }
 
     try {
-      this.updateState({ syncStatus: "syncing" });
+      this.updateUiState({ syncStatus: "syncing" });
 
       // 1. Load key pair (or generate)
       await this.loadOrCreateKeyPair();
@@ -129,12 +158,12 @@ export class BlockchainService {
       await this.p2pNode.start();
 
       this.refreshPeerCount();
-      this.updateState({ syncStatus: "synced" });
+      this.updateUiState({ syncStatus: "synced" });
 
       console.info("🚀 BlockchainService started");
     } catch (err) {
       console.error("Failed to start BlockchainService", err);
-      this.updateState({ syncStatus: "disconnected" });
+      this.updateUiState({ syncStatus: "disconnected" });
       throw err; // surface
     }
   }
@@ -215,7 +244,7 @@ export class BlockchainService {
 
     // Clear pending puzzle state
     this.pendingProofOfAccessHash = undefined;
-    this.updateState({ isProposalRequired: false, puzzleData: null });
+    this.updateUiState({ isProposalRequired: false, puzzleData: null });
 
     return newBlock;
   }
@@ -254,21 +283,21 @@ export class BlockchainService {
     try {
       // Access internal map size (not officially public API)
       const count = (this.p2pNode as any).connections?.size ?? 0;
-      this.updateState({ peerCount: count });
+      this.updateUiState({ peerCount: count });
     } catch {
       /* ignore */
     }
   }
 
-  private updateState(partial: Partial<ServiceState>): void {
-    this.state = { ...this.state, ...partial };
-    this.eventTarget.dispatchEvent(new CustomEvent<ServiceState>("state", { detail: this.state }));
+  private updateUiState(partial: Partial<ServiceState>): void {
+    this._uiState = { ...this._uiState, ...partial };
+    this.eventTarget.dispatchEvent(new CustomEvent<ServiceState>("state", { detail: this._uiState }));
   }
 
   private async recalculateLeaderboard(): Promise<void> {
     // Placeholder implementation – calculate based on blocks in DB
     // For now, we keep mock implementation
-    const leaderboard: LeaderboardEntry[] = [
+    const leaderboard: UiLeaderboardEntry[] = [
       {
         rank: 1,
         username: "You",
@@ -277,7 +306,7 @@ export class BlockchainService {
         total_completed: 0,
       },
     ];
-    this.updateState({ leaderboardData: leaderboard });
+    this.updateUiState({ leaderboardData: leaderboard });
   }
 
   private async createGenesisBlock(): Promise<Block> {
@@ -306,7 +335,7 @@ export class BlockchainService {
    * Sets state.isProposalRequired and puzzleData when a puzzle is available.
    */
   private async selectPuzzleIfNeeded(): Promise<void> {
-    if (this.state.isProposalRequired) return; // Already have a puzzle pending
+    if (this._uiState.isProposalRequired) return; // Already have a puzzle pending
     if (!this.db) return; // DB not initialised yet
 
     try {
@@ -314,10 +343,89 @@ export class BlockchainService {
       if (result) {
         const { puzzle, proofOfAccessHash } = result;
         this.pendingProofOfAccessHash = proofOfAccessHash;
-        this.updateState({ isProposalRequired: true, puzzleData: puzzle });
+        this.updateUiState({ isProposalRequired: true, puzzleData: puzzle });
       }
     } catch (err) {
       console.error("Failed to select puzzle", err);
     }
+  }
+
+  // --------------------------------------------------------------------------
+  // Phase-2  – Initialisation & State Projection
+  // --------------------------------------------------------------------------
+
+  /**
+   * Initialise the service: starts networking, loads blocks and projects state.
+   * This should be called once when the application boots.
+   */
+  public async initialize(): Promise<void> {
+    // Ensure lower-level networking/DB is running
+    await this.start();
+
+    // 1) Load cached state if it exists
+    const cached = await loadAppState();
+
+    // 2) Always load blocks from DB (fast)
+    const blockEntries = await this.db.blocks.orderBy("height").toArray();
+    const blocks = blockEntries.map((be) => be.block);
+
+    // 3) Decide whether to recompute – naive strategy: if no cached state, recompute.
+    let latestState: AppState;
+    if (!cached) {
+      latestState = recomputeState(blocks);
+      await saveAppState(latestState);
+    } else {
+      latestState = cached;
+      // TODO: enhancement – compare timestamps / heights for staleness
+    }
+
+    // 4) Store in-memory copy for ultra-fast reads
+    this.state = latestState;
+
+    // 5) Notify subscribers via UI state update so React can re-render
+    this.updateUiState({});
+  }
+
+  // --------------------------------------------------------------------------
+  // Convenience read helpers (pure, sync)
+  // --------------------------------------------------------------------------
+
+  getLeaderboard(): ProjectedLeaderboardEntry[] {
+    return this.state.leaderboard;
+  }
+
+  getBookmarksForUser(publicKey: string): Record<string, BookmarkState> {
+    return this.state.bookmarks[publicKey] ?? {};
+  }
+
+  getPaceForUser(publicKey: string): PaceState | undefined {
+    return this.state.pace[publicKey];
+  }
+
+  // --------------------------------------------------------------------------
+  // Generic transaction submission helper (Phase-2 stub)
+  // --------------------------------------------------------------------------
+
+  async submitTransaction(type: TransactionType, data: TransactionData): Promise<void> {
+    // Build unsigned transaction
+    const baseTx = {
+      type,
+      data,
+      publicKey: this.keyPair.publicKey,
+      timestamp: Date.now(),
+      priority: "normal" as const,
+    };
+
+    const id = hash(baseTx);
+    const signature = sign({ ...baseTx, id }, this.keyPair.privateKey);
+
+    const tx: Transaction = {
+      id,
+      ...baseTx,
+      signature,
+    } as Transaction;
+
+    // For now we simply log; P2P broadcast will be implemented in Phase-3.
+    console.info("📝 submitTransaction (stub)", tx);
   }
 } 

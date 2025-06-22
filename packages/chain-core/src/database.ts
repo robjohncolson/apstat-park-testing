@@ -11,6 +11,7 @@ import type {
   Transaction, 
   TransactionPriority 
 } from './types.js';
+import type { AppState } from './state.js';
 
 /**
  * Interface for mempool entries stored in IndexedDB
@@ -477,4 +478,24 @@ export async function smokeTest(): Promise<{ success: boolean; message: string }
 }
 
 // Placeholder export to make this a valid ES module
-export {}; 
+export {};
+
+// Constant key used for storing the single, latest projected application state
+const APP_STATE_KEY = 'latest';
+
+/**
+ * Persist the latest projected application state.
+ * Overwrites any previously stored state.
+ */
+export async function saveAppState(state: AppState): Promise<void> {
+  const db = await createChainDB();
+  await db.setAppState(APP_STATE_KEY, state);
+}
+
+/**
+ * Load the previously saved projected application state, if any.
+ */
+export async function loadAppState(): Promise<AppState | undefined> {
+  const db = await createChainDB();
+  return await db.getAppState<AppState>(APP_STATE_KEY);
+} 
