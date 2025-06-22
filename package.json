@@ -9,7 +9,7 @@
   ],
   "scripts": {
     "dev": "npm run dev --workspaces --if-present",
-    "build": "npm run build --workspace=@apstatchain/core && npm run build --workspace=@apstatchain/p2p && npm run build --workspace=@apstat-park/api && npm run build --workspace=@apstat-park/web",
+    "build": "npm run build --workspaces --if-present",
     "test": "vitest run",
     "test:watch": "vitest --watch",
     "test:ui": "vitest --ui",

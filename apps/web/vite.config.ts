@@ -16,6 +16,8 @@ export default defineConfig({
       const baseAliases: Record<string, string> = {
         react: path.resolve(__dirname, "../../node_modules/react"),
         "react-dom": path.resolve(__dirname, "../../node_modules/react-dom"),
+        '@apstatchain/core': path.resolve(__dirname, '../../packages/chain-core/src/index.ts'),
+        '@apstatchain/p2p': path.resolve(__dirname, '../../packages/chain-p2p/src/index.ts'),
       };
 
       // When running under Vitest (process.env.VITEST set), alias blockchain libs to mocks
