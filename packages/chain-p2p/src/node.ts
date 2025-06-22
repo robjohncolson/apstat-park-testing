@@ -40,6 +40,14 @@ export class P2PNode {
   private readonly chainId: string = 'apstat-chain';
   private readonly capabilities: string[] = ['validation', 'storage'];
   private readonly userAgent: string = 'APStatChain/1.0';
+  /**
+   * Flag indicating this node is currently working on its own candidate block proposal. When
+   * set to true the node SHOULD abandon the proposal if it learns that another peer has
+   * already announced a competing candidate block at the same height. This variable is mutated
+   * by consensus logic elsewhere, but it is useful for unit‐testing conflict resolution of the
+   * networking layer.
+   */
+  private isProposingBlock: boolean = false;
 
   // Dummy chain state - in a real implementation, this would come from the blockchain
   private latestBlockHash: string = '0x0000000000000000000000000000000000000000000000000000000000000000';
@@ -468,7 +476,19 @@ export class P2PNode {
   }
 
   private handleAnnounceCandidateBlockMessage(connInfo: ConnectionInfo, message: any): void {
-    console.log(`ANNOUNCE_CANDIDATE_BLOCK from ${connInfo.nodeId} - not implemented yet`);
+    console.log(`ANNOUNCE_CANDIDATE_BLOCK from ${connInfo.nodeId}`);
+
+    // If we are in the middle of building our own proposal and another peer announces one first
+    // we follow "passive conflict resolution" – abandon our local proposal and switch to
+    // validating the peer's candidate. For now we just clear the flag; consensus logic can pick
+    // up the candidate through a subsequent BLOCK_PROPOSAL message.
+    if (this.isProposingBlock) {
+      console.info('Abandoning local block proposal due to competing candidate block');
+      this.isProposingBlock = false;
+    }
+
+    // In a full implementation we would now request the full block or wait for a BLOCK_PROPOSAL
+    // message. For the purposes of this phase we simply acknowledge the announcement.
   }
 
   private handleBlockProposalMessage(connInfo: ConnectionInfo, message: any): void {
@@ -571,6 +591,21 @@ export class P2PNode {
    */
   public isReady(): boolean {
     return this.isStarted && this.peer.open;
+  }
+
+  /**
+   * Helper used by tests or higher-level consensus logic to mark the node as actively proposing
+   * (or not proposing) a new block.
+   */
+  public setProposingBlock(isProposing: boolean): void {
+    this.isProposingBlock = isProposing;
+  }
+
+  /**
+   * Returns current proposal status (primarily for tests).
+   */
+  public currentlyProposing(): boolean {
+    return this.isProposingBlock;
   }
 }
 
