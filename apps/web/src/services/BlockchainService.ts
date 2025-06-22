@@ -9,6 +9,8 @@ import {
   saveAppState,
   loadAppState,
   selectPuzzleForUser,
+  isTransactionValid,
+  isBlockValid,
 } from "@apstatchain/core";
 
 import type {
@@ -82,6 +84,9 @@ export class BlockchainService {
   };
 
   private pendingProofOfAccessHash?: Hash;
+
+  /** In-memory mempool mirror for quick size checks (primary storage is ChainDB). */
+  private mempool: Transaction[] = [];
 
   // ------------------------------------------------------------------------
   // Public, in-memory projection of the entire application state.
@@ -161,6 +166,18 @@ export class BlockchainService {
       this.updateUiState({ syncStatus: "synced" });
 
       console.info("🚀 BlockchainService started");
+
+      // ------------------------------------------------------------------
+      // Subscribe to P2P events
+      // ------------------------------------------------------------------
+
+      this.p2pNode.on("transaction:received", (tx: Transaction) => {
+        void this.handleReceivedTransaction(tx);
+      });
+
+      this.p2pNode.on("block:received", (blk: Block) => {
+        void this.handleReceivedBlock(blk);
+      });
     } catch (err) {
       console.error("Failed to start BlockchainService", err);
       this.updateUiState({ syncStatus: "disconnected" });
@@ -190,17 +207,18 @@ export class BlockchainService {
       signature,
     } as Transaction;
 
-    // Add to local mempool
+    // Add to local mempool (DB + in-memory mirror)
     await this.db.addToMempool(tx);
+    this.mempool.push(tx);
 
     // Broadcast to peers
     const broadcastMsg = createTxBroadcastMessage(tx, this.keyPair.publicKey);
     this.p2pNode.broadcast(broadcastMsg as P2PMessage);
 
-    console.info("📤 Lesson progress transaction broadcasted", tx);
+    console.info("📤 Transaction broadcasted", tx);
 
     // After successfully submitting progress, check if a puzzle can be offered.
-    await this.selectPuzzleIfNeeded();
+    await this.attemptToProposeBlock();
   }
 
   /**
@@ -425,7 +443,97 @@ export class BlockchainService {
       signature,
     } as Transaction;
 
-    // For now we simply log; P2P broadcast will be implemented in Phase-3.
-    console.info("📝 submitTransaction (stub)", tx);
+    // Add to local mempool (DB + in-memory mirror)
+    await this.db.addToMempool(tx);
+    this.mempool.push(tx);
+
+    // Broadcast to peers
+    const broadcastMsg = createTxBroadcastMessage(tx, this.keyPair.publicKey);
+    this.p2pNode.broadcast(broadcastMsg as P2PMessage);
+
+    console.info("📤 Transaction broadcasted", tx);
+
+    // Check if conditions met for proposing block
+    await this.attemptToProposeBlock();
+  }
+
+  // --------------------------------------------------------------------------
+  // Phase-3 – Network Event Handlers
+  // --------------------------------------------------------------------------
+
+  /** Handle an incoming transaction from the P2P network. */
+  private async handleReceivedTransaction(tx: Transaction): Promise<void> {
+    try {
+      if (!isTransactionValid(tx)) {
+        console.warn("⚠️  Invalid transaction received – ignoring");
+        return;
+      }
+
+      // Deduplication – skip if already in DB
+      const exists = await this.db.mempool.where("hash").equals(tx.id).count();
+      if (exists > 0) {
+        return; // Already seen
+      }
+
+      await this.db.addToMempool(tx);
+      this.mempool.push(tx);
+
+      console.info("📥 Transaction accepted from network", tx.id);
+
+      await this.attemptToProposeBlock();
+    } catch (err) {
+      console.error("Failed to handle incoming transaction", err);
+    }
+  }
+
+  /** Handle an incoming block from the P2P network. */
+  private async handleReceivedBlock(block: Block): Promise<void> {
+    try {
+      if (!(await isBlockValid(block, this.db))) {
+        console.warn("⚠️  Invalid block received – ignoring");
+        return;
+      }
+
+      // Check for duplicates
+      const existing = await this.db.getBlockByHash(block.header.hash as string);
+      if (existing) return;
+
+      await this.db.addBlock(block);
+
+      // Remove included txs from mempool/db mirror
+      for (const tx of block.transactions) {
+        await this.db.removeFromMempool(tx.id);
+        this.mempool = this.mempool.filter((t) => t.id !== tx.id);
+      }
+
+      // Recompute application state
+      const allBlocks = (await this.db.blocks.orderBy("height").toArray()).map((be) => be.block);
+      this.state = recomputeState(allBlocks);
+      await saveAppState(this.state);
+
+      await this.recalculateLeaderboard();
+
+      // Clear puzzle flag if we're no longer the highest proposer
+      this.updateUiState({});
+    } catch (err) {
+      console.error("Failed to handle incoming block", err);
+    }
+  }
+
+  /** Attempt to trigger puzzle selection / block proposal based on mempool size. */
+  private async attemptToProposeBlock(): Promise<void> {
+    try {
+      const mempoolCount = this.mempool.length;
+      if (mempoolCount >= 10) {
+        await this.selectPuzzleIfNeeded();
+      }
+    } catch (err) {
+      console.error("Error during proposal check", err);
+    }
+  }
+
+  /** Callback invoked by UI when user answers mining puzzle. */
+  public async handlePuzzleSolution(solution: any): Promise<void> {
+    await this.submitPuzzleSolution(solution);
   }
 } 

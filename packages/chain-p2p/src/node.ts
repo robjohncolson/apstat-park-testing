@@ -1,6 +1,6 @@
 // P2P Node implementation will go here
 import { Peer, DataConnection } from 'peerjs';
-import type { Block } from '@apstatchain/core';
+import type { Block, Transaction } from '@apstatchain/core';
 import { discoverPeers } from './bootstrap.js';
 import { 
   P2PMessage, 
@@ -12,8 +12,13 @@ import {
   createPongMessage,
   createErrorMessage,
   isValidP2PMessage,
-  validateMessage
+  validateMessage,
+  createTxBroadcastMessage
 } from './protocol.js';
+import { isTransactionValid } from '@apstatchain/core';
+
+// Event names emitted by P2PNode for higher-level services
+type P2PNodeEvent = 'transaction:received' | 'block:received';
 
 /**
  * Connection metadata for tracking peer connections
@@ -52,6 +57,24 @@ export class P2PNode {
   // Dummy chain state - in a real implementation, this would come from the blockchain
   private latestBlockHash: string = '0x0000000000000000000000000000000000000000000000000000000000000000';
   private latestBlockHeight: number = 0;
+
+  // ------------------------------------------------------------------------
+  // Event system – allows external services to subscribe to networking events
+  // ------------------------------------------------------------------------
+
+  private eventTarget: EventTarget = new EventTarget();
+
+  /** Subscribe to node events (`transaction:received`, `block:received`). */
+  public on(eventName: P2PNodeEvent, listener: (payload: any) => void): void {
+    this.eventTarget.addEventListener(eventName, (evt) => {
+      listener((evt as CustomEvent).detail);
+    });
+  }
+
+  /** Internal helper to emit events. */
+  private emit(eventName: P2PNodeEvent, payload: any): void {
+    this.eventTarget.dispatchEvent(new CustomEvent(eventName, { detail: payload }));
+  }
 
   constructor(peerId: PublicKey) {
     this.id = peerId;
@@ -468,31 +491,55 @@ export class P2PNode {
   }
 
   private handleSendTxMessage(connInfo: ConnectionInfo, message: any): void {
-    console.log(`SEND_TX from ${connInfo.nodeId} - not implemented yet`);
+    const { transaction, propagate = true } = message.payload;
+
+    // Basic validation – reject obviously malformed transactions
+    if (!isTransactionValid(transaction as Transaction)) {
+      console.warn('Received invalid transaction via SEND_TX – ignoring');
+      return;
+    }
+
+    console.log(`Valid SEND_TX received from ${connInfo.nodeId}`);
+
+    // Dispatch internal event so higher-level services can process the tx
+    this.emit('transaction:received', transaction);
+
+    // Optional propagation
+    if (propagate) {
+      const broadcastMsg = createTxBroadcastMessage(transaction, this.id);
+      this.broadcast(broadcastMsg);
+    }
   }
 
   private handleTxBroadcastMessage(connInfo: ConnectionInfo, message: any): void {
-    console.log(`TX_BROADCAST from ${connInfo.nodeId} - not implemented yet`);
-  }
+    const { transaction, originNodeId, hopCount = 0, maxHops = 7 } = message.payload;
 
-  private handleAnnounceCandidateBlockMessage(connInfo: ConnectionInfo, message: any): void {
-    console.log(`ANNOUNCE_CANDIDATE_BLOCK from ${connInfo.nodeId}`);
-
-    // If we are in the middle of building our own proposal and another peer announces one first
-    // we follow "passive conflict resolution" – abandon our local proposal and switch to
-    // validating the peer's candidate. For now we just clear the flag; consensus logic can pick
-    // up the candidate through a subsequent BLOCK_PROPOSAL message.
-    if (this.isProposingBlock) {
-      console.info('Abandoning local block proposal due to competing candidate block');
-      this.isProposingBlock = false;
+    if (!isTransactionValid(transaction as Transaction)) {
+      console.warn('Invalid transaction received via TX_BROADCAST – ignoring');
+      return;
     }
 
-    // In a full implementation we would now request the full block or wait for a BLOCK_PROPOSAL
-    // message. For the purposes of this phase we simply acknowledge the announcement.
+    // Forward to application layer
+    this.emit('transaction:received', transaction);
+
+    // Re-broadcast if we still have hops left and we are not the origin
+    if (hopCount < maxHops && originNodeId !== this.id) {
+      const fwdMsg = createTxBroadcastMessage(transaction, originNodeId, hopCount + 1, maxHops);
+      this.broadcast(fwdMsg);
+    }
   }
 
   private handleBlockProposalMessage(connInfo: ConnectionInfo, message: any): void {
-    console.log(`BLOCK_PROPOSAL from ${connInfo.nodeId} - not implemented yet`);
+    const { block } = message.payload;
+
+    // Lightweight structural validation — full validation handled by service layer
+    if (!block?.header || !Array.isArray(block?.transactions)) {
+      console.warn('Malformed BLOCK_PROPOSAL received – ignoring');
+      return;
+    }
+
+    console.log(`BLOCK_PROPOSAL received from ${connInfo.nodeId} – emitting to listeners`);
+    this.emit('block:received', block);
   }
 
   private handleSendAttestationMessage(connInfo: ConnectionInfo, message: any): void {
@@ -607,7 +654,24 @@ export class P2PNode {
   public currentlyProposing(): boolean {
     return this.isProposingBlock;
   }
+
+  private handleAnnounceCandidateBlockMessage(connInfo: ConnectionInfo, message: any): void {
+    console.log(`ANNOUNCE_CANDIDATE_BLOCK from ${connInfo.nodeId}`);
+
+    // If we are in the middle of building our own proposal and another peer announces one first
+    // we follow passive conflict resolution – abandon our local proposal and switch to validating
+    // the peer's candidate.
+    if (this.isProposingBlock) {
+      console.info('Abandoning local block proposal due to competing candidate block');
+      this.isProposingBlock = false;
+    }
+
+    // Forward the announcement upward so application layer may choose to request full block.
+    // The payload only contains metadata so we emit it verbatim.
+    this.emit('block:received', message.payload);
+  }
 }
 
-// For backward compatibility with the existing interface
-export {}; 
+// ----------------------------------------------------------------------------
+// Lightweight event system (browser-friendly)
+// ---------------------------------------------------------------------------- 
