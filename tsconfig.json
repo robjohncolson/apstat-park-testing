@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.base.json",
+  "files": [],
+  "include": [],
+  "references": [
+    { "path": "./apps/api" },
+    { "path": "./apps/web" },
+    { "path": "./apps/web-legacy" },
+    { "path": "./packages/chain-core" },
+    { "path": "./packages/chain-p2p" }
+  ]
+} 

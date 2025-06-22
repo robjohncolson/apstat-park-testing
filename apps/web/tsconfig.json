@@ -1,10 +1,11 @@
 {
-  "files": [],
-  "references": [
-    { "path": "./tsconfig.app.json" },
-    { "path": "./tsconfig.node.json" }
-  ],
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "types": ["vite/client"]
-  }
+  },
+  "include": ["src"],
+  "references": [
+    { "path": "../../packages/chain-core" },
+    { "path": "../../packages/chain-p2p" }
+  ]
 }
