@@ -69,6 +69,13 @@ export class BlockchainService {
 
   private constructor() {
     // Private constructor enforces singleton
+
+    // 👇 Expose the singleton instance in browser environments so E2E tests
+    //    can control chain state without reaching into React internals.
+    if (typeof window !== "undefined") {
+      // Use a stable name to avoid clashes and allow Playwright to access it.
+      (window as any).__APSTAT_CHAIN_SERVICE__ = this;
+    }
   }
 
   // --------------------------------------------------------------------------
