@@ -6,9 +6,10 @@ import {
   useEffect,
   type ReactNode,
 } from "react";
+import { BlockchainService } from "../services/BlockchainService";
 
 interface User {
-  id: number;
+  id: string;
   username: string;
   created_at: string;
   last_sync: string;
@@ -109,48 +110,39 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // Generate username if not provided
       const finalUsername = username || (await generateUsername());
 
-      // Try to create user via API, but fall back to offline mode if it fails
-      let user;
-      try {
-        const apiUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:3001';
-        const response = await fetch(
-          `${apiUrl}/api/users/get-or-create`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ username: finalUsername }),
-          },
-        );
+      // ------------------------------------------------------------------
+      // Blockchain-backed user creation
+      // ------------------------------------------------------------------
 
-        if (response.ok) {
-          const data = await response.json();
-          user = data.user;
-          console.log("Login successful with API, user data:", user);
-        } else {
-          throw new Error("API call failed");
-        }
-      } catch {
-        // Fallback to offline mode
-        console.log("API unavailable, using offline mode");
-        user = {
-          id: Math.floor(Math.random() * 10000),
-          username: finalUsername,
-          created_at: new Date().toISOString(),
-          last_sync: new Date().toISOString(),
-        };
-        console.log("Login successful in offline mode, user data:", user);
-      }
+      // Ensure the blockchain layer is initialised (idempotent)
+      const blockchainService = BlockchainService.getInstance();
+      await blockchainService.initialize();
 
-      // Save to localStorage
+      // Submit CREATE_USER transaction (fire-and-forget)
+      await blockchainService.submitTransaction("CREATE_USER", {
+        username: finalUsername,
+        createdAt: Date.now(),
+      } as any);
+
+      const publicKey = blockchainService.getPublicKey();
+
+      const user = {
+        // Store the public key under the existing `id` prop so downstream
+        // components remain compatible during the migration.
+        id: publicKey,
+        username: finalUsername,
+        created_at: new Date().toISOString(),
+        last_sync: new Date().toISOString(),
+      } as User;
+
+      // Persist to localStorage so user remains logged-in after refresh
       try {
         localStorage.setItem("apstat-user", JSON.stringify(user));
       } catch (error) {
         console.warn("Failed to save user to localStorage:", error);
       }
 
-      console.log("Setting authenticated state to true");
+      console.log("Login successful via blockchain, user:", user);
       setAuthState({
         user,
         isLoading: false,

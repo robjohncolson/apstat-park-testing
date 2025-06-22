@@ -12,6 +12,7 @@ import { PaceTracker } from "../components/PaceTracker";
 import { ErrorBoundary } from "../components/ui/ErrorBoundary";
 import type { Unit, Topic } from "../data/allUnitsData";
 import styles from "./DashboardPage.module.css";
+import { useBlockchain } from "../context/BlockchainProvider";
 
 // Interface for user progress data
 interface UserProgress {
@@ -27,6 +28,7 @@ interface UserProgress {
 
 export function DashboardPage() {
   const { user, logout } = useAuth();
+  const { appState } = useBlockchain();
   const navigate = useNavigate();
   const [progress, setProgress] = useState<UserProgress[]>([]);
 
@@ -36,79 +38,33 @@ export function DashboardPage() {
     navigate("/", { replace: true });
   };
 
-  // Fetch user progress on component mount
+  // Recompute user progress whenever blockchain state updates
   useEffect(() => {
-    const fetchProgress = async () => {
-      if (!user?.id) {
-        return;
-      }
+    if (!user?.id) return;
 
-          try {
-      const apiUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:3001';
-      const response = await fetch(
-        `${apiUrl}/api/users/${user.id}/progress`,
-        );
-        if (response.ok) {
-          const progressData = await response.json();
-          setProgress(progressData);
-        } else {
-          console.warn("Failed to fetch progress - running in offline mode");
-          // In offline mode, use localStorage for demo purposes
-          const offlineProgress = localStorage.getItem(`progress_${user.id}`);
-          if (offlineProgress) {
-            setProgress(JSON.parse(offlineProgress));
-          } else {
-            // TEMPORARY TEST DATA: Simulate having completed 2 lessons to test pace tracking
-            const testProgress: UserProgress[] = [
-              {
-                lesson_id: "exploring-data",
-                videos_watched: [0, 1, 2],
-                quizzes_completed: [0, 1],
-                lesson_completed: true,
-                completion_date: new Date().toISOString(),
-              },
-              {
-                lesson_id: "categorical-vs-quantitative",
-                videos_watched: [0, 1],
-                quizzes_completed: [0],
-                lesson_completed: true,
-                completion_date: new Date().toISOString(),
-              },
-            ];
-            setProgress(testProgress);
-          }
-        }
-      } catch {
-        console.warn("API not available - running in offline mode");
-        // In offline mode, use localStorage for demo purposes
-        const offlineProgress = localStorage.getItem(`progress_${user.id}`);
-        if (offlineProgress) {
-          setProgress(JSON.parse(offlineProgress));
-        } else {
-          // TEMPORARY TEST DATA: Simulate having completed 2 lessons to test pace tracking
-          const testProgress: UserProgress[] = [
-            {
-              lesson_id: "exploring-data",
-              videos_watched: [0, 1, 2],
-              quizzes_completed: [0, 1],
-              lesson_completed: true,
-              completion_date: new Date().toISOString(),
-            },
-            {
-              lesson_id: "categorical-vs-quantitative",
-              videos_watched: [0, 1],
-              quizzes_completed: [0],
-              lesson_completed: true,
-              completion_date: new Date().toISOString(),
-            },
-          ];
-          setProgress(testProgress);
-        }
-      }
-    };
+    const publicKey = user.id;
+    const lessonSet = appState.lessonProgress?.[publicKey];
 
-    fetchProgress();
-  }, [user?.id]);
+    if (!lessonSet) {
+      setProgress([]);
+      return;
+    }
+
+    const newProgress: UserProgress[] = Array.from(lessonSet).map((lid) => {
+      const topic = ALL_UNITS_DATA.flatMap((u) => u.topics).find((t) => t.id === lid);
+      return {
+        lesson_id: lid,
+        videos_watched: topic ? topic.videos.map((_, idx) => idx) : [],
+        quizzes_completed: topic ? topic.quizzes.map((_, idx) => idx) : [],
+        blooket_completed: topic ? !!topic.blooket?.url : false,
+        origami_completed: topic ? !!topic.origami : false,
+        lesson_completed: true,
+        completion_date: new Date().toISOString(),
+      };
+    });
+
+    setProgress(newProgress);
+  }, [appState, user?.id]);
 
   // Helper function to get granular progress for a topic
   const getTopicProgress = (topicId: string) => {

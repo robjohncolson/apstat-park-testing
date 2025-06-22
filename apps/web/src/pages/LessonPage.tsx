@@ -17,6 +17,7 @@ import { Badge } from "../components/ui/Badge";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { Spinner } from "../components/ui/Spinner";
+import { BlockchainService } from "../services/BlockchainService";
 
 // Interface for granular progress tracking
 interface LessonProgress {
@@ -44,7 +45,7 @@ export function LessonPage() {
   }>();
   const { user } = useAuth();
   const { setBookmark, isItemBookmarked } = useBookmark();
-  const { submitLessonProgress } = useBlockchain();
+  const { appState } = useBlockchain();
   const [topic, setTopic] = useState<Topic | null>(null);
   const [unit, setUnit] = useState<Unit | null>(null);
   const [progress, setProgress] = useState<LessonProgress | null>(null);
@@ -64,111 +65,59 @@ export function LessonPage() {
     setUnit(foundUnit || null);
     setTopic(foundTopic || null);
 
-    // Fetch progress for this specific lesson
-    const fetchProgress = async () => {
+    // Fetch progress for this specific lesson via blockchain state
+    const loadProgress = async () => {
       if (!user?.id) {
         setIsLoading(false);
         return;
       }
 
-          try {
-      const apiUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:3001';
-      const response = await fetch(
-        `${apiUrl}/api/users/${user.id}/progress`,
-        );
-        if (response.ok) {
-          const progressData = await response.json();
-          const lessonProgress = (progressData as ProgressData[]).find(
-            (p) => p.lesson_id === lessonId,
-          );
-          if (lessonProgress) {
-            setProgress({
-              lesson_id: lessonProgress.lesson_id,
-              videos_watched: lessonProgress.videos_watched || [],
-              quizzes_completed: lessonProgress.quizzes_completed || [],
-              blooket_completed: lessonProgress.blooket_completed || false,
-              origami_completed: lessonProgress.origami_completed || false,
-            });
-          } else {
-            // No progress yet, initialize empty state
-            setProgress({
-              lesson_id: lessonId,
-              videos_watched: [],
-              quizzes_completed: [],
-              blooket_completed: false,
-              origami_completed: false,
-            });
-          }
+      try {
+        // Use projected AppState from BlockchainProvider
+        const publicKey = user.id;
+        const lessonSet = appState?.lessonProgress?.[publicKey];
+        const isCompletedOnChain = lessonSet?.has(lessonId) ?? false;
+
+        let lessonProgress: LessonProgress;
+        if (isCompletedOnChain && foundTopic) {
+          // Mark everything completed if the lesson is present in chain state
+          lessonProgress = {
+            lesson_id: lessonId,
+            videos_watched: foundTopic.videos.map((_, idx) => idx),
+            quizzes_completed: foundTopic.quizzes.map((_, idx) => idx),
+            blooket_completed: !!foundTopic.blooket?.url,
+            origami_completed: !!foundTopic.origami,
+          };
         } else {
-          // Offline mode - check localStorage
-          const offlineProgress = localStorage.getItem(`progress_${user.id}`);
-          if (offlineProgress) {
-            const progressData = JSON.parse(offlineProgress) as ProgressData[];
-            const lessonProgress = progressData.find(
-              (p) => p.lesson_id === lessonId,
-            );
-            if (lessonProgress) {
-              setProgress({
-                lesson_id: lessonProgress.lesson_id,
-                videos_watched: lessonProgress.videos_watched || [],
-                quizzes_completed: lessonProgress.quizzes_completed || [],
-                blooket_completed: lessonProgress.blooket_completed || false,
-                origami_completed: lessonProgress.origami_completed || false,
-              });
-            } else {
-              setProgress({
+          // Fallback to empty / localStorage partial progress
+          const offlineProgress = localStorage.getItem(`progress_${publicKey}`);
+          const progressData: ProgressData[] = offlineProgress ? JSON.parse(offlineProgress) : [];
+          const stored = progressData.find((p) => p.lesson_id === lessonId);
+          lessonProgress = stored
+            ? {
+                lesson_id: stored.lesson_id,
+                videos_watched: stored.videos_watched || [],
+                quizzes_completed: stored.quizzes_completed || [],
+                blooket_completed: stored.blooket_completed || false,
+                origami_completed: stored.origami_completed || false,
+              }
+            : {
                 lesson_id: lessonId,
                 videos_watched: [],
                 quizzes_completed: [],
                 blooket_completed: false,
                 origami_completed: false,
-              });
-            }
-          }
+              };
         }
-      } catch {
-        console.warn("API not available - running in offline mode");
-        // Offline mode - check localStorage
-        const offlineProgress = localStorage.getItem(`progress_${user.id}`);
-        if (offlineProgress) {
-          const progressData = JSON.parse(offlineProgress) as ProgressData[];
-          const lessonProgress = progressData.find(
-            (p) => p.lesson_id === lessonId,
-          );
-          if (lessonProgress) {
-            setProgress({
-              lesson_id: lessonProgress.lesson_id,
-              videos_watched: lessonProgress.videos_watched || [],
-              quizzes_completed: lessonProgress.quizzes_completed || [],
-              blooket_completed: lessonProgress.blooket_completed || false,
-              origami_completed: lessonProgress.origami_completed || false,
-            });
-          } else {
-            setProgress({
-              lesson_id: lessonId,
-              videos_watched: [],
-              quizzes_completed: [],
-              blooket_completed: false,
-              origami_completed: false,
-            });
-          }
-        } else {
-          // No offline data, initialize empty
-          setProgress({
-            lesson_id: lessonId,
-            videos_watched: [],
-            quizzes_completed: [],
-            blooket_completed: false,
-            origami_completed: false,
-          });
-        }
+
+        setProgress(lessonProgress);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchProgress();
-  }, [unitId, lessonId, user?.id]);
+    loadProgress();
+  }, [unitId, lessonId, user?.id, appState]);
 
   // Unified progress update handler
   const updateProgress = async (
@@ -229,76 +178,38 @@ export function LessonPage() {
 
     setProgress(newProgress);
 
-    // Prepare API payload (existing backend)
-    const payload = {
-      lesson_id: lessonId,
-      item_type: itemType,
-      item_index: itemIndex,
-      completed,
-    };
+    // Prepare blockchain payload
+    const chainPayload = {
+      lessonId: lessonId!,
+      progressType:
+        itemType === "video"
+          ? "video_watched"
+          : itemType === "quiz"
+            ? "quiz_completed"
+            : "lesson_completed",
+      itemId: itemIndex !== undefined ? String(itemIndex) : undefined,
+      status: completed ? (itemType === "video" ? "watched" : "completed") : "in_progress",
+      metadata: {
+        item_type: itemType,
+        item_index: itemIndex,
+        completed,
+      },
+    } as const;
 
-    // ------------------------------------------------------------------
-    // Broadcast progress to blockchain – converted to on-chain schema
-    // ------------------------------------------------------------------
     try {
-      const chainPayload = {
-        lessonId: lessonId!,
-        progressType:
-          itemType === "video"
-            ? "video_watched"
-            : itemType === "quiz"
-              ? "quiz_completed"
-              : "lesson_completed",
-        itemId: itemIndex !== undefined ? String(itemIndex) : undefined,
-        status: completed ? (itemType === "video" ? "watched" : "completed") : "in_progress",
-        metadata: {
-          // Pass through original payload for additional context
-          item_type: itemType,
-          item_index: itemIndex,
-          completed,
-        },
-      } as const;
-
-      // Fire and forget – any errors are logged but do not disrupt UX
-      submitLessonProgress(chainPayload as any).catch((err) =>
-        console.error("Failed to submit lesson progress to blockchain", err),
-      );
+      const blockchainService = BlockchainService.getInstance();
+      await blockchainService.submitTransaction("LESSON_PROGRESS", chainPayload as any);
     } catch (err) {
-      console.error("submitLessonProgress failed", err);
+      console.error("Failed to submit lesson progress to blockchain", err);
     }
 
+    // Update localStorage offline mirror (no longer POSTing to API)
     try {
-      const apiUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:3001';
-      const response = await fetch(
-        `${apiUrl}/api/users/${user.id}/progress/update`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        },
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to update progress");
-      }
-
-      const result = await response.json();
-      console.log("Progress updated successfully:", result);
-    } catch {
-      console.warn("API not available - saving progress locally");
-
-      // Fallback to localStorage with self-cleaning
-      const offlineProgress = localStorage.getItem(`progress_${user.id}`);
+      const publicKey = user.id;
+      const offlineProgress = localStorage.getItem(`progress_${publicKey}`);
       const progressData: ProgressData[] = offlineProgress ? JSON.parse(offlineProgress) : [];
 
-      // Self-cleaning: remove lesson_completed from loaded data
-      progressData.forEach((p) => delete (p as unknown as Record<string, unknown>).lesson_completed);
-
-      const existingIndex = progressData.findIndex(
-        (p) => p.lesson_id === lessonId,
-      );
+      const existingIndex = progressData.findIndex((p) => p.lesson_id === lessonId);
       if (existingIndex >= 0) {
         Object.assign(progressData[existingIndex], {
           videos_watched: newProgress.videos_watched,
@@ -316,7 +227,7 @@ export function LessonPage() {
         });
       }
 
-      localStorage.setItem(`progress_${user.id}`, JSON.stringify(progressData));
+      localStorage.setItem(`progress_${publicKey}`, JSON.stringify(progressData));
     } finally {
       setUpdatingItems((prev) => {
         const next = new Set(prev);
