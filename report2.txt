@@ -1,0 +1,360 @@
+
+> @apstat-park/web@1.0.0 test:e2e
+> playwright test
+
+
+Running 25 tests using 7 workers
+
+  ✘  1 [chromium] › e2e\auth-and-navigation.e2e.test.ts:99:3 › Full User Journey (Happy Path) › should navigate back from leaderboard to dashboard (6ms)
+  ✘  2 [chromium] › e2e\auth-and-navigation.e2e.test.ts:56:3 › Full User Journey (Happy Path) › should handle username generation and custom username input (5ms)
+  ✘  3 [chromium] › e2e\basic-flow.e2e.test.ts:4:3 › Basic User Flow (Real API) › should load the login page and show generated username (6ms)
+  ✘  4 [chromium] › e2e\basic-flow.e2e.test.ts:100:3 › Basic User Flow (Real API) › should handle custom username input (7ms)
+  ✘  5 [chromium] › e2e\basic-flow.e2e.test.ts:68:3 › Basic User Flow (Real API) › should navigate from dashboard to leaderboard and back (5ms)
+  ✘  6 [chromium] › e2e\basic-flow.e2e.test.ts:38:3 › Basic User Flow (Real API) › should allow login with generated username and navigate to dashboard (6ms)
+  ✘  7 [chromium] › e2e\auth-and-navigation.e2e.test.ts:4:3 › Full User Journey (Happy Path) › should allow a user to log in, view the dashboard, and see the leaderboard (8ms)
+  ✘  8 [chromium] › e2e\diagnostic.e2e.test.ts:53:3 › Diagnostic Tests › should compare MSW vs non-MSW behavior (7ms)
+  ✘  9 [chromium] › e2e\diagnostic.e2e.test.ts:4:3 › Diagnostic Tests › should load the application with MSW enabled and show mocked content (8ms)
+  ✘  10 [chromium] › e2e\responsive-layout.e2e.test.ts:48:9 › Responsive layout – no horizontal scroll › mobile viewport (375×667) › lesson page fits within viewport (7ms)
+  ✘  11 [chromium] › e2e\responsive-layout.e2e.test.ts:48:9 › Responsive layout – no horizontal scroll › mobile viewport (375×667) › login page fits within viewport (5ms)
+  ✘  13 [chromium] › e2e\mining.e2e.test.ts:18:3 › Happy Path – Lesson → Block Mining › user completes lesson, mines a block, and sees leaderboard update (5ms)
+  ✘  12 [chromium] › e2e\responsive-layout.e2e.test.ts:48:9 › Responsive layout – no horizontal scroll › mobile viewport (375×667) › dashboard page fits within viewport (12ms)
+  ✘  14 [chromium] › e2e\responsive-layout.e2e.test.ts:48:9 › Responsive layout – no horizontal scroll › tablet viewport (768×1024) › login page fits within viewport (7ms)
+  ✘  16 [chromium] › e2e\responsive-layout.e2e.test.ts:48:9 › Responsive layout – no horizontal scroll › desktop viewport (1280×800) › dashboard page fits within viewport (5ms)
+  ✘  15 [chromium] › e2e\simple-debug.e2e.test.ts:4:3 › Simple Debug Tests › should debug app loading with and without MSW (5ms)
+  ✘  17 [chromium] › e2e\responsive-layout.e2e.test.ts:48:9 › Responsive layout – no horizontal scroll › tablet viewport (768×1024) › lesson page fits within viewport (8ms)
+  ✘  18 [chromium] › e2e\responsive-layout.e2e.test.ts:48:9 › Responsive layout – no horizontal scroll › tablet viewport (768×1024) › dashboard page fits within viewport (7ms)
+  ✘  19 [chromium] › e2e\responsive-layout.e2e.test.ts:48:9 › Responsive layout – no horizontal scroll › desktop viewport (1280×800) › login page fits within viewport (7ms)
+  ✘  20 [chromium] › e2e\responsive-layout.e2e.test.ts:48:9 › Responsive layout – no horizontal scroll › desktop viewport (1280×800) › lesson page fits within viewport (5ms)
+  ✘  21 [chromium] › e2e\stale-client.e2e.test.ts:17:3 › Stale Client Sync Indicator › shows syncing banner on dashboard when client is out of date (5ms)
+  ✘  23 [chromium] › e2e\visual-regression.e2e.test.ts:16:3 › Visual regression › Dashboard – after login (6ms)
+  ✘  22 [chromium] › e2e\visual-regression.e2e.test.ts:7:3 › Visual regression › Login page – desktop (5ms)
+  ✘  24 [chromium] › e2e\visual-regression.e2e.test.ts:29:3 › Visual regression › Lesson page – desktop (6ms)
+  ✘  25 [chromium] › e2e\visual-regression.e2e.test.ts:49:3 › Visual regression › Lesson page – Workflow Explainer modal (6ms)
+
+
+  1) [chromium] › e2e\auth-and-navigation.e2e.test.ts:4:3 › Full User Journey (Happy Path) › should allow a user to log in, view the dashboard, and see the leaderboard 
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\rober\AppData\Local\ms-playwright\chromium_headless_shell-1179\chrome-win\headless_shell.exe
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+
+  2) [chromium] › e2e\auth-and-navigation.e2e.test.ts:56:3 › Full User Journey (Happy Path) › should handle username generation and custom username input 
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\rober\AppData\Local\ms-playwright\chromium_headless_shell-1179\chrome-win\headless_shell.exe
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+
+  3) [chromium] › e2e\auth-and-navigation.e2e.test.ts:99:3 › Full User Journey (Happy Path) › should navigate back from leaderboard to dashboard 
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\rober\AppData\Local\ms-playwright\chromium_headless_shell-1179\chrome-win\headless_shell.exe
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+
+  4) [chromium] › e2e\basic-flow.e2e.test.ts:4:3 › Basic User Flow (Real API) › should load the login page and show generated username 
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\rober\AppData\Local\ms-playwright\chromium_headless_shell-1179\chrome-win\headless_shell.exe
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+
+  5) [chromium] › e2e\basic-flow.e2e.test.ts:38:3 › Basic User Flow (Real API) › should allow login with generated username and navigate to dashboard 
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\rober\AppData\Local\ms-playwright\chromium_headless_shell-1179\chrome-win\headless_shell.exe
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+
+  6) [chromium] › e2e\basic-flow.e2e.test.ts:68:3 › Basic User Flow (Real API) › should navigate from dashboard to leaderboard and back 
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\rober\AppData\Local\ms-playwright\chromium_headless_shell-1179\chrome-win\headless_shell.exe
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+
+  7) [chromium] › e2e\basic-flow.e2e.test.ts:100:3 › Basic User Flow (Real API) › should handle custom username input 
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\rober\AppData\Local\ms-playwright\chromium_headless_shell-1179\chrome-win\headless_shell.exe
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+
+  8) [chromium] › e2e\diagnostic.e2e.test.ts:4:3 › Diagnostic Tests › should load the application with MSW enabled and show mocked content 
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\rober\AppData\Local\ms-playwright\chromium_headless_shell-1179\chrome-win\headless_shell.exe
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+
+  9) [chromium] › e2e\diagnostic.e2e.test.ts:53:3 › Diagnostic Tests › should compare MSW vs non-MSW behavior 
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\rober\AppData\Local\ms-playwright\chromium_headless_shell-1179\chrome-win\headless_shell.exe
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+
+  10) [chromium] › e2e\mining.e2e.test.ts:18:3 › Happy Path – Lesson → Block Mining › user completes lesson, mines a block, and sees leaderboard update 
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\rober\AppData\Local\ms-playwright\chromium_headless_shell-1179\chrome-win\headless_shell.exe
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+
+  11) [chromium] › e2e\responsive-layout.e2e.test.ts:48:9 › Responsive layout – no horizontal scroll › mobile viewport (375×667) › login page fits within viewport 
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\rober\AppData\Local\ms-playwright\chromium_headless_shell-1179\chrome-win\headless_shell.exe
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+
+  12) [chromium] › e2e\responsive-layout.e2e.test.ts:48:9 › Responsive layout – no horizontal scroll › mobile viewport (375×667) › dashboard page fits within viewport 
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\rober\AppData\Local\ms-playwright\chromium_headless_shell-1179\chrome-win\headless_shell.exe
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+
+  13) [chromium] › e2e\responsive-layout.e2e.test.ts:48:9 › Responsive layout – no horizontal scroll › mobile viewport (375×667) › lesson page fits within viewport 
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\rober\AppData\Local\ms-playwright\chromium_headless_shell-1179\chrome-win\headless_shell.exe
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+
+  14) [chromium] › e2e\responsive-layout.e2e.test.ts:48:9 › Responsive layout – no horizontal scroll › tablet viewport (768×1024) › login page fits within viewport 
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\rober\AppData\Local\ms-playwright\chromium_headless_shell-1179\chrome-win\headless_shell.exe
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+
+  15) [chromium] › e2e\responsive-layout.e2e.test.ts:48:9 › Responsive layout – no horizontal scroll › tablet viewport (768×1024) › dashboard page fits within viewport 
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\rober\AppData\Local\ms-playwright\chromium_headless_shell-1179\chrome-win\headless_shell.exe
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+
+  16) [chromium] › e2e\responsive-layout.e2e.test.ts:48:9 › Responsive layout – no horizontal scroll › tablet viewport (768×1024) › lesson page fits within viewport 
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\rober\AppData\Local\ms-playwright\chromium_headless_shell-1179\chrome-win\headless_shell.exe
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+
+  17) [chromium] › e2e\responsive-layout.e2e.test.ts:48:9 › Responsive layout – no horizontal scroll › desktop viewport (1280×800) › login page fits within viewport 
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\rober\AppData\Local\ms-playwright\chromium_headless_shell-1179\chrome-win\headless_shell.exe
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+
+  18) [chromium] › e2e\responsive-layout.e2e.test.ts:48:9 › Responsive layout – no horizontal scroll › desktop viewport (1280×800) › dashboard page fits within viewport 
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\rober\AppData\Local\ms-playwright\chromium_headless_shell-1179\chrome-win\headless_shell.exe
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+
+  19) [chromium] › e2e\responsive-layout.e2e.test.ts:48:9 › Responsive layout – no horizontal scroll › desktop viewport (1280×800) › lesson page fits within viewport 
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\rober\AppData\Local\ms-playwright\chromium_headless_shell-1179\chrome-win\headless_shell.exe
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+
+  20) [chromium] › e2e\simple-debug.e2e.test.ts:4:3 › Simple Debug Tests › should debug app loading with and without MSW 
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\rober\AppData\Local\ms-playwright\chromium_headless_shell-1179\chrome-win\headless_shell.exe
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+
+  21) [chromium] › e2e\stale-client.e2e.test.ts:17:3 › Stale Client Sync Indicator › shows syncing banner on dashboard when client is out of date 
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\rober\AppData\Local\ms-playwright\chromium_headless_shell-1179\chrome-win\headless_shell.exe
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+
+  22) [chromium] › e2e\visual-regression.e2e.test.ts:7:3 › Visual regression › Login page – desktop 
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\rober\AppData\Local\ms-playwright\chromium_headless_shell-1179\chrome-win\headless_shell.exe
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+
+  23) [chromium] › e2e\visual-regression.e2e.test.ts:16:3 › Visual regression › Dashboard – after login 
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\rober\AppData\Local\ms-playwright\chromium_headless_shell-1179\chrome-win\headless_shell.exe
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+
+  24) [chromium] › e2e\visual-regression.e2e.test.ts:29:3 › Visual regression › Lesson page – desktop 
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\rober\AppData\Local\ms-playwright\chromium_headless_shell-1179\chrome-win\headless_shell.exe
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+
+  25) [chromium] › e2e\visual-regression.e2e.test.ts:49:3 › Visual regression › Lesson page – Workflow Explainer modal 
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\rober\AppData\Local\ms-playwright\chromium_headless_shell-1179\chrome-win\headless_shell.exe
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+
+  25 failed
+    [chromium] › e2e\auth-and-navigation.e2e.test.ts:4:3 › Full User Journey (Happy Path) › should allow a user to log in, view the dashboard, and see the leaderboard 
+    [chromium] › e2e\auth-and-navigation.e2e.test.ts:56:3 › Full User Journey (Happy Path) › should handle username generation and custom username input 
+    [chromium] › e2e\auth-and-navigation.e2e.test.ts:99:3 › Full User Journey (Happy Path) › should navigate back from leaderboard to dashboard 
+    [chromium] › e2e\basic-flow.e2e.test.ts:4:3 › Basic User Flow (Real API) › should load the login page and show generated username 
+    [chromium] › e2e\basic-flow.e2e.test.ts:38:3 › Basic User Flow (Real API) › should allow login with generated username and navigate to dashboard 
+    [chromium] › e2e\basic-flow.e2e.test.ts:68:3 › Basic User Flow (Real API) › should navigate from dashboard to leaderboard and back 
+    [chromium] › e2e\basic-flow.e2e.test.ts:100:3 › Basic User Flow (Real API) › should handle custom username input 
+    [chromium] › e2e\diagnostic.e2e.test.ts:4:3 › Diagnostic Tests › should load the application with MSW enabled and show mocked content 
+    [chromium] › e2e\diagnostic.e2e.test.ts:53:3 › Diagnostic Tests › should compare MSW vs non-MSW behavior 
+    [chromium] › e2e\mining.e2e.test.ts:18:3 › Happy Path – Lesson → Block Mining › user completes lesson, mines a block, and sees leaderboard update 
+    [chromium] › e2e\responsive-layout.e2e.test.ts:48:9 › Responsive layout – no horizontal scroll › mobile viewport (375×667) › login page fits within viewport 
+    [chromium] › e2e\responsive-layout.e2e.test.ts:48:9 › Responsive layout – no horizontal scroll › mobile viewport (375×667) › dashboard page fits within viewport 
+    [chromium] › e2e\responsive-layout.e2e.test.ts:48:9 › Responsive layout – no horizontal scroll › mobile viewport (375×667) › lesson page fits within viewport 
+    [chromium] › e2e\responsive-layout.e2e.test.ts:48:9 › Responsive layout – no horizontal scroll › tablet viewport (768×1024) › login page fits within viewport 
+    [chromium] › e2e\responsive-layout.e2e.test.ts:48:9 › Responsive layout – no horizontal scroll › tablet viewport (768×1024) › dashboard page fits within viewport 
+    [chromium] › e2e\responsive-layout.e2e.test.ts:48:9 › Responsive layout – no horizontal scroll › tablet viewport (768×1024) › lesson page fits within viewport 
+    [chromium] › e2e\responsive-layout.e2e.test.ts:48:9 › Responsive layout – no horizontal scroll › desktop viewport (1280×800) › login page fits within viewport 
+    [chromium] › e2e\responsive-layout.e2e.test.ts:48:9 › Responsive layout – no horizontal scroll › desktop viewport (1280×800) › dashboard page fits within viewport 
+    [chromium] › e2e\responsive-layout.e2e.test.ts:48:9 › Responsive layout – no horizontal scroll › desktop viewport (1280×800) › lesson page fits within viewport 
+    [chromium] › e2e\simple-debug.e2e.test.ts:4:3 › Simple Debug Tests › should debug app loading with and without MSW 
+    [chromium] › e2e\stale-client.e2e.test.ts:17:3 › Stale Client Sync Indicator › shows syncing banner on dashboard when client is out of date 
+    [chromium] › e2e\visual-regression.e2e.test.ts:7:3 › Visual regression › Login page – desktop ──
+    [chromium] › e2e\visual-regression.e2e.test.ts:16:3 › Visual regression › Dashboard – after login 
+    [chromium] › e2e\visual-regression.e2e.test.ts:29:3 › Visual regression › Lesson page – desktop 
+    [chromium] › e2e\visual-regression.e2e.test.ts:49:3 › Visual regression › Lesson page – Workflow Explainer modal 
