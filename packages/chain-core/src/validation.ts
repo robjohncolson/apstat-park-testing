@@ -8,6 +8,12 @@
 import { verify, hash } from './crypto.js';
 import type { Transaction, Block } from './types.js';
 import type { ChainDB } from './database.js';
+import type {
+  CreateUserData,
+  SetBookmarkData,
+  AwardStarData,
+  PaceUpdateData,
+} from './types.js';
 
 /**
  * Validates a single transaction by checking its signature
@@ -280,6 +286,79 @@ export function isBlockStructureValid(block: Block): boolean {
   } catch (error) {
     return false;
   }
+}
+
+/**
+ * Validates a CREATE_USER transaction (schema + signature)
+ */
+export function isCreateUserTxValid(tx: Transaction): boolean {
+  if (tx.type !== 'CREATE_USER') return false;
+  // Base transaction validity (signature, id, etc.)
+  if (!isTransactionValid(tx)) return false;
+
+  const data = tx.data as CreateUserData;
+
+  // Schema checks
+  if (!data || typeof data.username !== 'string' || data.username.trim() === '') return false;
+  if (data.displayName && typeof data.displayName !== 'string') return false;
+  if (typeof data.createdAt !== 'number' || data.createdAt <= 0) return false;
+
+  return true;
+}
+
+/**
+ * Validates a SET_BOOKMARK transaction
+ */
+export function isSetBookmarkTxValid(tx: Transaction): boolean {
+  if (tx.type !== 'SET_BOOKMARK') return false;
+  if (!isTransactionValid(tx)) return false;
+
+  const data = tx.data as SetBookmarkData;
+
+  if (!data || typeof data.lessonId !== 'string' || data.lessonId.trim() === '') return false;
+  if (typeof data.page !== 'number' || data.page <= 0) return false;
+  if (data.offset !== undefined && typeof data.offset !== 'number') return false;
+  if (data.note !== undefined && typeof data.note !== 'string') return false;
+  if (typeof data.createdAt !== 'number' || data.createdAt <= 0) return false;
+
+  return true;
+}
+
+/**
+ * Validates an AWARD_STAR transaction
+ */
+export function isAwardStarTxValid(tx: Transaction): boolean {
+  if (tx.type !== 'AWARD_STAR') return false;
+  if (!isTransactionValid(tx)) return false;
+
+  const data = tx.data as AwardStarData;
+
+  if (!data || typeof data.toPublicKey !== 'string' || data.toPublicKey.trim() === '') return false;
+  if (!['gold', 'silver', 'bronze'].includes(data.starType)) return false;
+  if (data.lessonId !== undefined && typeof data.lessonId !== 'string') return false;
+  if (data.reason !== undefined && typeof data.reason !== 'string') return false;
+  if (typeof data.awardedAt !== 'number' || data.awardedAt <= 0) return false;
+
+  return true;
+}
+
+/**
+ * Validates a PACE_UPDATE transaction (revised schema)
+ */
+export function isPaceUpdateTxValid(tx: Transaction): boolean {
+  if (tx.type !== 'PACE_UPDATE') return false;
+  if (!isTransactionValid(tx)) return false;
+
+  const data = tx.data as PaceUpdateData;
+
+  if (!data) return false;
+  if (typeof data.totalLessons !== 'number' || data.totalLessons <= 0) return false;
+  if (typeof data.lessonsCompleted !== 'number' || data.lessonsCompleted < 0) return false;
+  if (data.lessonsCompleted > data.totalLessons) return false;
+  if (typeof data.targetDate !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(data.targetDate)) return false;
+  if (typeof data.updatedAt !== 'number' || data.updatedAt <= 0) return false;
+
+  return true;
 }
 
 // Placeholder export to make this a valid ES module

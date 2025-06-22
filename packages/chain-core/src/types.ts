@@ -16,7 +16,10 @@ export type TransactionType =
   | 'USER_CREATE' 
   | 'LESSON_PROGRESS' 
   | 'PACE_UPDATE' 
-  | 'RECOVER_KEY';
+  | 'RECOVER_KEY'
+  | 'CREATE_USER'
+  | 'SET_BOOKMARK'
+  | 'AWARD_STAR';
 
 /**
  * Data payload for user creation transactions
@@ -65,24 +68,14 @@ export interface LessonProgressData {
  * Data payload for pace update transactions
  */
 export interface PaceUpdateData {
-  /** Target completion date for current unit/lesson */
-  targetDate: string; // ISO string
-  /** Current pace status */
-  paceStatus: 'on_track' | 'ahead' | 'behind' | 'critical';
-  /** Number of lessons completed */
-  lessonsCompleted: number;
-  /** Total number of lessons required */
+  /** Total lessons the course contains (denominator) */
   totalLessons: number;
-  /** Current streak of on-time completions */
-  currentStreak: number;
-  /** Whether user earned a gold star for meeting deadline */
-  earnedGoldStar?: boolean;
-  /** Additional pace metrics */
-  metrics?: {
-    averageTimePerLesson?: number; // minutes
-    studySessionsPerWeek?: number;
-    lastActivityDate?: string; // ISO string
-  };
+  /** How many lessons the student has completed so far */
+  lessonsCompleted: number;
+  /** Target completion date in ISO YYYY-MM-DD */
+  targetDate: string;
+  /** Unix epoch milliseconds when this snapshot was recorded */
+  updatedAt: number;
 }
 
 /**
@@ -106,13 +99,60 @@ export interface RecoverKeyData {
 }
 
 /**
+ * Data payload for create user transactions (v2 – supersedes UserCreateData for new tx type)
+ */
+export interface CreateUserData {
+  /** Unique, human-readable username */
+  username: string;
+  /** Optional display name */
+  displayName?: string;
+  /** Unix epoch milliseconds of creation */
+  createdAt: number;
+}
+
+/**
+ * Data payload for set bookmark transactions
+ */
+export interface SetBookmarkData {
+  /** Identifier of the lesson / PDF the bookmark belongs to */
+  lessonId: string;
+  /** 1-based page number in the document */
+  page: number;
+  /** Optional vertical scroll offset (px or percentage – UI defined) */
+  offset?: number;
+  /** Optional short note */
+  note?: string;
+  /** Unix epoch milliseconds when the bookmark was created */
+  createdAt: number;
+}
+
+/**
+ * Data payload for award star transactions
+ */
+export interface AwardStarData {
+  /** Public key of the recipient */
+  toPublicKey: string;
+  /** Star tier */
+  starType: 'gold' | 'silver' | 'bronze';
+  /** Optional lesson association */
+  lessonId?: string;
+  /** Optional short justification */
+  reason?: string;
+  /** Unix epoch milliseconds when the star was awarded */
+  awardedAt: number;
+}
+
+/**
  * Union type for all transaction data payloads
  */
 export type TransactionData = 
   | UserCreateData 
   | LessonProgressData 
   | PaceUpdateData 
-  | RecoverKeyData;
+  | RecoverKeyData
+  | CreateUserData
+  | SetBookmarkData
+  | AwardStarData;
 
 // =============================================================================
 // TRANSACTION STRUCTURE
