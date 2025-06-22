@@ -6,22 +6,22 @@
  */
 
 // Export all types
-export * from './types.js';
+export * from './types';
 
 // Export cryptographic utilities
-export * from './crypto.js';
+export * from './crypto';
 
 // Export database operations
-export * from './database.js';
+export * from './database';
 
 // Export validation functions
-export * from './validation.js';
+export * from './validation';
 
 // Export consensus mechanism
-export * from './consensus.js';
+export * from './consensus';
 
 // Export QuizBank functionality
-export * from './QuizBank.js';
+export * from './QuizBank';
 
 // Package version
 export const VERSION = '0.1.0'; 
