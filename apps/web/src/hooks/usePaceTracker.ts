@@ -1,5 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useBlockchain } from '../context/BlockchainProvider';
+import { BlockchainService } from '../services/BlockchainService';
+import type { PaceUpdateData, PaceState } from '@apstatchain/core';
 
 // API Types
 interface PaceData {
@@ -37,10 +40,13 @@ interface UpdatePaceParams {
   examDate?: string;
 }
 
-// API Base URL - prioritize VITE_API_URL, then VITE_API_BASE_URL, then localhost
-const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 
-// Generate offline pace data when API is unavailable
+// Generate pace data locally when none is present on chain yet. This re-uses
+// the existing offline generator so the UI continues to receive the same
+// rich metrics structure it expects.
 function generateOfflinePaceData(userId: number, completedLessons: number, totalLessons: number): PaceData {
   // Calculate mock exam date (next May 13th)
   const currentYear = new Date().getFullYear();
@@ -87,39 +93,34 @@ function generateOfflinePaceData(userId: number, completedLessons: number, total
   };
 }
 
-// API Functions
-async function fetchPaceData(userId: number, completedLessons?: number, totalLessons?: number): Promise<PaceData> {
-  let url = `${API_BASE_URL}/api/v1/pace/${userId}`;
-  
-  if (completedLessons !== undefined && totalLessons !== undefined) {
-    url += `?completedLessons=${completedLessons}&totalLessons=${totalLessons}`;
-  }
+// ---------------------------------------------------------------------------
+// Blockchain helpers
+// ---------------------------------------------------------------------------
 
-  const response = await fetch(url);
-  
+const blockchainService = BlockchainService.getInstance();
 
-  
-  if (!response.ok) {
-    throw new Error(`Failed to fetch pace data: ${response.statusText}`);
-  }
+function paceStateToPaceData(
+  paceState: PaceState,
+  userId: number,
+): PaceData {
+  // For V1 we use the existing offline generator to build the full PaceData
+  // structure the UI expects, while filling in values from the blockchain
+  // snapshot where possible.
+  const generated = generateOfflinePaceData(
+    userId,
+    paceState.lessonsCompleted,
+    paceState.totalLessons,
+  );
 
-  return response.json();
-}
-
-async function updatePaceData(userId: number, params: UpdatePaceParams): Promise<PaceData> {
-  const response = await fetch(`${API_BASE_URL}/api/v1/pace/${userId}`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
+  return {
+    ...generated,
+    lastCompletedLessons: paceState.lessonsCompleted,
+    metrics: generated.metrics && {
+      ...generated.metrics,
+      completedLessons: paceState.lessonsCompleted,
+      totalLessons: paceState.totalLessons,
     },
-    body: JSON.stringify(params),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to update pace data: ${response.statusText}`);
-  }
-
-  return response.json();
+  };
 }
 
 // Hook Types
@@ -160,66 +161,74 @@ export function usePaceTracker(options: UsePaceTrackerOptions): UsePaceTrackerRe
   const {
     completedLessons,
     totalLessons,
-    // examDate, // Currently unused in the hook implementation
+    examDate,
     enabled = true,
   } = options;
 
+  // Access blockchain context (reactive app state)
+  const { appState } = useBlockchain();
+
+  // Resolve the current public key from the running BlockchainService
+  const publicKey = useMemo(() => blockchainService.getPublicKey(), []);
+
+  // Derive the on-chain pace snapshot for the current user (if any)
+  const onChainPace = appState.pace[publicKey];
+
   // State management
   const [paceData, setPaceData] = useState<PaceData | undefined>();
-  const [isLoading, setIsLoading] = useState(false);
-  const [isError, setIsError] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateError, setUpdateError] = useState<Error | null>(null);
 
   // Disable for anonymous users or when explicitly disabled
   const isDisabled = !user?.id || !enabled;
 
-  // Fetch data function
-  const fetchData = useCallback(async () => {
+  // Keep local paceData in sync with on-chain state or fallback generator
+  useEffect(() => {
     if (isDisabled) return;
-    
-    try {
-      setIsLoading(true);
-      setIsError(false);
-      setError(null);
-      
-      const data = await fetchPaceData(user!.id, completedLessons, totalLessons);
-      setPaceData(data);
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error('Unknown error');
-      
-      // Check if this is a connection error - use offline fallback instead of error
-      if (error.message.includes('Failed to fetch') || error.message.includes('ERR_CONNECTION_REFUSED')) {
-        console.warn('Pace tracker API unavailable - using offline mode with mock data');
-        
-        // Generate offline pace data
-        const offlinePaceData = generateOfflinePaceData(user!.id, completedLessons, totalLessons);
-        setPaceData(offlinePaceData);
-        setIsError(false);
-        setError(null);
-      } else {
-        setError(error);
-        console.error('Failed to fetch pace data:', error);
-        setIsError(true);
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  }, [isDisabled, user?.id, completedLessons, totalLessons]);
 
-  // Update pace function
+    if (onChainPace) {
+      setPaceData(paceStateToPaceData(onChainPace, user!.id));
+    } else {
+      // No on-chain data yet – fall back to generated mock
+      const offline = generateOfflinePaceData(user!.id, completedLessons, totalLessons);
+      setPaceData(offline);
+    }
+  }, [onChainPace, isDisabled, completedLessons, totalLessons, user?.id]);
+
+  // -----------------------------------------------------------------------
+  // Update pace function – writes a PACE_UPDATE transaction
+  // -----------------------------------------------------------------------
+
   const updatePace = useCallback(async (params: UpdatePaceParams) => {
     if (isDisabled) {
       throw new Error('Pace tracking is disabled for anonymous users');
     }
-    
+
     try {
       setIsUpdating(true);
       setUpdateError(null);
-      
-      const data = await updatePaceData(user!.id, params);
-      setPaceData(data);
+
+      const txData: PaceUpdateData = {
+        totalLessons: params.totalLessons,
+        lessonsCompleted: params.completedLessons,
+        targetDate: (params.examDate ?? examDate ?? new Date().toISOString().slice(0, 10)),
+        updatedAt: Date.now(),
+      };
+
+      if (typeof blockchainService.submitPaceUpdate === 'function') {
+        await blockchainService.submitPaceUpdate(txData);
+      } else {
+        await blockchainService.submitTransaction('PACE_UPDATE', txData as any);
+      }
+
+      // Optimistically update local state until the block is mined
+      setPaceData(paceStateToPaceData({
+        lessonsCompleted: params.completedLessons,
+        totalLessons: params.totalLessons,
+        targetDate: txData.targetDate,
+        updatedAt: txData.updatedAt,
+      }, user!.id));
+
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Unknown error');
       setUpdateError(error);
@@ -228,14 +237,7 @@ export function usePaceTracker(options: UsePaceTrackerOptions): UsePaceTrackerRe
     } finally {
       setIsUpdating(false);
     }
-  }, [isDisabled, user?.id]);
-
-  // Initial data fetch
-  useEffect(() => {
-    if (!isDisabled) {
-      fetchData();
-    }
-  }, [fetchData, isDisabled]);
+  }, [isDisabled, examDate, user?.id]);
 
   // Computed values
   const currentDeadline = paceData?.currentDeadline ? new Date(paceData.currentDeadline) : null;
@@ -245,8 +247,6 @@ export function usePaceTracker(options: UsePaceTrackerOptions): UsePaceTrackerRe
     ? Math.max(0, (currentDeadline.getTime() - Date.now()) / (1000 * 60 * 60))
     : 0;
     
-  // const examDate = paceData?.examDate; // Unused variable - commented out
-    
   const isOverdue = currentDeadline ? Date.now() > currentDeadline.getTime() : false;
 
   return {
@@ -255,9 +255,9 @@ export function usePaceTracker(options: UsePaceTrackerOptions): UsePaceTrackerRe
     metrics: paceData?.metrics,
     
     // State
-    isLoading,
-    isError,
-    error,
+    isLoading: false,
+    isError: false,
+    error: null,
     
     // Actions
     updatePace,

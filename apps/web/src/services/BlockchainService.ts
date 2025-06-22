@@ -26,6 +26,7 @@ import type {
   LeaderboardEntry as ProjectedLeaderboardEntry,
   TransactionType,
   TransactionData,
+  PaceUpdateData,
 } from "@apstatchain/core";
 import { P2PNode, createTxBroadcastMessage, createBlockProposalMessage, type P2PMessage } from "@apstatchain/p2p";
 import type { LeaderboardEntry as UiLeaderboardEntry } from "../utils/leaderboard";
@@ -418,6 +419,23 @@ export class BlockchainService {
 
   getPaceForUser(publicKey: string): PaceState | undefined {
     return this.state.pace[publicKey];
+  }
+
+  /**
+   * Returns this node's public key. Useful for UI components that need to
+   * query the current user's data from the projected state.
+   */
+  getPublicKey(): string {
+    return this.keyPair.publicKey;
+  }
+
+  /**
+   * Convenience helper that maps directly to submitTransaction for the
+   * PACE_UPDATE transaction type. Ensures callers pass the approved
+   * PaceUpdateData payload.
+   */
+  async submitPaceUpdate(data: PaceUpdateData): Promise<void> {
+    await this.submitTransaction("PACE_UPDATE", data);
   }
 
   // --------------------------------------------------------------------------
