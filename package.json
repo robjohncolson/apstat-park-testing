@@ -18,8 +18,7 @@
     "lint": "npm run lint --workspaces --if-present",
     "lint:fix": "npm run lint:fix --workspaces --if-present",
     "format": "prettier \"**/*.{ts,tsx,js,jsx,css,md,json}\" --write",
-    "clean": "rm -rf node_modules apps/*/node_modules apps/*/dist",
-    "postinstall": "npx playwright install --with-deps"
+    "clean": "rm -rf node_modules apps/*/node_modules apps/*/dist"
   },
   "keywords": [
     "education",
