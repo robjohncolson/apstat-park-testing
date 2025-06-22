@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "npm run dev --workspaces --if-present",
     "build": "npm run build --workspaces --if-present",
-    "type-check": "npm run type-check --workspaces --if-present",
+    "type-check": "tsc -b --verbose",
     "test": "vitest run",
     "test:watch": "vitest --watch",
     "test:ui": "vitest --ui",
