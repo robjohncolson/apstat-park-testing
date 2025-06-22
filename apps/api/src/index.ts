@@ -224,7 +224,17 @@ io.on("connection", (socket: CustomSocket) => {
 });
 
 // Middleware
-app.use(cors());
+// CORS configuration - restrict to Vercel frontend
+const corsOptions = {
+  origin: "https://apstat-park-testing-web.vercel.app",
+};
+
+// Apply CORS middleware before any routes
+app.use(cors(corsOptions));
+
+// Enable preflight response for all routes
+app.options("*", cors(corsOptions));
+
 app.use(express.json());
 
 // In-memory storage fallback when database is not available
