@@ -2,9 +2,23 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "types": ["vite/client"],
-    "lib": ["ES2020", "DOM", "DOM.Iterable"]
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "baseUrl": ".",
+    "paths": {
+      "@apstatchain/core": ["../../packages/chain-core/src/index.ts"],
+      "@apstatchain/p2p": ["../../packages/chain-p2p/src/index.ts"]
+    }
   },
   "include": ["src", "vite-env.d.ts"],
+  "exclude": [
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx",
+    "src/**/*.spec.ts",
+    "src/**/*.spec.tsx",
+    "src/**/*.integration.test.tsx",
+    "src/__tests__/**",
+    "src/setupTests.ts"
+  ],
   "references": [
     { "path": "../../packages/chain-core" },
     { "path": "../../packages/chain-p2p" }
