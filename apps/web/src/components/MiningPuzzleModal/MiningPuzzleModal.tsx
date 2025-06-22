@@ -44,7 +44,7 @@ export const MiningPuzzleModal: React.FC<MiningPuzzleModalProps> = ({
         <p className={styles.question}>{puzzle.questionText}</p>
 
         <ul className={styles.answers}>
-          {puzzle.answers.map((answer, idx) => (
+          {puzzle.answers.map((answer: string, idx: number) => (
             <li key={idx} className={styles.answerItem}>
               <label>
                 <input
