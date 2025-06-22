@@ -12,7 +12,8 @@ import {
   proposeBlock, 
   verifyPuzzleSolution,
   getTransactionByHash,
-  verifyPuzzleSolutionWithContext 
+  verifyPuzzleSolutionWithContext,
+  handleFailedBlock 
 } from './consensus.js';
 import { ChainDB } from './database.js';
 import { QUIZ_BANK } from './QuizBank.js';
@@ -439,6 +440,63 @@ describe('Consensus Module', () => {
 
       const isValid = await verifyPuzzleSolutionWithContext(blockHeader, db);
       assert.strictEqual(isValid, true, 'Should return true for valid puzzle solution with context');
+    });
+  });
+
+  describe('handleFailedBlock', () => {
+    it('should penalize the proposer and return transactions to the mempool', async () => {
+      // Create a dummy transaction to include in the failed block
+      const failedTx: Transaction = {
+        id: 'failed-tx-1',
+        type: 'USER_CREATE',
+        data: {
+          username: 'failedUser',
+          createdAt: new Date().toISOString()
+        },
+        signature: 'bad-signature',
+        publicKey: userKeyPair.publicKey,
+        timestamp: Date.now(),
+        priority: 'normal'
+      };
+
+      // Construct a block that will be considered failed
+      const failedBlock: Block = {
+        header: {
+          version: 1,
+          previousHash: genesisBlock.header.hash!,
+          merkleRoot: hash([failedTx]),
+          timestamp: Date.now(),
+          nonce: 0,
+          proofOfAccessHash: '0'.repeat(64),
+          difficulty: 1,
+          height: 1,
+          hash: 'deadbeef'.padEnd(64, '0')
+        },
+        transactions: [failedTx],
+        attestations: []
+      };
+
+      // Sanity-check that the mempool starts empty
+      const initialMempoolCount = await db.getMempoolCount();
+      assert.strictEqual(initialMempoolCount, 0, 'Mempool should start empty');
+
+      // Call the function under test
+      await handleFailedBlock(failedBlock, userKeyPair.publicKey, db);
+
+      // 1) The proposer should be penalized
+      const penalized = await db.isPenalized(userKeyPair.publicKey);
+      assert.strictEqual(penalized, true, 'Proposer should be penalized');
+
+      const activePenalty = await db.getActivePenalty(userKeyPair.publicKey);
+      assert.ok(activePenalty, 'Active penalty should be present');
+      assert.strictEqual(activePenalty!.scoreMultiplier, 0.5, 'Penalty multiplier should be 0.5');
+
+      // 2) Transactions from the failed block should be back in the mempool
+      const mempoolCount = await db.getMempoolCount();
+      assert.strictEqual(mempoolCount, 1, 'One transaction should be in the mempool');
+
+      const mempoolTxs = await db.getTransactionsFromMempool(10);
+      assert.strictEqual(mempoolTxs[0].id, failedTx.id, 'Returned transaction ID should match');
     });
   });
 }); 
