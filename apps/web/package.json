@@ -6,7 +6,7 @@
   "description": "React frontend for APStat Park education platform",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b ../../packages/chain-core ../../packages/chain-p2p && tsc -b && vite build",
+    "build": "tsc -b ../../packages/chain-core/tsconfig.build.json ../../packages/chain-p2p/tsconfig.build.json && tsc -b && vite build",
     "lint": "eslint .",
     "lint:fix": "eslint . --ext .ts,.tsx,.js,.jsx --fix",
     "preview": "vite preview",
