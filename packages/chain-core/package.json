@@ -21,7 +21,8 @@
     "clean": "rm -rf dist",
     "test": "node --test",
     "lint": "eslint src/**/*.ts",
-    "lint:fix": "eslint src/**/*.ts --fix"
+    "lint:fix": "eslint src/**/*.ts --fix",
+    "type-check": "tsc --noEmit"
   },
   "keywords": [
     "blockchain",
