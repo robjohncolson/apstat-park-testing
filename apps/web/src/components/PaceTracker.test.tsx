@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { screen } from "@testing-library/react";
 import { renderWithProviders as render, setupMocks } from "../utils/test-utils";
-import { PaceTracker } from "./PaceTracker";
+import { PaceTracker } from "./PaceTracker.tsx";
 
 // Mock the usePaceTracker hook
 vi.mock("../hooks/usePaceTracker", () => ({

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeAll, afterAll } from "vitest";
 import { renderWithProviders as render } from "../utils/test-utils";
 import { screen } from "@testing-library/react";
-import { PaceTracker } from "./PaceTracker";
+import { PaceTracker } from "./PaceTracker.tsx";
 
 // Freeze time for deterministic output
 beforeAll(() => {
