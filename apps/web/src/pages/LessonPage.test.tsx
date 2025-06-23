@@ -1,11 +1,10 @@
-import { ReactNode } from "react";
-import { screen, waitFor, fireEvent } from "@testing-library/react";
+import React, { ReactNode } from "react";
+import "@testing-library/jest-dom";
+import { render, screen, waitFor, fireEvent } from "../utils/test-utils";
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { Routes, Route } from "react-router-dom";
+import { MemoryRouter, Routes, Route } from "react-router-dom";
 
 import { LessonPage } from "./LessonPage.tsx";
-import { renderWithProviders } from "../utils/test-utils";
-import { BlockchainService } from "../services/BlockchainService";
 
 // Reusable helper to inject a logged-in user for AuthContext
 const mockUser = {
@@ -21,12 +20,14 @@ const primeUser = () => {
 
 // Utility to render LessonPage within a matching route so useParams works
 const LESSON_ROUTE = "/unit/unit1/lesson/1-2";
-const renderLesson = (initialRoute = LESSON_ROUTE) => {
-  return renderWithProviders(
-    <Routes>
-      <Route path="/unit/:unitId/lesson/:lessonId" element={<LessonPage />} />
-    </Routes>,
-    { initialRoute },
+const renderLesson = (initialRoute = LESSON_ROUTE, mockService?: any) => {
+  return render(
+    <MemoryRouter initialEntries={[initialRoute]}>
+      <Routes>
+        <Route path="/unit/:unitId/lesson/:lessonId" element={<LessonPage />} />
+      </Routes>
+    </MemoryRouter>,
+    { mockService },
   );
 };
 
@@ -126,17 +127,18 @@ describe("LessonPage", () => {
   });
 
   it("calls progress update API with correct payload when marking a video as watched", async () => {
-    // Spy on mocked BlockchainService method
-    const service = BlockchainService.getInstance();
-    const submitSpy = vi.spyOn(service, "submitLessonProgress");
+    const submitSpy = vi.fn();
+    const mockService = {
+      submitTransaction: submitSpy,
+    } as any;
 
-    // Still stub initial progress fetch GET so component can mount
+    // Stub initial progress fetch so component can mount
     vi.spyOn(global, "fetch").mockResolvedValueOnce({
       ok: true,
       json: () => Promise.resolve([]),
     } as Response);
 
-    renderLesson();
+    renderLesson(LESSON_ROUTE, mockService);
 
     // Find the "Mark as Watched" button for first video
     const watchBtn = await screen.findByRole("button", {
@@ -146,11 +148,14 @@ describe("LessonPage", () => {
     fireEvent.click(watchBtn);
 
     await waitFor(() => {
-      expect(submitSpy).toHaveBeenCalled();
+      expect(submitSpy).toHaveBeenCalledWith(
+        "LESSON_PROGRESS",
+        expect.any(Object),
+      );
     });
 
-    // Validate payload structure
-    const [payload] = submitSpy.mock.calls[0];
+    // Validate payload structure (second arg)
+    const [, payload] = submitSpy.mock.calls[0];
     expect(payload).toEqual({
       lessonId: "1-2",
       progressType: "video_watched",

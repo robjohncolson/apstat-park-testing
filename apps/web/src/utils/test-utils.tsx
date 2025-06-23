@@ -83,6 +83,19 @@ const customRender = (
 export * from '@testing-library/react';
 export { customRender as render };
 
+// ---------------------------------------------------------------------------
+// Backwards-compatibility helpers (to gradually migrate old tests)
+// ---------------------------------------------------------------------------
+
+// Alias to support legacy test files still importing `renderWithProviders`
+export const renderWithProviders = customRender;
+
+// Simple helper that clears all Vitest mocks – legacy tests relied on this
+export const setupMocks = () => {
+  // Clear call counts and reset spies but preserve module mocking configuration
+  vi.clearAllMocks();
+};
+
 // Utility functions for common test scenarios
 export const createMockUser = (overrides = {}) => ({
   id: 1,

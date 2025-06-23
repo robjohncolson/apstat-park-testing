@@ -223,6 +223,7 @@ describe("PaceTracker Component", () => {
     it("should handle 'ahead' pace status", () => {
       mockedUsePaceTracker.mockReturnValue({
         ...DEFAULT_HOOK_DATA,
+        status: "ahead",
         metrics: {
           ...DEFAULT_HOOK_DATA.metrics!,
           paceStatus: "ahead",
@@ -290,6 +291,7 @@ describe("PaceTracker Component", () => {
     it("should handle completed progress", () => {
       mockedUsePaceTracker.mockReturnValue({
         ...DEFAULT_HOOK_DATA,
+        isError: false,
         metrics: {
           ...DEFAULT_HOOK_DATA.metrics!,
           completedLessons: 50,

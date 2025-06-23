@@ -1,7 +1,33 @@
-import { ReactNode } from "react";
+import React, { ReactNode } from "react";
 import { renderHook, act, waitFor } from "@testing-library/react";
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { AuthProvider, useAuth } from "./AuthContext";
+import { BlockchainService } from "../services/BlockchainService";
+
+// Stub BlockchainService for all tests in this file
+const mockChainService = {
+  initialize: vi.fn().mockResolvedValue(undefined),
+  submitTransaction: vi.fn().mockResolvedValue(undefined),
+  getPublicKey: () => "test-public-key",
+  state: {
+    users: {},
+    bookmarks: {},
+    pace: {},
+    starCounts: {},
+    lessonProgress: {},
+    leaderboard: [],
+  },
+  getState: () => ({
+    syncStatus: "synced" as const,
+    peerCount: 0,
+    leaderboardData: [],
+    isProposalRequired: false,
+    puzzleData: null,
+  }),
+  subscribe: () => () => {},
+} as any;
+
+vi.spyOn(BlockchainService, "getInstance").mockReturnValue(mockChainService);
 
 // Helper to wrap components with the AuthProvider
 const wrapper = ({ children }: { children: ReactNode }) => (

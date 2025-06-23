@@ -3,6 +3,7 @@ import "@testing-library/jest-dom";
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import { render, screen, waitFor } from "../utils/test-utils";
 import { DashboardPage } from "./DashboardPage.tsx";
+import { MemoryRouter } from "react-router-dom";
 
 const publicKey = "test-public-key";
 
@@ -72,7 +73,12 @@ describe("DashboardPage", () => {
     mockFetchOnce(mockProgress);
 
     const mockService = createMockService();
-    render(<DashboardPage />, { mockService });
+    render(
+      <MemoryRouter>
+        <DashboardPage />
+      </MemoryRouter>,
+      { mockService },
+    );
 
     // Welcome header should appear immediately
     expect(
@@ -92,7 +98,12 @@ describe("DashboardPage", () => {
     mockFetchOnce([]);
 
     const mockService = createMockService();
-    render(<DashboardPage />, { mockService });
+    render(
+      <MemoryRouter>
+        <DashboardPage />
+      </MemoryRouter>,
+      { mockService },
+    );
 
     const progressEl = await screen.findByText(/0% Complete|0\.00% Complete/i);
     expect(progressEl).toBeInTheDocument();
@@ -107,7 +118,12 @@ describe("DashboardPage", () => {
     } as Response);
 
     const mockService = createMockService();
-    render(<DashboardPage />, { mockService });
+    render(
+      <MemoryRouter>
+        <DashboardPage />
+      </MemoryRouter>,
+      { mockService },
+    );
 
     // Expect page still renders welcome header
     expect(

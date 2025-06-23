@@ -1,22 +1,21 @@
-import { screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "../utils/test-utils";
 import { describe, it, expect, afterEach, vi } from "vitest";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
+import React from "react";
+import "@testing-library/jest-dom";
 
 import { LoginPage } from "./LoginPage.tsx";
-import { renderWithProviders } from "../utils/test-utils";
 
 // Helper to render LoginPage within MemoryRouter so we can inspect navigation
-const renderLogin = (initialPath = "/") => {
-  return renderWithProviders(
+const renderLogin = (initialPath = "/", mockService?: any) => {
+  return render(
     <MemoryRouter initialEntries={[initialPath]}>
       <Routes>
         <Route path="/" element={<LoginPage />} />
         <Route path="/dashboard" element={<div data-testid="dashboard">Dashboard</div>} />
       </Routes>
     </MemoryRouter>,
-    {
-      skipRouter: true, // prevent double router injection
-    },
+    { mockService },
   );
 };
 
@@ -104,7 +103,12 @@ describe("LoginPage", () => {
       } as Response);
     void _fetchMock;
 
-    renderLogin();
+    const submitSpy = vi.fn();
+    const mockService = {
+      submitTransaction: submitSpy,
+    } as any;
+
+    renderLogin("/", mockService);
 
     const continueBtn = await screen.findByRole("button", {
       name: /continue as brightpanda5/i,
@@ -114,6 +118,11 @@ describe("LoginPage", () => {
 
     // Wait for navigation
     await screen.findByTestId("dashboard");
+
+    // Wait for the CREATE_USER transaction to be submitted
+    await waitFor(() => {
+      expect(submitSpy).toHaveBeenCalledWith("CREATE_USER", expect.any(Object));
+    });
 
     // Expect user stored in localStorage (AuthContext side effect)
     const stored = window.localStorage.getItem("apstat-user");
