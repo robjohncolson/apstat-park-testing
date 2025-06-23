@@ -1,1 +1,0 @@
-**Note: PATH variable is broken.  Prefix NPM commands with run.bat which is at root of project.  ie.  cd apps/web; ../../run.bat npm run dev

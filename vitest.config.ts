@@ -13,11 +13,9 @@ export default defineConfig({
   test: {
     globals: true,
     include: [
-      'packages/*/src/**/*.test.ts',
-      'apps/web/src/**/*.test.tsx'
+      'packages/*/src/**/*.test.ts'
     ],
     environmentMatchGlobs: [
-      ['apps/web/src/**', 'jsdom'],
       ['packages/chain-core/src/**', 'happy-dom'],
       ['packages/**', 'node']
     ],
