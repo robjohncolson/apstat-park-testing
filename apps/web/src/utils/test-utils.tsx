@@ -7,6 +7,51 @@ import { AuthProvider } from "../context/AuthContext";
 import { BookmarkProvider } from "../context/BookmarkContext";
 import { BlockchainProvider } from "../context/BlockchainProvider";
 
+vi.mock("../services/BlockchainService", () => {
+  const viFn = vi.fn;
+  const mockState = {
+    syncStatus: "disconnected" as const,
+    peerCount: 0,
+    leaderboardData: [],
+    isProposalRequired: false,
+    puzzleData: null,
+  };
+
+  const mockService = {
+    // UI state helpers
+    getState: () => mockState,
+    subscribe: (cb: (s: typeof mockState) => void) => {
+      cb(mockState);
+      return () => {};
+    },
+    // Public projection of chain app state used by components
+    state: {
+      users: {},
+      bookmarks: {},
+      pace: {},
+      starCounts: {},
+      lessonProgress: {},
+      leaderboard: [],
+    } as any,
+    // Stubbed async methods
+    initialize: viFn().mockResolvedValue(undefined),
+    start: viFn().mockResolvedValue(undefined),
+    submitLessonProgress: viFn(),
+    submitPuzzleSolution: viFn(),
+    submitPaceUpdate: viFn().mockResolvedValue(undefined),
+    submitTransaction: viFn(),
+    submitBookmark: viFn(),
+    getPublicKey: () => "42",
+  };
+
+  return {
+    __esModule: true,
+    BlockchainService: {
+      getInstance: () => mockService,
+    },
+  };
+});
+
 // Mock localStorage for tests
 const mockLocalStorage = (() => {
   let store: Record<string, string> = {};

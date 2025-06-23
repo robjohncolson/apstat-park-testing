@@ -2,7 +2,7 @@ import { screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, afterEach, vi } from "vitest";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 
-import { LoginPage } from "./LoginPage";
+import { LoginPage } from "./LoginPage.tsx";
 import { renderWithProviders } from "../utils/test-utils";
 
 // Helper to render LoginPage within MemoryRouter so we can inspect navigation

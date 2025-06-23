@@ -3,8 +3,9 @@ import { screen, waitFor, fireEvent } from "@testing-library/react";
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { Routes, Route } from "react-router-dom";
 
-import { LessonPage } from "./LessonPage";
+import { LessonPage } from "./LessonPage.tsx";
 import { renderWithProviders } from "../utils/test-utils";
+import { BlockchainService } from "../services/BlockchainService";
 
 // Reusable helper to inject a logged-in user for AuthContext
 const mockUser = {
@@ -125,22 +126,15 @@ describe("LessonPage", () => {
   });
 
   it("calls progress update API with correct payload when marking a video as watched", async () => {
-    const fetchMock = vi
-      .fn()
-      // progress GET
-      .mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve([]),
-      } as Response)
-      // progress POST (update) – respond with success
-      .mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({}),
-      } as Response);
+    // Spy on mocked BlockchainService method
+    const service = BlockchainService.getInstance();
+    const submitSpy = vi.spyOn(service, "submitLessonProgress");
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore – jest/vitest global augmentation
-    global.fetch = fetchMock;
+    // Still stub initial progress fetch GET so component can mount
+    vi.spyOn(global, "fetch").mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve([]),
+    } as Response);
 
     renderLesson();
 
@@ -151,31 +145,22 @@ describe("LessonPage", () => {
 
     fireEvent.click(watchBtn);
 
-    // Wait until the update call is made (it may be 2nd or 3rd depending on bookmark fetch)
     await waitFor(() => {
-      expect(fetchMock).toHaveBeenCalled();
-      // Ensure at least one call targets the update endpoint
-      expect(
-        fetchMock.mock.calls.some((args) => (args[0] as string).includes("progress/update")),
-      ).toBe(true);
+      expect(submitSpy).toHaveBeenCalled();
     });
 
-    // Find the call that hit /progress/update
-    const updateCall = fetchMock.mock.calls.find((args) => (args[0] as string).includes("progress/update"));
-    expect(updateCall).toBeTruthy();
-
-    const [updateUrl, updateOptions] = updateCall!;
-
-    // Ensure correct endpoint hit
-    expect(updateUrl).toMatch(/progress\/update/);
-
-    const payload = JSON.parse((updateOptions as RequestInit).body as string);
-
+    // Validate payload structure
+    const [payload] = submitSpy.mock.calls[0];
     expect(payload).toEqual({
-      lesson_id: "1-2",
-      item_type: "video",
-      item_index: 0,
-      completed: true,
+      lessonId: "1-2",
+      progressType: "video_watched",
+      itemId: "0",
+      status: "watched",
+      metadata: {
+        item_type: "video",
+        item_index: 0,
+        completed: true,
+      },
     });
   });
 

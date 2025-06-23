@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
-import WorkflowExplainer from "./WorkflowExplainer";
+import WorkflowExplainer from "./WorkflowExplainer.tsx";
 
 describe("WorkflowExplainer", () => {
   it("renders the core workflow steps", () => {

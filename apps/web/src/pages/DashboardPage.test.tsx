@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { screen, waitFor } from "@testing-library/react";
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
-import { DashboardPage } from "./DashboardPage";
+import { DashboardPage } from "./DashboardPage.tsx";
 import { renderWithProviders } from "../utils/test-utils";
 
 // Helper user in localStorage to authenticate AuthContext
