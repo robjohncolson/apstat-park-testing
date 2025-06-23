@@ -1,180 +1,87 @@
 /* eslint-disable react-refresh/only-export-components */
-import { ReactNode, ReactElement } from "react";
-import { render, type RenderOptions } from "@testing-library/react";
-import { BrowserRouter } from "react-router-dom";
-import { vi } from "vitest";
-import { AuthProvider } from "../context/AuthContext";
-import { BookmarkProvider } from "../context/BookmarkContext";
-import { BlockchainProvider } from "../context/BlockchainProvider";
+import React, { ReactElement } from 'react';
+import { render, RenderOptions } from '@testing-library/react';
+import { vi } from 'vitest';
+import { BlockchainProvider } from '../context/BlockchainProvider';
+import { AuthProvider } from '../context/AuthContext';
+// @ts-ignore – BookmarkProvider re-exports from BookmarkContext
+import { BookmarkProvider } from '../context/BookmarkProvider';
+import { BlockchainService } from '../services/BlockchainService';
 
-vi.mock("../services/BlockchainService", () => {
-  const viFn = vi.fn;
-  const mockState = {
-    syncStatus: "disconnected" as const,
+// Define a default mock service that can be overridden
+const createDefaultMockService = () => ({
+  initialize: vi.fn().mockResolvedValue(undefined),
+  start: vi.fn().mockResolvedValue(undefined),
+  submitLessonProgress: vi.fn().mockResolvedValue(undefined),
+  submitPuzzleSolution: vi.fn().mockResolvedValue(undefined),
+  submitPaceUpdate: vi.fn().mockResolvedValue(undefined),
+  submitTransaction: vi.fn().mockResolvedValue(undefined),
+  submitBookmark: vi.fn().mockResolvedValue(undefined),
+  getPublicKey: () => 'test-public-key',
+  state: {
+    users: {},
+    bookmarks: {},
+    pace: {},
+    starCounts: {},
+    lessonProgress: new Set(),
+    leaderboard: [],
+  },
+  // Basic stubs for BlockchainProvider expectations
+  getState: () => ({
+    syncStatus: "synced" as const,
     peerCount: 0,
     leaderboardData: [],
     isProposalRequired: false,
     puzzleData: null,
-  };
-
-  const mockService = {
-    // UI state helpers
-    getState: () => mockState,
-    subscribe: (cb: (s: typeof mockState) => void) => {
-      cb(mockState);
-      return () => {};
-    },
-    // Public projection of chain app state used by components
-    state: {
-      users: {},
-      bookmarks: {},
-      pace: {},
-      starCounts: {},
-      lessonProgress: {},
-      leaderboard: [],
-    } as any,
-    // Stubbed async methods
-    initialize: viFn().mockResolvedValue(undefined),
-    start: viFn().mockResolvedValue(undefined),
-    submitLessonProgress: viFn(),
-    submitPuzzleSolution: viFn(),
-    submitPaceUpdate: viFn().mockResolvedValue(undefined),
-    submitTransaction: viFn(),
-    submitBookmark: viFn(),
-    getPublicKey: () => "42",
-  };
-
-  return {
-    __esModule: true,
-    BlockchainService: {
-      getInstance: () => mockService,
-    },
-  };
+  }),
+  subscribe: (cb: any) => {
+    // Immediately invoke callback with default UI state
+    cb({
+      syncStatus: "synced",
+      peerCount: 0,
+      leaderboardData: [],
+      isProposalRequired: false,
+      puzzleData: null,
+    });
+    // Return unsubscribe no-op
+    return () => {};
+  },
+  // Add other methods and properties as needed
 });
 
-// Mock localStorage for tests
-const mockLocalStorage = (() => {
-  let store: Record<string, string> = {};
-
-  return {
-    getItem: (key: string) => store[key] || null,
-    setItem: (key: string, value: string) => {
-      store[key] = value.toString();
-    },
-    removeItem: (key: string) => {
-      delete store[key];
-    },
-    clear: () => {
-      store = {};
-    },
-  };
-})();
-
-// Mock fetch for tests
-const mockFetch = vi.fn(() =>
-  Promise.resolve({
-    ok: false,
-    json: () => Promise.resolve({}),
-  }),
-);
-
-// Setup function to be called manually in tests that need it
-export const setupMocks = () => {
-  // Reset localStorage mock
-  mockLocalStorage.clear();
-  Object.defineProperty(window, "localStorage", {
-    value: mockLocalStorage,
-    writable: true,
-    configurable: true,
-  });
-
-  // Reset fetch mock
-  mockFetch.mockClear();
-  global.fetch = mockFetch as unknown as typeof fetch;
+const AllTheProviders = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <BlockchainProvider>
+      <AuthProvider>
+        <BookmarkProvider>{children}</BookmarkProvider>
+      </AuthProvider>
+    </BlockchainProvider>
+  );
 };
 
-// Automatically set up mocks when this module is loaded
-// This ensures localStorage is always available in test environments
-setupMocks();
-
-// Custom render function that includes providers
-interface CustomRenderOptions extends Omit<RenderOptions, "wrapper"> {
-  // Allow tests to provide initial route
-  initialRoute?: string;
-  // Allow tests to skip certain providers if needed
-  skipAuth?: boolean;
-  skipBookmarks?: boolean;
-  skipRouter?: boolean;
-}
-
-function AllTheProviders({
-  children,
-  skipAuth = false,
-  skipBookmarks = false,
-  skipRouter = false,
-}: {
-  children: ReactNode;
-  skipAuth?: boolean;
-  skipBookmarks?: boolean;
-  skipRouter?: boolean;
-}) {
-  let component = <>{children}</>;
-
-  // Wrap with BookmarkProvider (depends on AuthProvider)
-  if (!skipBookmarks && !skipAuth) {
-    component = <BookmarkProvider>{component}</BookmarkProvider>;
-  }
-
-  // Wrap with AuthProvider
-  if (!skipAuth) {
-    component = <AuthProvider>{component}</AuthProvider>;
-  }
-
-  // Always include BlockchainProvider (does not depend on auth)
-  component = <BlockchainProvider>{component}</BlockchainProvider>;
-
-  // Wrap with Router
-  if (!skipRouter) {
-    component = <BrowserRouter>{component}</BrowserRouter>;
-  }
-
-  return component;
-}
-
-export function renderWithProviders(
+// This is our new, enhanced custom render function
+const customRender = (
   ui: ReactElement,
-  {
-    initialRoute = "/",
-    skipAuth = false,
-    skipBookmarks = false,
-    skipRouter = false,
-    ...renderOptions
-  }: CustomRenderOptions = {},
-) {
-  // Set initial route if router is not skipped
-  if (!skipRouter && initialRoute !== "/") {
-    window.history.pushState({}, "Test page", initialRoute);
+  options?: Omit<RenderOptions, 'wrapper'> & {
+    mockService?: Partial<ReturnType<typeof createDefaultMockService>>;
   }
+) => {
+  // Create a fresh mock for each render call
+  const mockServiceInstance = {
+    ...createDefaultMockService(),
+    ...options?.mockService, // Override with test-specific mocks
+  };
 
-  return render(ui, {
-    wrapper: ({ children }) => (
-      <AllTheProviders
-        skipAuth={skipAuth}
-        skipBookmarks={skipBookmarks}
-        skipRouter={skipRouter}
-      >
-        {children}
-      </AllTheProviders>
-    ),
-    ...renderOptions,
-  });
-}
+  // Mock the getInstance method for this specific render
+  vi.spyOn(BlockchainService, 'getInstance').mockReturnValue(
+    mockServiceInstance as any
+  );
 
-// Re-export everything from testing-library
-export * from "@testing-library/react";
+  return render(ui, { wrapper: AllTheProviders, ...options });
+};
 
-// Export our custom render as the default render
-export { renderWithProviders as render };
+export * from '@testing-library/react';
+export { customRender as render };
 
 // Utility functions for common test scenarios
 export const createMockUser = (overrides = {}) => ({
@@ -210,3 +117,5 @@ export const mockApiFailure = (status = 500) => {
     json: () => Promise.resolve({ error: "API Error" }),
   } as Response);
 };
+
+const mockFetch = vi.fn();

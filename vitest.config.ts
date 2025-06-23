@@ -13,10 +13,12 @@ export default defineConfig({
   test: {
     globals: true,
     include: [
-      'packages/*/src/**/*.test.ts'
+      'packages/*/src/**/*.test.{ts,tsx}',
+      'apps/*/src/**/*.test.{ts,tsx}'
     ],
     environmentMatchGlobs: [
       ['packages/chain-core/src/**', 'happy-dom'],
+      ['apps/**', 'happy-dom'],
       ['packages/**', 'node']
     ],
     // Register global matchers such as toBeInTheDocument

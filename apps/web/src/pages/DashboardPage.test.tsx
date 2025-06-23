@@ -1,12 +1,13 @@
-import { ReactNode } from "react";
-import { screen, waitFor } from "@testing-library/react";
+import React, { ReactNode } from "react";
+import "@testing-library/jest-dom";
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
+import { render, screen, waitFor } from "../utils/test-utils";
 import { DashboardPage } from "./DashboardPage.tsx";
-import { renderWithProviders } from "../utils/test-utils";
 
-// Helper user in localStorage to authenticate AuthContext
+const publicKey = "test-public-key";
+
 const mockUser = {
-  id: 1,
+  id: publicKey, // Must match BlockchainService.getPublicKey()
   username: "dash-tester",
   created_at: new Date().toISOString(),
   last_sync: new Date().toISOString(),
@@ -39,6 +40,27 @@ vi.mock("react-modal", () => {
 });
 
 describe("DashboardPage", () => {
+  const createMockService = () => ({
+    // Minimal override – will be merged with the default mock in test-utils
+    state: {
+      users: {
+        [publicKey]: {
+          publicKey,
+          username: mockUser.username,
+          createdAt: Date.now(),
+        },
+      },
+      bookmarks: {},
+      pace: {},
+      starCounts: {},
+      lessonProgress: {
+        [publicKey]: new Set<string>(),
+      },
+      leaderboard: [],
+    },
+    getPublicKey: () => publicKey,
+  } as any);
+
   beforeEach(() => {
     primeUser();
   });
@@ -49,7 +71,8 @@ describe("DashboardPage", () => {
     ];
     mockFetchOnce(mockProgress);
 
-    renderWithProviders(<DashboardPage />);
+    const mockService = createMockService();
+    render(<DashboardPage />, { mockService });
 
     // Welcome header should appear immediately
     expect(
@@ -68,7 +91,8 @@ describe("DashboardPage", () => {
   it("shows 0% progress when API returns empty array", async () => {
     mockFetchOnce([]);
 
-    renderWithProviders(<DashboardPage />);
+    const mockService = createMockService();
+    render(<DashboardPage />, { mockService });
 
     const progressEl = await screen.findByText(/0% Complete|0\.00% Complete/i);
     expect(progressEl).toBeInTheDocument();
@@ -82,7 +106,8 @@ describe("DashboardPage", () => {
       json: () => Promise.resolve({}),
     } as Response);
 
-    renderWithProviders(<DashboardPage />);
+    const mockService = createMockService();
+    render(<DashboardPage />, { mockService });
 
     // Expect page still renders welcome header
     expect(
