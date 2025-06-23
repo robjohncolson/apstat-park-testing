@@ -41,9 +41,8 @@ vi.mock("react-modal", () => {
 });
 
 describe("DashboardPage", () => {
-  const createMockService = () => ({
-    // Minimal override – will be merged with the default mock in test-utils
-    state: {
+  const createMockBlockchainContext = () => ({
+    appState: {
       users: {
         [publicKey]: {
           publicKey,
@@ -59,8 +58,7 @@ describe("DashboardPage", () => {
       },
       leaderboard: [],
     },
-    getPublicKey: () => publicKey,
-  } as any);
+  });
 
   beforeEach(() => {
     primeUser();
@@ -72,12 +70,12 @@ describe("DashboardPage", () => {
     ];
     mockFetchOnce(mockProgress);
 
-    const mockService = createMockService();
+    const blockchainContextValue = createMockBlockchainContext();
     render(
       <MemoryRouter>
         <DashboardPage />
       </MemoryRouter>,
-      { mockService },
+      { blockchainContextValue },
     );
 
     // Welcome header should appear immediately
@@ -97,12 +95,12 @@ describe("DashboardPage", () => {
   it("shows 0% progress when API returns empty array", async () => {
     mockFetchOnce([]);
 
-    const mockService = createMockService();
+    const blockchainContextValue = createMockBlockchainContext();
     render(
       <MemoryRouter>
         <DashboardPage />
       </MemoryRouter>,
-      { mockService },
+      { blockchainContextValue },
     );
 
     const progressEl = await screen.findByText(/0% Complete|0\.00% Complete/i);
@@ -117,12 +115,12 @@ describe("DashboardPage", () => {
       json: () => Promise.resolve({}),
     } as Response);
 
-    const mockService = createMockService();
+    const blockchainContextValue = createMockBlockchainContext();
     render(
       <MemoryRouter>
         <DashboardPage />
       </MemoryRouter>,
-      { mockService },
+      { blockchainContextValue },
     );
 
     // Expect page still renders welcome header

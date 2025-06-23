@@ -1,13 +1,17 @@
 import { render, screen, fireEvent, waitFor } from "../utils/test-utils";
-import { describe, it, expect, afterEach, vi } from "vitest";
+import { describe, it, expect, afterEach, vi, beforeEach } from "vitest";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 import React from "react";
 import "@testing-library/jest-dom";
 
 import { LoginPage } from "./LoginPage.tsx";
+import { BlockchainService } from "../services/BlockchainService";
 
 // Helper to render LoginPage within MemoryRouter so we can inspect navigation
-const renderLogin = (initialPath = "/", mockService?: any) => {
+const renderLogin = (
+  initialPath = "/",
+  blockchainContextValue?: any,
+) => {
   return render(
     <MemoryRouter initialEntries={[initialPath]}>
       <Routes>
@@ -15,7 +19,7 @@ const renderLogin = (initialPath = "/", mockService?: any) => {
         <Route path="/dashboard" element={<div data-testid="dashboard">Dashboard</div>} />
       </Routes>
     </MemoryRouter>,
-    { mockService },
+    { blockchainContextValue },
   );
 };
 
@@ -23,6 +27,15 @@ const renderLogin = (initialPath = "/", mockService?: any) => {
 afterEach(() => {
   vi.restoreAllMocks();
   window.localStorage.clear();
+});
+
+// Reusable stub for BlockchainService across tests
+beforeEach(() => {
+  vi.spyOn(BlockchainService, "getInstance").mockReturnValue({
+    initialize: vi.fn().mockResolvedValue(undefined),
+    submitTransaction: vi.fn().mockResolvedValue(undefined),
+    getPublicKey: () => "test-public-key",
+  } as any);
 });
 
 describe("LoginPage", () => {
@@ -104,11 +117,16 @@ describe("LoginPage", () => {
     void _fetchMock;
 
     const submitSpy = vi.fn();
-    const mockService = {
-      submitTransaction: submitSpy,
+    const blockchainContextValue = {
+      blockchainService: {
+        submitTransaction: submitSpy,
+      },
     } as any;
 
-    renderLogin("/", mockService);
+    // Override submitTransaction for this test so we can inspect call
+    (BlockchainService.getInstance() as any).submitTransaction = submitSpy;
+
+    renderLogin("/", blockchainContextValue);
 
     const continueBtn = await screen.findByRole("button", {
       name: /continue as brightpanda5/i,

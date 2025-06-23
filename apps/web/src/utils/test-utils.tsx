@@ -2,9 +2,10 @@
 import React, { ReactElement } from 'react';
 import { render, RenderOptions } from '@testing-library/react';
 import { vi } from 'vitest';
-import { BlockchainProvider } from '../context/BlockchainProvider';
+import { MemoryRouter } from 'react-router-dom';
+import * as BlockchainContext from '../context/BlockchainProvider';
 import { AuthProvider } from '../context/AuthContext';
-// @ts-ignore – BookmarkProvider re-exports from BookmarkContext
+// @ts-ignore – BookmarkProvider re-exports context
 import { BookmarkProvider } from '../context/BookmarkProvider';
 import { BlockchainService } from '../services/BlockchainService';
 
@@ -23,60 +24,107 @@ const createDefaultMockService = () => ({
     bookmarks: {},
     pace: {},
     starCounts: {},
-    lessonProgress: new Set(),
+    lessonProgress: {},
     leaderboard: [],
   },
-  // Basic stubs for BlockchainProvider expectations
+  // UI-state accessors expected by BlockchainProvider consumers (not used in
+  // most tests but mocked for completeness).
   getState: () => ({
-    syncStatus: "synced" as const,
+    syncStatus: 'synced' as const,
     peerCount: 0,
     leaderboardData: [],
     isProposalRequired: false,
     puzzleData: null,
   }),
   subscribe: (cb: any) => {
-    // Immediately invoke callback with default UI state
     cb({
-      syncStatus: "synced",
+      syncStatus: 'synced',
       peerCount: 0,
       leaderboardData: [],
       isProposalRequired: false,
       puzzleData: null,
     });
-    // Return unsubscribe no-op
     return () => {};
   },
   // Add other methods and properties as needed
 });
 
-const AllTheProviders = ({ children }: { children: React.ReactNode }) => {
-  return (
-    <BlockchainProvider>
-      <AuthProvider>
-        <BookmarkProvider>{children}</BookmarkProvider>
-      </AuthProvider>
-    </BlockchainProvider>
-  );
-};
+const AllTheProviders = ({ children }: { children: React.ReactNode }) => (
+  <MemoryRouter>
+    <AuthProvider>
+      <BookmarkProvider>{children}</BookmarkProvider>
+    </AuthProvider>
+  </MemoryRouter>
+);
 
 // This is our new, enhanced custom render function
-const customRender = (
+type CustomRenderOptions = Omit<RenderOptions, 'wrapper'> & {
+  /** Partial overrides for the mocked useBlockchain return value */
+  blockchainContextValue?: Partial<ReturnType<typeof BlockchainContext.useBlockchain>>;
+  /**
+   * Legacy support: allow tests to stub BlockchainService.getInstance().
+   * Prefer using `blockchainContextValue` moving forward.
+   */
+  mockService?: Partial<ReturnType<typeof createDefaultMockService>>;
+};
+
+export const customRender = (
   ui: ReactElement,
-  options?: Omit<RenderOptions, 'wrapper'> & {
-    mockService?: Partial<ReturnType<typeof createDefaultMockService>>;
-  }
+  options: CustomRenderOptions = {},
 ) => {
-  // Create a fresh mock for each render call
-  const mockServiceInstance = {
-    ...createDefaultMockService(),
-    ...options?.mockService, // Override with test-specific mocks
-  };
+  // ---------------------------------------------------------------------
+  // 1. Mock useBlockchain so components receive predictable values
+  // ---------------------------------------------------------------------
+  const defaultBlockchainContext = {
+    syncStatus: 'synced' as const,
+    peerCount: 0,
+    leaderboardData: [],
+    isProposalRequired: false,
+    puzzleData: null,
+    appState: {
+      users: {},
+      bookmarks: {},
+      pace: {},
+      starCounts: {},
+      lessonProgress: {},
+      leaderboard: [],
+    },
+    initialize: vi.fn(),
+    start: vi.fn(),
+    submitLessonProgress: vi.fn(),
+    submitPuzzleSolution: vi.fn(),
+    // Expose underlying service for tests that still rely on it.
+    blockchainService: {
+      submitTransaction: vi.fn(),
+    },
+  } as any;
 
-  // Mock the getInstance method for this specific render
-  vi.spyOn(BlockchainService, 'getInstance').mockReturnValue(
-    mockServiceInstance as any
-  );
+  const mockedContext = {
+    ...defaultBlockchainContext,
+    ...options.blockchainContextValue,
+  } as any;
 
+  if (vi.isMockFunction(BlockchainContext.useBlockchain)) {
+    (BlockchainContext.useBlockchain as any).mockReturnValue(mockedContext);
+  } else {
+    vi.spyOn(BlockchainContext, 'useBlockchain').mockReturnValue(mockedContext);
+  }
+
+  // ---------------------------------------------------------------------
+  // 2. Legacy – still allow stubbing BlockchainService.getInstance()
+  // ---------------------------------------------------------------------
+  if (options.mockService) {
+    const serviceInstance = {
+      ...createDefaultMockService(),
+      ...options.mockService,
+    } as any;
+
+    vi.spyOn(BlockchainService, 'getInstance').mockReturnValue(serviceInstance);
+  }
+
+  // ---------------------------------------------------------------------
+  // 3. Render with common providers
+  // ---------------------------------------------------------------------
   return render(ui, { wrapper: AllTheProviders, ...options });
 };
 
